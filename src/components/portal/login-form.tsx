@@ -8,7 +8,7 @@ import { roleLabel } from "@/lib/workflow"
 import { signIn } from "next-auth/react"
 import { useState } from "react"
 
-export function LoginForm() {
+export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -49,7 +49,7 @@ export function LoginForm() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             className="h-10"
-            placeholder="ayse.demir@vekalet.local"
+            placeholder="adsoyad@buroadi.com"
           />
         </div>
         <div className="grid gap-1.5">
@@ -74,35 +74,41 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <div>
-        <p className="text-xs tracking-[0.14em] text-muted-foreground uppercase">Deneme hesapları</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Ortak parola: <span className="font-mono text-foreground">{DEMO_PASSWORD}</span>
-        </p>
-        <div className="mt-3 grid gap-2">
-          {DEMO_ACCOUNTS.map((account) => (
-            <button
-              key={account.id}
-              type="button"
-              disabled={pending}
-              onClick={() => {
-                setEmail(account.email)
-                setPassword(DEMO_PASSWORD)
-                void enter(account.email, DEMO_PASSWORD)
-              }}
-              className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-left hover:bg-muted disabled:opacity-60"
-            >
-              <span>
-                <span className="block text-sm font-medium">{account.name}</span>
-                <span className="block text-xs text-muted-foreground">{account.title}</span>
-              </span>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] ring-1 ring-border">
-                {roleLabel(account.role)}
-              </span>
-            </button>
-          ))}
+      {showDemo ? (
+        <div>
+          <p className="text-xs tracking-[0.16em] text-muted-foreground uppercase">Deneme hesapları</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Ortak parola: <span className="font-mono text-foreground">{DEMO_PASSWORD}</span>
+          </p>
+          <div className="mt-3 grid gap-2">
+            {DEMO_ACCOUNTS.map((account) => (
+              <button
+                key={account.id}
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  setEmail(account.email)
+                  setPassword(DEMO_PASSWORD)
+                  void enter(account.email, DEMO_PASSWORD)
+                }}
+                className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-left hover:bg-muted disabled:opacity-60"
+              >
+                <span>
+                  <span className="block text-sm font-medium">{account.name}</span>
+                  <span className="block text-xs text-muted-foreground">{account.title}</span>
+                </span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] ring-1 ring-border">
+                  {roleLabel(account.role)}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Hesabınız yoksa bürodaki bir avukattan kullanıcı açmasını isteyin.
+        </p>
+      )}
     </div>
   )
 }

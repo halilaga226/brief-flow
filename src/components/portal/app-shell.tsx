@@ -8,13 +8,13 @@ import type { NotificationDTO, SessionUser } from "@/lib/dto"
 import { initials } from "@/lib/format"
 import { roleLabel } from "@/lib/workflow"
 import { cn } from "@/lib/utils"
-import { FolderOpen, LayoutDashboard, LogOut, Menu, Plus, Scale } from "lucide-react"
+import { FolderOpen, LayoutDashboard, LogOut, Menu, Plus, Scale, Users, UserRound } from "lucide-react"
 import { motion, useReducedMotion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 
-const links = [
+const baseLinks = [
   { href: "/panel", label: "Panel", icon: LayoutDashboard },
   { href: "/gorevler", label: "Görevler", icon: FolderOpen },
 ]
@@ -24,8 +24,21 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-function NavLinks({ inSheet = false }: { inSheet?: boolean }) {
+function NavLinks({
+  inSheet = false,
+  lawyer = false,
+}: {
+  inSheet?: boolean
+  lawyer?: boolean
+}) {
   const pathname = usePathname()
+  const links = lawyer
+    ? [
+        ...baseLinks,
+        { href: "/kullanicilar", label: "Kullanıcılar", icon: Users },
+        { href: "/hesap", label: "Hesabım", icon: UserRound },
+      ]
+    : [...baseLinks, { href: "/hesap", label: "Hesabım", icon: UserRound }]
   return (
     <nav className="grid gap-1">
       {links.map((link) => {
@@ -92,7 +105,7 @@ export function AppShell({
           </Link>
         </div>
         <div className="flex-1 px-3 py-4">
-          <NavLinks />
+          <NavLinks lawyer={lawyer} />
           {lawyer ? (
             <Button asChild className="mt-4 w-full bg-[#0f6e56] text-white hover:bg-[#0c5b48]">
               <Link href="/gorevler/yeni">
@@ -140,7 +153,7 @@ export function AppShell({
                 <p className="font-serif text-2xl">Vekâlet</p>
                 <p className="mt-4 text-xs tracking-[0.16em] text-[#9aafc2] uppercase">Menü</p>
                 <div className="mt-3">
-                  <NavLinks inSheet />
+                  <NavLinks inSheet lawyer={lawyer} />
                 </div>
                 {lawyer ? (
                   <SheetClose asChild>

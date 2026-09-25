@@ -14,6 +14,8 @@ const steps = [
 ]
 
 export default function LoginPage() {
+  const showDemo = process.env.DEMO_LOGIN === "true"
+
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
       <section className="relative hidden overflow-hidden bg-[#12263a] text-[#e7eef5] lg:flex lg:flex-col lg:justify-between lg:p-12">
@@ -49,9 +51,11 @@ export default function LoginPage() {
             <p className="mt-2 text-sm text-muted-foreground lg:hidden">
               Avukat atar, stajyer yürütür. Kod girilmeden dosya kapanmaz.
             </p>
-            <p className="mt-2 hidden text-sm text-muted-foreground lg:block">Hesabınızla büro akışına girin.</p>
+            <p className="mt-2 hidden text-sm text-muted-foreground lg:block">
+              Hesabınızla büro akışına girin.
+            </p>
           </div>
-          <LoginForm />
+          <LoginForm showDemo={showDemo} />
         </div>
       </section>
     </div>
