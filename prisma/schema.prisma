@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  LAWYER
+  INTERN
+}
+
+enum TaskStatus {
+  ATANDI
+  INCELEME_BEKLIYOR
+  REVIZE_ISTENDI
+  GONDERIM_BEKLIYOR
+  TAMAMLANDI
+}
+
+enum FileKind {
+  INSTRUCTION
+  DRAFT
+}
+
+enum LogType {
+  CREATED
+  DRAFT_UPLOADED
+  REVISION_REQUESTED
+  APPROVED
+  COMPLETED
+}
+
+model User {
+  id           String   @id
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  title        String
+  createdAt    DateTime @default(now())
+
+  assignedTasks Task[]         @relation("Assignee")
+  createdTasks  Task[]         @relation("Assigner")
+  comments      TaskComment[]
+  logs          TaskLog[]
+  files         TaskFile[]
+  notifications Notification[]
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  title        String
+  clientName   String
+  fileNumber   String
+  description  String
+  dueDate      DateTime
+  status       TaskStatus @default(ATANDI)
+  assignerId   String
+  assigneeId   String
+  trackingCode String?
+  completedAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  assigner      User           @relation("Assigner", fields: [assignerId], references: [id])
+  assignee      User           @relation("Assignee", fields: [assigneeId], references: [id])
+  comments      TaskComment[]
+  logs          TaskLog[]
+  files         TaskFile[]
+  notifications Notification[]
+
+  @@index([assignerId])
+  @@index([assigneeId])
+  @@index([status])
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id])
+
+  @@index([taskId])
+}
+
+model TaskLog {
+  id         String    @id @default(cuid())
+  taskId     String
+  actorId    String
+  type       LogType
+  fromStatus TaskStatus?
+  toStatus   TaskStatus?
+  note       String?
+  meta       String?
+  createdAt  DateTime  @default(now())
+
+  task  Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@index([taskId])
+}
+
+model TaskFile {
+  id           String   @id @default(cuid())
+  taskId       String
+  kind         FileKind
+  driveFileId  String   @unique
+  name         String
+  mimeType     String
+  size         Int
+  webViewLink  String
+  storageMode  String
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  task       Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation(fields: [uploadedById], references: [id])
+
+  @@index([taskId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  taskId    String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}
