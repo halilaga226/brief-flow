@@ -1,4 +1,4 @@
-export default function PortalLoading() {
+export default function PanelLoading() {
   return (
     <div className="grid gap-4">
       <div className="h-8 w-40 animate-pulse rounded-md bg-[#e7e1d4]" />
