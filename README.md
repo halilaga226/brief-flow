@@ -1,14 +1,18 @@
 # Atlı Karakaya Hukuk Bürosu
 
-Görev, taslak inceleme ve evrak gönderim portalı.
+Görev, taslak inceleme ve evrak gönderim portalı. Avukatlar için iş listesi (ajanda) ve satırdan görev atama içerir. Açık/koyu tema desteklenir.
 
 ## Roller
 
-- **Avukat** görev atar, taslağı onaylar veya revize ister. Onaydan sonra masraf, müvekkil araması ve gönderime alma kararını verir.
+- **Avukat** iş listesine kayıt ekler, satırdan veya Görev ver ile atama yapar; taslağı onaylar veya revize ister. Onaydan sonra masraf, müvekkil araması ve gönderime alma kararını verir.
 - **Stajyer** yalnızca kendisine atanan işleri görür. Görev atayamaz. Gönderime alınan işte evrak kodunu girerek işi kapatır.
-- **Yönetici (ADMIN)** tüm işleri görür, kullanıcı ekler/düzenler ve Yönetim panelinden örnek veriyi sıfırlar.
+- **Yönetici (ADMIN)** tüm işleri görür, kullanıcı ekler/düzenler ve Ayarlar’dan örnek veriyi sıfırlar.
 
 Üçüncü kişiler kaydı göremez.
+
+## İş listesi (avukat ajandası)
+
+`/is-listesi` sayfasında müvekkil, karşı taraf, mahkeme, dosya no, yapılacak iş ve notlar tutulur. Her satırdaki **İş ata** ile doğrudan görev verilir.
 
 ## Görev döngüsü
 

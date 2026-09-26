@@ -72,7 +72,7 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
         <Button
           type="submit"
           disabled={pending}
-          className="h-11 bg-[var(--brand-primary)] font-semibold hover:bg-[var(--brand-primary-hover)]"
+          className="h-11 font-semibold"
         >
           {pending ? "Giriş yapılıyor…" : "Giriş yap"}
         </Button>

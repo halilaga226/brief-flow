@@ -18,14 +18,24 @@ import type { ColleagueDTO } from "@/lib/dto"
 import { roleLabel } from "@/lib/workflow"
 import { useActionState, useState } from "react"
 
+export type TaskPrefill = {
+  workItemId?: string
+  title?: string
+  clientName?: string
+  fileNumber?: string
+  description?: string
+}
+
 export function NewTaskForm({
   people,
   defaultDue,
   drive,
+  prefill,
 }: {
   people: ColleagueDTO[]
   defaultDue: string
   drive: { mode: "google" | "mock"; reason: string | null }
+  prefill?: TaskPrefill
 }) {
   const fallback = people.find((person) => person.role === "INTERN")?.id ?? people[0]?.id ?? ""
   const [assigneeId, setAssigneeId] = useState(fallback)
@@ -36,6 +46,9 @@ export function NewTaskForm({
 
   return (
     <form action={action} className="grid gap-4">
+      {prefill?.workItemId ? (
+        <input type="hidden" name="workItemId" value={prefill.workItemId} />
+      ) : null}
       {state?.error ? (
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
           {state.error}
@@ -43,16 +56,39 @@ export function NewTaskForm({
       ) : null}
       <div className="grid gap-1.5">
         <Label htmlFor="title">Başlık</Label>
-        <Input id="title" name="title" required minLength={3} maxLength={160} className="h-10" placeholder="İşe iade dava dilekçesi" />
+        <Input
+          id="title"
+          name="title"
+          required
+          minLength={3}
+          maxLength={160}
+          className="h-10"
+          defaultValue={prefill?.title ?? ""}
+          placeholder="İşe iade dava dilekçesi"
+        />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-1.5">
           <Label htmlFor="clientName">Müvekkil</Label>
-          <Input id="clientName" name="clientName" required className="h-10" placeholder="Deniz Acar" />
+          <Input
+            id="clientName"
+            name="clientName"
+            required
+            className="h-10"
+            defaultValue={prefill?.clientName ?? ""}
+            placeholder="Deniz Acar"
+          />
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="fileNumber">Dosya no</Label>
-          <Input id="fileNumber" name="fileNumber" required className="h-10" placeholder="2026/184 Esas" />
+          <Input
+            id="fileNumber"
+            name="fileNumber"
+            required
+            className="h-10"
+            defaultValue={prefill?.fileNumber ?? ""}
+            placeholder="2026/184 Esas"
+          />
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -110,6 +146,7 @@ export function NewTaskForm({
           required
           minLength={8}
           rows={6}
+          defaultValue={prefill?.description ?? ""}
           placeholder="Ne hazırlanacak, hangi belge esas alınacak, nelere dikkat edilecek?"
         />
       </div>
@@ -129,7 +166,7 @@ export function NewTaskForm({
         </p>
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={pending || !assigneeId} className="bg-zinc-900">
+        <Button type="submit" disabled={pending || !assigneeId} className="bg-primary font-semibold">
           {pending ? "Atanıyor…" : "Görevi ata"}
         </Button>
       </div>

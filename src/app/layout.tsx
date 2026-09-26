@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Source_Sans_3 } from "next/font/google"
+import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { BRAND } from "@/lib/brand"
@@ -25,12 +26,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning>
       <body className={`${sourceSans.variable} antialiased`}>
-        <TooltipProvider>
-          {children}
-          <Toaster />
-        </TooltipProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            {children}
+            <Toaster />
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

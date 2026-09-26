@@ -30,7 +30,7 @@ import { toast } from "sonner"
 
 function DriveNote({ drive }: { drive: { mode: "google" | "mock"; reason: string | null } }) {
   return (
-    <p className="text-xs font-medium leading-relaxed text-zinc-500">
+    <p className="text-xs font-medium leading-relaxed text-muted-foreground">
       {drive.mode === "google"
         ? "Dosya büronun Google Drive klasörüne gider. Sunucuda kopya tutulmaz."
         : drive.reason}
@@ -60,7 +60,7 @@ function UploadForm({
       />
       <DriveNote drive={drive} />
       {state?.error ? <p className="text-sm font-medium text-destructive">{state.error}</p> : null}
-      <Button type="submit" disabled={pending} className="bg-zinc-900 font-semibold">
+      <Button type="submit" disabled={pending} className="bg-primary font-semibold">
         <Send />
         {pending ? "Yükleniyor…" : "Taslağı incelemeye gönder"}
       </Button>
@@ -106,7 +106,7 @@ function ApproveDialog({ taskId }: { taskId: string }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <Button
         type="button"
-        className="bg-zinc-900 font-semibold text-white"
+        className="bg-primary font-semibold text-primary-foreground"
         onClick={() => setOpen(true)}
       >
         <Check />
@@ -124,7 +124,7 @@ function ApproveDialog({ taskId }: { taskId: string }) {
           <Textarea name="note" rows={4} placeholder="İsteğe bağlı onay notu" />
           {state?.error ? <p className="text-sm font-medium text-destructive">{state.error}</p> : null}
           <DialogFooter>
-            <Button type="submit" disabled={pending} className="bg-zinc-900 font-semibold">
+            <Button type="submit" disabled={pending} className="bg-primary font-semibold">
               {pending ? "Onaylanıyor…" : "Onayla"}
             </Button>
           </DialogFooter>
@@ -153,7 +153,7 @@ function OpsControls({
   useActionResult(sendState)
 
   return (
-    <div className="mt-4 grid gap-3 rounded-xl border border-zinc-200 bg-white p-3">
+    <div className="mt-4 grid gap-3 rounded-xl border border-border bg-card p-3">
       <p className="text-sm font-bold">Atayan avukat kararları</p>
       <div className="flex flex-wrap gap-2">
         <form action={expenseAction}>
@@ -202,7 +202,7 @@ function OpsControls({
       {canQueueSend ? (
         <form action={sendAction}>
           <input type="hidden" name="taskId" value={taskId} />
-          <Button type="submit" disabled={sendPending} className="w-full bg-zinc-900 font-semibold sm:w-auto">
+          <Button type="submit" disabled={sendPending} className="w-full bg-primary font-semibold sm:w-auto">
             <Send />
             {sendPending ? "Alınıyor…" : "Gönderime al"}
           </Button>
@@ -218,7 +218,7 @@ function CompleteDialog({ taskId }: { taskId: string }) {
   useActionResult(state, () => setOpen(false))
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button type="button" className="mt-3 bg-zinc-900 font-semibold" onClick={() => setOpen(true)}>
+      <Button type="button" className="mt-3 bg-primary font-semibold" onClick={() => setOpen(true)}>
         Gönderimi tamamla
       </Button>
       <DialogContent className="sm:max-w-md">
@@ -289,11 +289,11 @@ export function TaskActions({
     <section
       className={cn(
         "rounded-xl border p-4",
-        myTurn ? "border-yellow-300 bg-yellow-50" : "border-zinc-200 bg-white",
+        myTurn ? "border-[var(--brand-accent)]/40 bg-accent" : "border-border bg-card",
       )}
     >
-      <p className="text-xs font-bold tracking-wide text-zinc-500 uppercase">Sıradaki adım</p>
-      <p className="mt-1 text-sm font-semibold leading-relaxed text-zinc-900">{nextStep}</p>
+      <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">Sıradaki adım</p>
+      <p className="mt-1 text-sm font-semibold leading-relaxed text-foreground">{nextStep}</p>
       {latestDraft && canReview ? (
         <p className="mt-3 text-sm font-medium">
           Son taslak:{" "}
@@ -346,7 +346,7 @@ export function TaskActions({
             </Button>
           </div>
           {completedLabel ? (
-            <p className="mt-1 text-xs font-medium text-zinc-600">{completedLabel}</p>
+            <p className="mt-1 text-xs font-medium text-muted-foreground">{completedLabel}</p>
           ) : null}
         </div>
       ) : null}

@@ -57,10 +57,29 @@ model User {
 
   assignedTasks Task[]         @relation("Assignee")
   createdTasks  Task[]         @relation("Assigner")
+  workItems     WorkItem[]
   comments      TaskComment[]
   logs          TaskLog[]
   files         TaskFile[]
   notifications Notification[]
+}
+
+model WorkItem {
+  id            String   @id @default(cuid())
+  clientName    String
+  opposingParty String
+  courtName     String
+  fileNumber    String
+  workToDo      String
+  notes         String   @default("")
+  ownerId       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  owner User   @relation(fields: [ownerId], references: [id])
+  tasks Task[]
+
+  @@index([ownerId])
 }
 
 model Task {
@@ -73,6 +92,7 @@ model Task {
   status       TaskStatus @default(ATANDI)
   assignerId   String
   assigneeId   String
+  workItemId   String?
   trackingCode String?
   completedAt  DateTime?
   expensePaid       Boolean          @default(false)
@@ -83,6 +103,7 @@ model Task {
 
   assigner      User           @relation("Assigner", fields: [assignerId], references: [id])
   assignee      User           @relation("Assignee", fields: [assigneeId], references: [id])
+  workItem      WorkItem?      @relation(fields: [workItemId], references: [id], onDelete: SetNull)
   comments      TaskComment[]
   logs          TaskLog[]
   files         TaskFile[]
@@ -91,6 +112,7 @@ model Task {
   @@index([assignerId])
   @@index([assigneeId])
   @@index([status])
+  @@index([workItemId])
 }
 
 model TaskComment {

@@ -50,48 +50,92 @@
 }
 
 :root {
-  --brand-canvas: #f3faf7;
-  --brand-ink: #12352b;
-  --brand-muted: #5b746c;
-  --brand-border: #d7ebe3;
-  --brand-soft: #e7f6f0;
-  --brand-primary: #0f6b57;
-  --brand-primary-hover: #0c5747;
-  --brand-accent: #ffb347;
-  --brand-accent-hover: #ffa126;
-  --brand-danger: #e85d4c;
-  --background: #f3faf7;
-  --foreground: #12352b;
+  --brand-canvas: #ecfdf8;
+  --brand-ink: #042f2e;
+  --brand-muted: #0f766e;
+  --brand-border: #99f6e4;
+  --brand-soft: #ccfbf1;
+  --brand-primary: #0d9488;
+  --brand-primary-hover: #0f766e;
+  --brand-accent: #f97316;
+  --brand-accent-hover: #ea580c;
+  --brand-danger: #ef4444;
+  --background: #ecfdf8;
+  --foreground: #042f2e;
   --card: #ffffff;
-  --card-foreground: #12352b;
+  --card-foreground: #042f2e;
   --popover: #ffffff;
-  --popover-foreground: #12352b;
-  --primary: #0f6b57;
-  --primary-foreground: #f7fffb;
-  --secondary: #e7f6f0;
-  --secondary-foreground: #12352b;
-  --muted: #e7f6f0;
-  --muted-foreground: #5b746c;
-  --accent: #ffe3b8;
-  --accent-foreground: #7a3e00;
-  --destructive: #e85d4c;
-  --border: #d7ebe3;
-  --input: #d7ebe3;
-  --ring: #2ec4b6;
-  --chart-1: #0f6b57;
-  --chart-2: #ffb347;
-  --chart-3: #e85d4c;
-  --chart-4: #2ec4b6;
-  --chart-5: #5b746c;
-  --radius: 0.9rem;
+  --popover-foreground: #042f2e;
+  --primary: #0d9488;
+  --primary-foreground: #f0fdfa;
+  --secondary: #ccfbf1;
+  --secondary-foreground: #134e4a;
+  --muted: #d1fae5;
+  --muted-foreground: #115e59;
+  --accent: #ffedd5;
+  --accent-foreground: #9a3412;
+  --destructive: #ef4444;
+  --border: #99f6e4;
+  --input: #5eead4;
+  --ring: #14b8a6;
+  --chart-1: #14b8a6;
+  --chart-2: #f97316;
+  --chart-3: #ef4444;
+  --chart-4: #06b6d4;
+  --chart-5: #0f766e;
+  --radius: 1rem;
   --sidebar: #ffffff;
-  --sidebar-foreground: #12352b;
-  --sidebar-primary: #0f6b57;
-  --sidebar-primary-foreground: #f7fffb;
-  --sidebar-accent: #e7f6f0;
-  --sidebar-accent-foreground: #12352b;
-  --sidebar-border: #d7ebe3;
-  --sidebar-ring: #2ec4b6;
+  --sidebar-foreground: #042f2e;
+  --sidebar-primary: #0d9488;
+  --sidebar-primary-foreground: #f0fdfa;
+  --sidebar-accent: #ccfbf1;
+  --sidebar-accent-foreground: #134e4a;
+  --sidebar-border: #99f6e4;
+  --sidebar-ring: #14b8a6;
+}
+
+.dark {
+  --brand-canvas: #021a18;
+  --brand-ink: #ecfdf8;
+  --brand-muted: #5eead4;
+  --brand-border: #115e59;
+  --brand-soft: #0f3d38;
+  --brand-primary: #2dd4bf;
+  --brand-primary-hover: #5eead4;
+  --brand-accent: #fb923c;
+  --brand-accent-hover: #fdba74;
+  --brand-danger: #f87171;
+  --background: #021a18;
+  --foreground: #ecfdf8;
+  --card: #0a2a26;
+  --card-foreground: #ecfdf8;
+  --popover: #0a2a26;
+  --popover-foreground: #ecfdf8;
+  --primary: #2dd4bf;
+  --primary-foreground: #042f2e;
+  --secondary: #0f3d38;
+  --secondary-foreground: #ccfbf1;
+  --muted: #0f3d38;
+  --muted-foreground: #99f6e4;
+  --accent: #431407;
+  --accent-foreground: #fdba74;
+  --destructive: #f87171;
+  --border: #115e59;
+  --input: #134e4a;
+  --ring: #2dd4bf;
+  --chart-1: #2dd4bf;
+  --chart-2: #fb923c;
+  --chart-3: #f87171;
+  --chart-4: #22d3ee;
+  --chart-5: #99f6e4;
+  --sidebar: #041f1c;
+  --sidebar-foreground: #ecfdf8;
+  --sidebar-primary: #2dd4bf;
+  --sidebar-primary-foreground: #042f2e;
+  --sidebar-accent: #0f3d38;
+  --sidebar-accent-foreground: #ccfbf1;
+  --sidebar-border: #115e59;
+  --sidebar-ring: #2dd4bf;
 }
 
 @layer base {
@@ -102,8 +146,12 @@
     @apply font-sans;
   }
   body {
-    @apply bg-background text-foreground antialiased font-normal tracking-[0.01em];
+    @apply bg-background text-foreground antialiased font-normal;
     line-height: 1.55;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 0% -10%, color-mix(in oklab, var(--primary) 18%, transparent), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, color-mix(in oklab, var(--brand-accent) 14%, transparent), transparent);
+    background-attachment: fixed;
   }
   h1,
   h2,
@@ -111,7 +159,6 @@
     @apply font-semibold tracking-tight;
   }
   ::selection {
-    background: #ffe3b8;
-    color: #12352b;
+    background: color-mix(in oklab, var(--primary) 35%, transparent);
   }
 }

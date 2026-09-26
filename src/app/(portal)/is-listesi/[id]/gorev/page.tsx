@@ -5,21 +5,23 @@ import { addDaysKey, istanbulDayKey } from "@/lib/format"
 import { requireUser } from "@/lib/session"
 import { canCreateTask } from "@/lib/workflow"
 import { listAssignees } from "@/server/tasks"
+import { getWorkItem } from "@/server/work-items"
 import type { Metadata } from "next"
 import Link from "next/link"
 
-export const metadata: Metadata = { title: "Görev ver" }
+export const metadata: Metadata = { title: "İş ata" }
 
-export default async function NewTaskPage() {
+export default async function AssignFromWorkItemPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
   const user = await requireUser()
+  const { id } = await params
   if (!canCreateTask(user.role)) {
     return (
-      <div className="mx-auto max-w-lg rounded-xl bg-card px-6 py-12 text-center ring-1 ring-foreground/10">
-        <p className="text-xs tracking-[0.16em] text-muted-foreground uppercase">Yetki</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Bu hesap görev atayamaz</h1>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Bu hesap yalnızca kendisine atanan işleri görür, taslağı yükler ve onaydan sonra evrak kodunu işler.
-        </p>
+      <div className="mx-auto max-w-lg rounded-2xl border border-border bg-card px-6 py-12 text-center">
+        <h1 className="text-2xl font-semibold">Yetki yok</h1>
         <Button asChild className="mt-5">
           <Link href="/gorevler">Görevlere dön</Link>
         </Button>
@@ -27,9 +29,20 @@ export default async function NewTaskPage() {
     )
   }
 
+  const item = await getWorkItem(user, id)
   const people = await listAssignees(user)
   const drive = getDriveStatus()
   const defaultDue = addDaysKey(istanbulDayKey(new Date()), 3)
+  const description = [
+    `Mahkeme: ${item.courtName}`,
+    `Karşı taraf: ${item.opposingParty}`,
+    `Dosya: ${item.fileNumber}`,
+    "",
+    `Yapılacak iş: ${item.workToDo}`,
+    item.notes ? `Notlar: ${item.notes}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
 
   return (
     <div className="mx-auto grid max-w-3xl gap-5">
@@ -37,16 +50,27 @@ export default async function NewTaskPage() {
         <Link href="/is-listesi" className="text-sm text-muted-foreground hover:text-foreground">
           İş listesine dön
         </Link>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Görev ver</h1>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Görev ver</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          İş, seçtiğiniz avukat veya stajyere düşer. Üçüncü kişiler bu kaydı göremez.
+          {item.clientName} · {item.fileNumber}
         </p>
       </div>
       <div className="rounded-2xl border border-border bg-card p-4 md:p-6">
         {people.length === 0 ? (
           <p className="text-sm text-muted-foreground">Atanacak başka kullanıcı yok.</p>
         ) : (
-          <NewTaskForm people={people} defaultDue={defaultDue} drive={drive} />
+          <NewTaskForm
+            people={people}
+            defaultDue={defaultDue}
+            drive={drive}
+            prefill={{
+              workItemId: item.id,
+              title: item.workToDo,
+              clientName: item.clientName,
+              fileNumber: item.fileNumber,
+              description,
+            }}
+          />
         )}
       </div>
     </div>

@@ -33,10 +33,10 @@ function CreateUserForm() {
   useActionResult(state)
 
   return (
-    <form action={action} className="grid gap-3 rounded-2xl border border-[var(--brand-border)] bg-white p-4">
+    <form action={action} className="grid gap-3 rounded-2xl border border-border bg-card p-4">
       <div>
         <h2 className="text-xl font-semibold">Yeni kullanıcı</h2>
-        <p className="mt-1 text-sm text-[var(--brand-muted)]">
+        <p className="mt-1 text-sm text-muted-foreground">
           Giriş kullanıcı adı ve geçici parolayı kişiye iletin.
         </p>
       </div>
@@ -104,7 +104,7 @@ function CreateUserForm() {
         />
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={pending} className="bg-[var(--brand-primary)] font-semibold">
+        <Button type="submit" disabled={pending} className="bg-primary font-semibold">
           {pending ? "Ekleniyor…" : "Kullanıcıyı ekle"}
         </Button>
       </div>
@@ -178,12 +178,12 @@ export function UsersManager({ users }: { users: ManagedUser[] }) {
   return (
     <div className="grid gap-5">
       <CreateUserForm />
-      <section className="overflow-hidden rounded-2xl border border-[var(--brand-border)] bg-white">
-        <div className="border-b border-[var(--brand-border)] px-4 py-3">
+      <section className="overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="border-b border-border px-4 py-3">
           <h2 className="text-xl font-semibold">Büro kullanıcıları</h2>
-          <p className="text-sm text-[var(--brand-muted)]">Giriş kullanıcı adı ile yapılır.</p>
+          <p className="text-sm text-muted-foreground">Giriş kullanıcı adı ile yapılır.</p>
         </div>
-        <ul className="divide-y divide-[var(--brand-border)]">
+        <ul className="divide-y divide-border">
           {users.map((user) => (
             <li
               key={user.id}
@@ -193,19 +193,19 @@ export function UsersManager({ users }: { users: ManagedUser[] }) {
                 <p className="text-sm font-semibold">
                   {user.name}
                   {user.isSelf ? (
-                    <span className="ml-2 text-xs font-normal text-[var(--brand-muted)]">(siz)</span>
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">(siz)</span>
                   ) : null}
                   {user.isDemo ? (
-                    <span className="ml-2 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 text-[11px] text-[var(--brand-primary)]">
+                    <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] text-primary">
                       Deneme
                     </span>
                   ) : null}
                 </p>
-                <p className="text-sm text-[var(--brand-muted)]">
+                <p className="text-sm text-muted-foreground">
                   @{user.username} · {user.title} · {user.roleLabel}
                   {user.email ? ` · ${user.email}` : ""}
                 </p>
-                <p className="text-xs text-[var(--brand-muted)]">
+                <p className="text-xs text-muted-foreground">
                   {user.taskCount} görev kaydı
                   {!user.canDelete && !user.isSelf
                     ? " · silmek için önce bağlı işler temizlenmeli"

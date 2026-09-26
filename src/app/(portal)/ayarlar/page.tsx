@@ -32,13 +32,13 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto grid max-w-5xl gap-6">
       <div>
-        <p className="text-xs font-bold tracking-[0.14em] text-[var(--brand-muted)] uppercase">
+        <p className="text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">
           {formatTodayLabel()}
         </p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight md:text-4xl">
           {greeting()}, {firstName}
         </h1>
-        <p className="mt-2 text-sm font-medium text-[var(--brand-muted)]">
+        <p className="mt-2 text-sm font-medium text-muted-foreground">
           {user.title || roleLabel(user.role)} · {user.email}
         </p>
       </div>
@@ -64,28 +64,28 @@ export default async function SettingsPage() {
           <Link
             key={stat.label}
             href={stat.href}
-            className="rounded-2xl border border-[var(--brand-border)] bg-white p-4 shadow-[0_1px_0_rgba(15,61,46,0.04)] transition hover:border-[var(--brand-accent)] hover:bg-[var(--brand-soft)]"
+            className="rounded-2xl border border-border bg-card p-4 transition hover:border-primary/40 hover:bg-muted/50"
           >
-            <p className="text-xs font-bold tracking-wide text-[var(--brand-muted)] uppercase">
+            <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
               {stat.label}
             </p>
-            <p className="mt-2 text-3xl font-bold text-[var(--brand-ink)]">{stat.value}</p>
+            <p className="mt-2 text-3xl font-bold text-foreground">{stat.value}</p>
           </Link>
         ))}
       </section>
 
       {calls.length > 0 ? (
-        <section className="rounded-2xl border border-[var(--brand-border)] bg-white p-4">
+        <section className="rounded-2xl border border-border bg-card p-4">
           <h2 className="flex items-center gap-2 text-lg font-bold">
-            <Phone className="size-5 text-[var(--brand-danger)]" />
+            <Phone className="size-5 text-destructive" />
             Arama yapılacak
           </h2>
-          <ul className="mt-3 divide-y divide-[var(--brand-border)]">
+          <ul className="mt-3 divide-y divide-border">
             {calls.slice(0, 6).map((item) => (
               <li key={item.id} className="py-3">
                 <Link href={`/gorevler/${item.id}`} className="block">
                   <span className="block text-sm font-bold">{item.clientName}</span>
-                  <span className="text-sm font-medium text-[var(--brand-muted)]">{item.title}</span>
+                  <span className="text-sm font-medium text-muted-foreground">{item.title}</span>
                 </Link>
               </li>
             ))}
@@ -94,18 +94,18 @@ export default async function SettingsPage() {
       ) : null}
 
       {manageUsers ? (
-        <section className="rounded-2xl border border-[var(--brand-border)] bg-white p-4">
+        <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="flex items-center gap-2 text-lg font-bold">
-                <Users className="size-5 text-[var(--brand-primary)]" />
+                <Users className="size-5 text-primary" />
                 Kullanıcılar
               </h2>
-              <p className="mt-1 text-sm font-medium text-[var(--brand-muted)]">
+              <p className="mt-1 text-sm font-medium text-muted-foreground">
                 Avukat ve stajyer ekleyin veya silin.
               </p>
             </div>
-            <Button asChild className="bg-[var(--brand-primary)] font-bold hover:bg-[var(--brand-primary-hover)]">
+            <Button asChild className="font-bold">
               <Link href="/kullanicilar">Kullanıcı paneli</Link>
             </Button>
           </div>
@@ -113,7 +113,7 @@ export default async function SettingsPage() {
       ) : null}
 
       {overview ? (
-        <section className="rounded-2xl border border-[var(--brand-border)] bg-white p-4">
+        <section className="rounded-2xl border border-border bg-card p-4">
           <h2 className="text-lg font-bold">Büro özeti</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-4">
             {[
@@ -122,8 +122,8 @@ export default async function SettingsPage() {
               { label: "Arama", value: overview.counts.calls },
               { label: "Kullanıcı", value: overview.counts.users },
             ].map((stat) => (
-              <div key={stat.label} className="rounded-xl bg-[var(--brand-soft)] px-3 py-2">
-                <p className="text-[11px] font-bold tracking-wide text-[var(--brand-muted)] uppercase">
+              <div key={stat.label} className="rounded-xl bg-muted px-3 py-2">
+                <p className="text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
                   {stat.label}
                 </p>
                 <p className="text-2xl font-bold">{stat.value}</p>
@@ -131,9 +131,9 @@ export default async function SettingsPage() {
             ))}
           </div>
 
-          <div className="mt-5 border-t border-[var(--brand-border)] pt-4">
+          <div className="mt-5 border-t border-border pt-4">
             <h3 className="font-bold">Örnek veriyi sıfırla</h3>
-            <p className="mt-1 text-sm font-medium text-[var(--brand-muted)]">
+            <p className="mt-1 text-sm font-medium text-muted-foreground">
               Seed işlerini ve @vekalet.local hesaplarını siler. Sizin hesabınız kalır.
             </p>
             <div className="mt-3">
@@ -142,9 +142,9 @@ export default async function SettingsPage() {
           </div>
 
           {overview.recentTasks.length > 0 ? (
-            <div className="mt-5 border-t border-[var(--brand-border)] pt-4">
+            <div className="mt-5 border-t border-border pt-4">
               <h3 className="font-bold">Son işler</h3>
-              <ul className="mt-2 divide-y divide-[var(--brand-border)]">
+              <ul className="mt-2 divide-y divide-border">
                 {overview.recentTasks.slice(0, 6).map((task) => (
                   <li key={task.id}>
                     <Link
@@ -153,7 +153,7 @@ export default async function SettingsPage() {
                     >
                       <span>
                         <span className="block text-sm font-bold">{task.title}</span>
-                        <span className="text-xs font-medium text-[var(--brand-muted)]">
+                        <span className="text-xs font-medium text-muted-foreground">
                           {task.clientName} · {CLIENT_CALL_META[task.clientCallStatus]}
                         </span>
                       </span>
@@ -167,7 +167,7 @@ export default async function SettingsPage() {
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-[var(--brand-border)] bg-white p-4">
+      <section className="rounded-2xl border border-border bg-card p-4">
         <h2 className="text-lg font-bold">Parola</h2>
         <div className="mt-3">
           <PasswordForm />

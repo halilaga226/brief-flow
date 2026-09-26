@@ -53,6 +53,7 @@ export async function createTaskAction(
         description: readText(formData, "description"),
         dueDate: parseDueDate(readText(formData, "dueDate")),
         assigneeId: readText(formData, "assigneeId"),
+        workItemId: readText(formData, "workItemId") || null,
       },
       file instanceof File ? file : null,
     )
@@ -60,6 +61,7 @@ export async function createTaskAction(
     return actionError(error)
   }
   revalidateTask(taskId)
+  revalidatePath("/is-listesi")
   redirect(`/gorevler/${taskId}`)
 }
 

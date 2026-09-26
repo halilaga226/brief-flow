@@ -25,15 +25,15 @@ function dueText(task: TaskCardDTO) {
 }
 
 function dueClass(tone: DueTone) {
-  if (tone === "overdue" || tone === "today") return "text-[var(--brand-danger)]"
-  if (tone === "soon") return "text-[#b45309]"
-  return "text-[var(--brand-muted)]"
+  if (tone === "overdue" || tone === "today") return "text-destructive"
+  if (tone === "soon") return "text-[var(--brand-accent)]"
+  return "text-muted-foreground"
 }
 
 function toneRing(tone: VisualTone) {
-  if (tone === "red") return "ring-red-300 bg-red-50/70"
-  if (tone === "yellow") return "ring-yellow-300 bg-yellow-50/80"
-  return "ring-zinc-200 bg-white"
+  if (tone === "red") return "ring-destructive/40 bg-destructive/10"
+  if (tone === "yellow") return "ring-[var(--brand-accent)]/40 bg-accent"
+  return "ring-border bg-card"
 }
 
 function HistoryButton({ task }: { task: TaskCardDTO }) {
@@ -51,7 +51,7 @@ function HistoryButton({ task }: { task: TaskCardDTO }) {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80">
-        <p className="mb-2 text-xs font-medium text-zinc-500">İşlem geçmişi</p>
+        <p className="mb-2 text-xs font-medium text-muted-foreground">İşlem geçmişi</p>
         <div className="max-h-80 overflow-y-auto">
           <TaskTimeline events={task.logs} />
         </div>
@@ -92,18 +92,18 @@ function CardBody({ task }: { task: TaskCardDTO }) {
   return (
     <>
       <div className="relative z-10 flex items-start justify-between gap-2 pointer-events-none">
-        <p className="text-[11px] text-zinc-500">{task.relationLabel}</p>
+        <p className="text-[11px] text-muted-foreground">{task.relationLabel}</p>
         <div className="pointer-events-auto">
           <HistoryButton task={task} />
         </div>
       </div>
       <h2 className="relative mt-1 text-sm leading-snug font-semibold">{task.title}</h2>
-      <p className="mt-1 text-xs text-zinc-500">
+      <p className="mt-1 text-xs text-muted-foreground">
         {task.clientName}
         <span className="px-1">·</span>
         <span className="font-mono">{task.fileNumber}</span>
       </p>
-      <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-zinc-600">{task.description}</p>
+      <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{task.description}</p>
       <div className="mt-3 flex items-center justify-between gap-2 text-xs">
         <span className={cn("font-medium", dueClass(task.dueTone))}>{dueText(task)}</span>
         <StatusBadge status={task.status} />
@@ -115,9 +115,9 @@ function CardBody({ task }: { task: TaskCardDTO }) {
 export function TaskBoard({ tasks, view }: { tasks: TaskCardDTO[]; view: TaskView }) {
   if (tasks.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-14 text-center">
+      <div className="rounded-xl border border-dashed border-border bg-muted/40 px-6 py-14 text-center">
         <p className="text-lg font-semibold">Bu görünümde iş yok</p>
-        <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
           Süzgeci temizleyin. Yönetici değilseniz yalnızca tarafı olduğunuz işler listelenir.
         </p>
       </div>
@@ -126,8 +126,8 @@ export function TaskBoard({ tasks, view }: { tasks: TaskCardDTO[]; view: TaskVie
 
   if (view === "liste") {
     return (
-      <div className="overflow-hidden rounded-2xl border border-[var(--brand-border)] bg-white shadow-[0_1px_0_rgba(15,61,46,0.04)]">
-        <div className="hidden grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr_auto] gap-3 border-b border-[var(--brand-border)] px-4 py-2 text-xs font-bold text-[var(--brand-muted)] md:grid">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="hidden grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr_auto] gap-3 border-b border-border px-4 py-2 text-xs font-bold text-muted-foreground md:grid">
           <span>İş</span>
           <span>Müvekkil</span>
           <span>Durum</span>
@@ -136,23 +136,23 @@ export function TaskBoard({ tasks, view }: { tasks: TaskCardDTO[]; view: TaskVie
         </div>
         <ul>
           {tasks.map((task) => (
-            <li key={task.id} className="border-b border-[var(--brand-border)] last:border-b-0">
+            <li key={task.id} className="border-b border-border last:border-b-0">
               <HoverCard openDelay={400}>
                 <HoverCardTrigger asChild>
                   <div
                     className={cn(
                       "relative grid gap-2 px-3 py-3.5 sm:px-4 md:grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr_auto] md:items-center",
-                      task.visualTone === "red" && "bg-[#fff5f3]",
-                      task.visualTone === "yellow" && "bg-[#fff9ef]",
+                      task.visualTone === "red" && "bg-destructive/10",
+                      task.visualTone === "yellow" && "bg-accent/60",
                     )}
                   >
                     <Link href={`/gorevler/${task.id}`} className="absolute inset-0" aria-label={task.title} />
                     <div className="min-w-0 pr-8 md:pr-0">
                       <p className="text-sm font-semibold leading-snug">{task.title}</p>
-                      <p className="mt-0.5 text-xs font-semibold text-[var(--brand-muted)] md:hidden">
+                      <p className="mt-0.5 text-xs font-semibold text-muted-foreground md:hidden">
                         {task.clientName} · {task.fileNumber}
                       </p>
-                      <p className="text-[11px] font-medium text-[var(--brand-muted)]">{task.relationLabel}</p>
+                      <p className="text-[11px] font-medium text-muted-foreground">{task.relationLabel}</p>
                       <div className="mt-2 flex flex-wrap items-center gap-2 md:hidden">
                         <StatusBadge status={task.status} />
                         <span className={cn("text-xs font-bold", dueClass(task.dueTone))}>{dueText(task)}</span>
@@ -160,7 +160,7 @@ export function TaskBoard({ tasks, view }: { tasks: TaskCardDTO[]; view: TaskVie
                     </div>
                     <p className="hidden text-sm font-semibold md:block">
                       {task.clientName}
-                      <span className="mt-0.5 block font-mono text-xs font-medium text-[var(--brand-muted)]">
+                      <span className="mt-0.5 block font-mono text-xs font-medium text-muted-foreground">
                         {task.fileNumber}
                       </span>
                     </p>
@@ -195,20 +195,20 @@ export function TaskBoard({ tasks, view }: { tasks: TaskCardDTO[]; view: TaskVie
         return (
           <section
             key={column.status}
-            className="flex w-[82vw] max-w-80 shrink-0 flex-col rounded-xl border border-zinc-200 bg-zinc-50 p-2 xl:w-auto xl:min-w-0 xl:flex-1"
+            className="flex w-[82vw] max-w-80 shrink-0 flex-col rounded-xl border border-border bg-muted/40 p-2 xl:w-auto xl:min-w-0 xl:flex-1"
           >
             <header className="flex items-center justify-between px-1 py-1.5">
               <div>
                 <p className="text-sm font-semibold">{column.title}</p>
-                <p className="text-[11px] text-zinc-500">{column.description}</p>
+                <p className="text-[11px] text-muted-foreground">{column.description}</p>
               </div>
-              <span className="rounded-full bg-white px-2 py-0.5 text-xs ring-1 ring-zinc-200">
+              <span className="rounded-full bg-card px-2 py-0.5 text-xs ring-1 ring-border">
                 {items.length}
               </span>
             </header>
             <div className="mt-1 grid max-h-[70vh] gap-2 overflow-y-auto pr-0.5">
               {items.length === 0 ? (
-                <p className="px-2 py-6 text-center text-xs text-zinc-400">Boş</p>
+                <p className="px-2 py-6 text-center text-xs text-muted-foreground">Boş</p>
               ) : (
                 items.map((task) => (
                   <TaskSurface key={task.id} task={task}>

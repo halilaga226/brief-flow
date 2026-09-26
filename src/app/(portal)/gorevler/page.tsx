@@ -72,8 +72,8 @@ export default async function TasksPage({
   return (
     <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-6">
       <aside className="lg:sticky lg:top-20 lg:self-start">
-        <div className="rounded-2xl border border-[var(--brand-border)] bg-white p-2">
-          <p className="px-2 py-1.5 text-xs font-semibold tracking-wide text-[var(--brand-muted)] uppercase">
+        <div className="rounded-2xl border border-border bg-card p-2">
+          <p className="px-2 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             Klasörler
           </p>
           <nav className="mt-1 grid gap-0.5">
@@ -90,8 +90,8 @@ export default async function TasksPage({
                   className={cn(
                     "flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm transition",
                     active
-                      ? "bg-[var(--brand-soft)] font-semibold text-[var(--brand-primary)]"
-                      : "font-medium text-[var(--brand-ink)]/80 hover:bg-[var(--brand-soft)]/70",
+                      ? "bg-primary font-semibold text-primary-foreground shadow-sm"
+                      : "font-medium text-foreground/80 hover:bg-muted",
                   )}
                 >
                   <Icon className="size-4 shrink-0 opacity-80" />
@@ -108,25 +108,17 @@ export default async function TasksPage({
         <div className="flex items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{activeFolder.label}</h1>
-            <p className="mt-1 text-sm text-[var(--brand-muted)]">{visible.length} iş</p>
+            <p className="mt-1 text-sm text-muted-foreground">{visible.length} iş</p>
           </div>
           {canCreateTask(user.role) ? (
             <>
-              <Button
-                asChild
-                className="bg-[var(--brand-accent)] font-semibold text-[var(--brand-ink)] hover:bg-[var(--brand-accent-hover)] md:hidden"
-                size="icon"
-                aria-label="Yeni görev"
-              >
+              <Button asChild size="icon" aria-label="Görev ver" className="md:hidden">
                 <Link href="/gorevler/yeni">
                   <Plus />
                 </Link>
               </Button>
-              <Button
-                asChild
-                className="hidden bg-[var(--brand-accent)] font-semibold text-[var(--brand-ink)] hover:bg-[var(--brand-accent-hover)] md:inline-flex"
-              >
-                <Link href="/gorevler/yeni">Yeni görev</Link>
+              <Button asChild className="hidden font-semibold md:inline-flex">
+                <Link href="/gorevler/yeni">Görev ver</Link>
               </Button>
             </>
           ) : null}
@@ -143,8 +135,8 @@ export default async function TasksPage({
                 className={cn(
                   "shrink-0 rounded-full px-3 py-1.5 text-sm ring-1",
                   active
-                    ? "bg-[var(--brand-primary)] font-semibold text-white ring-[var(--brand-primary)]"
-                    : "bg-white font-medium text-[var(--brand-ink)] ring-[var(--brand-border)]",
+                    ? "bg-primary font-semibold text-primary-foreground ring-primary"
+                    : "bg-card font-medium text-foreground ring-border",
                 )}
               >
                 {item.label}
@@ -158,38 +150,31 @@ export default async function TasksPage({
           {filter !== "tum" ? <input type="hidden" name="filtre" value={filter} /> : null}
           {view === "pano" ? <input type="hidden" name="gorunum" value="pano" /> : null}
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-[var(--brand-muted)]" />
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               name="q"
               defaultValue={query}
               placeholder="Müvekkil, dosya no, başlık"
               aria-label="Görev ara"
-              className="h-11 rounded-xl border-[var(--brand-border)] bg-white pl-8"
+              className="h-11 rounded-xl bg-card pl-8"
             />
           </div>
-          <Button
-            type="submit"
-            variant="secondary"
-            className="h-11 rounded-xl bg-[var(--brand-soft)] font-semibold text-[var(--brand-ink)]"
-          >
+          <Button type="submit" variant="secondary" className="h-11 rounded-xl font-semibold">
             Ara
           </Button>
         </form>
 
         {tasks.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--brand-border)] bg-white px-6 py-16 text-center">
+          <div className="rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center">
             <p className="text-2xl font-semibold tracking-tight">Henüz iş yok</p>
-            <p className="mx-auto mt-2 max-w-md text-sm text-[var(--brand-muted)]">
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
               {canCreateTask(user.role)
-                ? "Bir stajyere veya avukata ilk işi atayın."
+                ? "İş listesinden kayıt ekleyip görev atayın."
                 : "Size iş atandığında burada görünür."}
             </p>
             {canCreateTask(user.role) ? (
-              <Button
-                asChild
-                className="mt-4 bg-[var(--brand-primary)] font-semibold hover:bg-[var(--brand-primary-hover)]"
-              >
-                <Link href="/gorevler/yeni">İlk görevi ata</Link>
+              <Button asChild className="mt-4 font-semibold">
+                <Link href="/is-listesi">İş listesine git</Link>
               </Button>
             ) : null}
           </div>

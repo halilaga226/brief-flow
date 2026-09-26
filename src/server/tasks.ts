@@ -153,6 +153,7 @@ export async function createTask(
     description: string
     dueDate: Date | null
     assigneeId: string
+    workItemId?: string | null
   },
   file?: File | null,
 ) {
@@ -166,6 +167,16 @@ export async function createTask(
   }
   const assignee = await prisma.user.findUnique({ where: { id: input.assigneeId } })
   if (!assignee) throw new WorkflowError("Atanacak kişi bulunamadı.")
+
+  let workItemId: string | null = null
+  if (input.workItemId) {
+    const workItem = await prisma.workItem.findUnique({ where: { id: input.workItemId } })
+    if (!workItem) throw new WorkflowError("İş listesi kaydı bulunamadı.")
+    if (!isAdmin(actor.role) && workItem.ownerId !== actor.id) {
+      throw new WorkflowError("Bu iş kaydından görev atayamazsınız.")
+    }
+    workItemId = workItem.id
+  }
 
   let stored: StoredFile | null = null
   if (file && file.size > 0) {
@@ -183,6 +194,7 @@ export async function createTask(
         status: "ATANDI",
         assignerId: actor.id,
         assigneeId: assignee.id,
+        workItemId,
         files: stored
           ? {
               create: {
