@@ -8,7 +8,7 @@ export default function PortalNotFound() {
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         Kayıt yok ya da taraflarından biri değilsiniz. Başka bir avukatın işi burada açılmaz.
       </p>
-      <Button asChild className="mt-5 bg-[#16324f]">
+      <Button asChild className="mt-5">
         <Link href="/gorevler">Görevlere dön</Link>
       </Button>
     </div>

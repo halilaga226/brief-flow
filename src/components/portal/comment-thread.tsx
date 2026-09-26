@@ -45,14 +45,14 @@ export function CommentThread({
                 <div
                   className={cn(
                     "max-w-[85%] rounded-2xl px-3 py-2",
-                    mine ? "bg-[#16324f] text-[#f6f3ec]" : "bg-[#f7f4ee] ring-1 ring-border",
+                    mine ? "bg-primary text-primary-foreground" : "bg-muted ring-1 ring-border",
                   )}
                 >
-                  <p className={cn("text-xs", mine ? "text-white/70" : "text-muted-foreground")}>
+                  <p className={cn("text-xs", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
                     {comment.authorName} · {comment.authorTitle}
                   </p>
                   <p className="mt-1 text-sm whitespace-pre-wrap">{comment.body}</p>
-                  <p className={cn("mt-1 text-[11px]", mine ? "text-white/60" : "text-muted-foreground")}>
+                  <p className={cn("mt-1 text-[11px]", mine ? "text-primary-foreground/60" : "text-muted-foreground")}>
                     {comment.when}
                   </p>
                 </div>

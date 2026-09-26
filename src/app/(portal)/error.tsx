@@ -9,7 +9,7 @@ export default function PortalError({ reset }: { error: Error; reset: () => void
       <p className="mt-2 text-sm text-muted-foreground">
         Kayıt okunurken bir sorun oluştu. Yeniden deneyin.
       </p>
-      <Button type="button" className="mt-5 bg-[#16324f]" onClick={() => reset()}>
+      <Button type="button" className="mt-5" onClick={() => reset()}>
         Yeniden dene
       </Button>
     </div>

@@ -12,7 +12,7 @@ export function TaskTimeline({ events }: { events: TimelineEventDTO[] }) {
           {index !== events.length - 1 ? (
             <span className="absolute top-2 bottom-0 left-[5px] w-px bg-border" />
           ) : null}
-          <span className="absolute top-1.5 left-0 size-2.5 rounded-full bg-[#16324f] ring-2 ring-card" />
+          <span className="absolute top-1.5 left-0 size-2.5 rounded-full bg-primary ring-2 ring-card" />
           <p className="text-sm leading-tight font-medium">{event.label}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {event.actorName} · {event.when}

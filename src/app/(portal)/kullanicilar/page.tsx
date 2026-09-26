@@ -17,7 +17,7 @@ export default async function UsersPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           Kullanıcı ekleme ve silme yalnızca avukatlara açıktır.
         </p>
-        <Button asChild className="mt-5 bg-[#16324f]">
+        <Button asChild className="mt-5">
           <Link href="/gorevler">Görevlere dön</Link>
         </Button>
       </div>
@@ -28,11 +28,11 @@ export default async function UsersPage() {
   return (
     <div className="mx-auto grid max-w-3xl gap-5">
       <div>
-        <p className="text-xs font-bold tracking-[0.14em] text-[var(--brand-muted)] uppercase">Büro</p>
+        <p className="text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">Büro</p>
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
           Kullanıcılar
         </h1>
-        <p className="mt-2 text-sm font-semibold text-[var(--brand-muted)]">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           Avukat ve stajyer hesaplarını buradan açın veya silin.
         </p>
       </div>

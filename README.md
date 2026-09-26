@@ -27,11 +27,11 @@ Görevler varsayılan olarak **liste** görünümündedir. Pano isteğe bağlıd
 
 ## Örnek veriyi kaldırma (sıfırdan başlama)
 
-1. Yönetici hesabıyla giriş yapın (`avukathalilkarakaya@gmail.com` veya oluşturduğunuz ADMIN).
-2. Sol menüden **Yönetim** açın.
+1. Yönetici hesabıyla giriş yapın (kullanıcı adı: `halil` veya oluşturduğunuz ADMIN).
+2. Sol menüden **Ayarlar** açın.
 3. **Örnek işleri ve hesapları sil** → onaylayın.
 4. Tüm görevler ve `@vekalet.local` deneme hesapları silinir. Kendi yönetici hesabınız kalır.
-5. **Kullanıcılar** sayfasından gerçek avukat/stajyer ekleyip yeni iş atayın.
+5. **Kullanıcılar** sayfasından gerçek avukat/stajyer ekleyip iş listesinden veya Görev ver ile yeni iş atayın.
 
 Örnek hesapla girişliyken temizleme yapılamaz; önce kendi yönetici hesabınızla girin.
 
@@ -50,16 +50,16 @@ Veritabanı PostgreSQL / Supabase pooler ile çalışır (`DATABASE_URL`, `DIREC
 
 ## Deneme hesapları
 
-Ortak parola: `Vekalet2026!`
+`DEMO_LOGIN=true` iken giriş ekranında görünür. Ortak parola: `Vekalet2026!`
 
-| Kişi | Rol | E-posta |
+| Kişi | Rol | Kullanıcı adı |
 | --- | --- | --- |
-| Ayşe Demir | Kıdemli avukat | ayse.demir@vekalet.local |
-| Mehmet Kaya | Avukat | mehmet.kaya@vekalet.local |
-| Elif Yılmaz | Stajyer | elif.yilmaz@vekalet.local |
-| Can Öztürk | Stajyer | can.ozturk@vekalet.local |
+| Ayşe Demir | Kıdemli avukat | ayse.demir |
+| Mehmet Kaya | Avukat | mehmet.kaya |
+| Elif Yılmaz | Stajyer | elif.yilmaz |
+| Can Öztürk | Stajyer | can.ozturk |
 
-Yönetim panelinden silinene kadar giriş ekranında görünürler.
+Ayarlar’dan örnek veri silinene kadar kullanılabilir.
 
 ## Google Drive
 

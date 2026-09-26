@@ -39,8 +39,8 @@ export default async function FilePreviewPage({
         Göreve dön
       </Link>
       <div className="mt-4 rounded-xl bg-card p-6 ring-1 ring-foreground/10">
-        <FileText className="size-8 text-[#16324f]" />
-        <h1 className="mt-3 font-serif text-3xl">Dosya içeriği burada yok</h1>
+        <FileText className="size-8 text-primary" />
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Dosya içeriği burada yok</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           {file.storageMode === "google"
             ? "Bu kayıt Google Drive üzerindeki dosyaya işaret eder."
@@ -72,7 +72,7 @@ export default async function FilePreviewPage({
         </dl>
         <div className="mt-5 flex flex-wrap gap-2">
           {external ? (
-            <Button asChild className="bg-[#16324f]">
+            <Button asChild>
               <a href={external} target="_blank" rel="noreferrer">
                 Google Drive bağlantısı
               </a>

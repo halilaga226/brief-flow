@@ -48,6 +48,7 @@ async function main() {
   await prisma.taskLog.deleteMany()
   await prisma.taskFile.deleteMany()
   await prisma.task.deleteMany()
+  await prisma.workItem.deleteMany()
   await prisma.user.deleteMany()
 
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10)

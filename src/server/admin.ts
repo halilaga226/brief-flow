@@ -17,7 +17,7 @@ export async function getAdminOverview(actor: SessionUser) {
         where: {
           OR: [
             { email: { endsWith: "@vekalet.local" } },
-            { username: { in: ["ayse.demir", "mehmet.kaya", "elif.yilmaz", "can.ozturk"] } },
+            { username: { in: ["ayse.demir", "mehmet.kaya", "elif.yilmaz", "can.ozturk", "demo.avukat", "demo.stajyer"] } },
           ],
         },
         select: { id: true, name: true, email: true, username: true },
@@ -66,7 +66,7 @@ export async function clearDemoData(actor: SessionUser) {
     where: {
       OR: [
         { email: { endsWith: "@vekalet.local" } },
-        { username: { in: ["ayse.demir", "mehmet.kaya", "elif.yilmaz", "can.ozturk"] } },
+        { username: { in: ["ayse.demir", "mehmet.kaya", "elif.yilmaz", "can.ozturk", "demo.avukat", "demo.stajyer"] } },
       ],
     },
     select: { id: true },
@@ -76,6 +76,7 @@ export async function clearDemoData(actor: SessionUser) {
   const result = await prisma.$transaction(async (tx) => {
     const tasks = await tx.task.deleteMany({})
     if (demoIds.length > 0) {
+      await tx.workItem.deleteMany({ where: { ownerId: { in: demoIds } } })
       await tx.notification.deleteMany({ where: { userId: { in: demoIds } } })
       await tx.user.deleteMany({ where: { id: { in: demoIds } } })
     }

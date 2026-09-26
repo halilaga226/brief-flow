@@ -9,14 +9,15 @@ import { Textarea } from "@/components/ui/textarea"
 import type { WorkItemDTO } from "@/server/work-items"
 import { Plus, Trash2, UserPlus } from "lucide-react"
 import Link from "next/link"
-import { useActionState } from "react"
+import { useActionState, useRef } from "react"
 
 function CreateWorkItemForm() {
   const [state, action, pending] = useActionState(createWorkItemAction, null)
-  useActionResult(state)
+  const formRef = useRef<HTMLFormElement>(null)
+  useActionResult(state, () => formRef.current?.reset())
 
   return (
-    <form action={action} className="grid gap-4 rounded-2xl border border-border bg-card p-4 md:p-5">
+    <form ref={formRef} action={action} className="grid gap-4 rounded-2xl border border-border bg-card p-4 md:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Yeni iş</h2>
