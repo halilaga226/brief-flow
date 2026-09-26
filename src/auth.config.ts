@@ -15,7 +15,8 @@ export const authConfig = {
       if (pathname.startsWith("/api/auth")) return true
       if (pathname === "/giris") {
         if (loggedIn) {
-          return NextResponse.redirect(new URL("/gorevler", request.nextUrl))
+          const dest = auth?.user?.role === "INTERN" ? "/gorevler" : "/is-listesi"
+          return NextResponse.redirect(new URL(dest, request.nextUrl))
         }
         return true
       }
