@@ -179,3 +179,12 @@
     background: color-mix(in oklab, var(--primary) 35%, transparent);
   }
 }
+
+@keyframes login-drift {
+  from {
+    transform: scale(1.05) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.12) translate3d(-1.5%, -1%, 0);
+  }
+}
