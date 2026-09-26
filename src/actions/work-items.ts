@@ -27,6 +27,7 @@ export async function createWorkItemAction(
       opposingParty: readText(formData, "opposingParty"),
       courtName: readText(formData, "courtName"),
       fileNumber: readText(formData, "fileNumber"),
+      courtFile: readText(formData, "courtFile"),
       workToDo: readText(formData, "workToDo"),
       notes: readText(formData, "notes"),
     })

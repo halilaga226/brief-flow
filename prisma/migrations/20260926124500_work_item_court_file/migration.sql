@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "WorkItem" ADD COLUMN IF NOT EXISTS "courtFile" TEXT NOT NULL DEFAULT '';

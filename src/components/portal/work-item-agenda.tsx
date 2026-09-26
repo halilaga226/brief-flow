@@ -17,15 +17,12 @@ function CreateWorkItemForm() {
   useActionResult(state, () => formRef.current?.reset())
 
   return (
-    <form ref={formRef} action={action} className="grid gap-4 rounded-2xl border border-border bg-card p-4 md:p-5">
+    <form ref={formRef} action={action} className="glass grid gap-4 rounded-2xl p-4 md:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight">Yeni iş</h2>
-          <p className="text-sm text-muted-foreground">Ajandaya ekleyin, satırdan görev atayın.</p>
-        </div>
+        <h2 className="text-lg font-semibold tracking-tight">Yeni iş</h2>
         <Button type="submit" disabled={pending} className="font-semibold">
           <Plus />
-          {pending ? "Ekleniyor…" : "Listeye ekle"}
+          {pending ? "…" : "Ekle"}
         </Button>
       </div>
       {state?.error ? (
@@ -35,28 +32,32 @@ function CreateWorkItemForm() {
       ) : null}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <div className="grid gap-1.5">
-          <Label htmlFor="clientName">Müvekkil adı</Label>
-          <Input id="clientName" name="clientName" required className="h-10" placeholder="Deniz Acar" />
+          <Label htmlFor="clientName">Müvekkil</Label>
+          <Input id="clientName" name="clientName" required className="h-10" />
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="opposingParty">Karşı taraf</Label>
-          <Input id="opposingParty" name="opposingParty" required className="h-10" placeholder="XYZ A.Ş." />
+          <Input id="opposingParty" name="opposingParty" required className="h-10" />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="courtName">Mahkeme adı</Label>
-          <Input id="courtName" name="courtName" required className="h-10" placeholder="İstanbul 5. İş Mahkemesi" />
+          <Label htmlFor="courtName">Mahkeme</Label>
+          <Input id="courtName" name="courtName" required className="h-10" />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="fileNumber">Dosya numarası</Label>
-          <Input id="fileNumber" name="fileNumber" required className="h-10" placeholder="2026/184 Esas" />
+          <Label htmlFor="fileNumber">Dava dosyası</Label>
+          <Input id="fileNumber" name="fileNumber" required className="h-10" />
         </div>
-        <div className="grid gap-1.5 sm:col-span-2">
+        <div className="grid gap-1.5">
+          <Label htmlFor="courtFile">Mahkeme dosyası</Label>
+          <Input id="courtFile" name="courtFile" required className="h-10" />
+        </div>
+        <div className="grid gap-1.5">
           <Label htmlFor="workToDo">Yapılacak iş</Label>
-          <Input id="workToDo" name="workToDo" required className="h-10" placeholder="İşe iade dilekçesi" />
+          <Input id="workToDo" name="workToDo" required className="h-10" />
         </div>
         <div className="grid gap-1.5 sm:col-span-2 xl:col-span-3">
           <Label htmlFor="notes">Notlar</Label>
-          <Textarea id="notes" name="notes" rows={2} placeholder="Süre, belgeler, ek not…" />
+          <Textarea id="notes" name="notes" rows={2} />
         </div>
       </div>
     </form>
@@ -88,49 +89,40 @@ export function WorkItemAgenda({ items }: { items: WorkItemDTO[] }) {
     <div className="grid gap-5">
       <CreateWorkItemForm />
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-card">
+      <section className="glass overflow-hidden rounded-2xl">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">Ajanda</h2>
-            <p className="text-sm text-muted-foreground">{items.length} kayıt</p>
-          </div>
+          <h2 className="text-lg font-semibold tracking-tight">Ajanda</h2>
+          <p className="text-sm text-muted-foreground">{items.length}</p>
         </div>
 
         {items.length === 0 ? (
-          <p className="px-4 py-14 text-center text-sm text-muted-foreground">
-            Henüz kayıt yok. Yukarıdan müvekkil işi ekleyin.
-          </p>
+          <p className="px-4 py-14 text-center text-sm text-muted-foreground">Kayıt yok</p>
         ) : (
           <>
             <div className="hidden overflow-x-auto xl:block">
-              <table className="w-full min-w-[960px] text-left text-sm">
-                <thead className="border-b border-border bg-muted/50 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <table className="w-full min-w-[1020px] text-left text-sm">
+                <thead className="border-b border-border bg-muted/40 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   <tr>
                     <th className="px-4 py-3 font-semibold">Müvekkil</th>
                     <th className="px-4 py-3 font-semibold">Karşı taraf</th>
                     <th className="px-4 py-3 font-semibold">Mahkeme</th>
-                    <th className="px-4 py-3 font-semibold">Dosya no</th>
-                    <th className="px-4 py-3 font-semibold">Yapılacak iş</th>
+                    <th className="px-4 py-3 font-semibold">Dava dosyası</th>
+                    <th className="px-4 py-3 font-semibold">Mahkeme dosyası</th>
+                    <th className="px-4 py-3 font-semibold">İş</th>
                     <th className="px-4 py-3 font-semibold">Notlar</th>
-                    <th className="px-4 py-3 text-right font-semibold">İşlem</th>
+                    <th className="px-4 py-3 text-right font-semibold"> </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {items.map((item) => (
-                    <tr key={item.id} className="align-top transition hover:bg-muted/40">
-                      <td className="px-4 py-3.5 font-semibold text-foreground">{item.clientName}</td>
-                      <td className="px-4 py-3.5 text-foreground/90">{item.opposingParty}</td>
+                    <tr key={item.id} className="align-top transition hover:bg-muted/30">
+                      <td className="px-4 py-3.5 font-semibold">{item.clientName}</td>
+                      <td className="px-4 py-3.5">{item.opposingParty}</td>
                       <td className="px-4 py-3.5 text-muted-foreground">{item.courtName}</td>
-                      <td className="px-4 py-3.5 font-mono text-xs text-foreground">{item.fileNumber}</td>
-                      <td className="max-w-[14rem] px-4 py-3.5 font-medium text-foreground">
-                        {item.workToDo}
-                        {item.taskCount > 0 ? (
-                          <span className="mt-1 block text-xs font-semibold text-primary">
-                            {item.taskCount} görev
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="max-w-[12rem] px-4 py-3.5 text-muted-foreground">
+                      <td className="px-4 py-3.5 font-mono text-xs">{item.fileNumber}</td>
+                      <td className="px-4 py-3.5 font-mono text-xs">{item.courtFile}</td>
+                      <td className="max-w-[12rem] px-4 py-3.5 font-medium">{item.workToDo}</td>
+                      <td className="max-w-[10rem] px-4 py-3.5 text-muted-foreground">
                         {item.notes || "—"}
                       </td>
                       <td className="px-4 py-3.5">
@@ -153,21 +145,16 @@ export function WorkItemAgenda({ items }: { items: WorkItemDTO[] }) {
             <ul className="divide-y divide-border xl:hidden">
               {items.map((item) => (
                 <li key={item.id} className="grid gap-3 px-4 py-4">
-                  <div className="grid gap-1.5">
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                      <p className="font-semibold text-foreground">{item.clientName}</p>
-                      <span className="text-muted-foreground">×</span>
-                      <p className="text-sm text-foreground/85">{item.opposingParty}</p>
-                    </div>
+                  <div className="grid gap-1">
+                    <p className="font-semibold">
+                      {item.clientName} · {item.opposingParty}
+                    </p>
                     <p className="text-sm text-muted-foreground">{item.courtName}</p>
-                    <p className="font-mono text-xs text-foreground">{item.fileNumber}</p>
-                    <p className="text-sm font-medium text-foreground">{item.workToDo}</p>
+                    <p className="font-mono text-xs">
+                      Dava: {item.fileNumber} · Mahkeme: {item.courtFile}
+                    </p>
+                    <p className="text-sm font-medium">{item.workToDo}</p>
                     {item.notes ? <p className="text-sm text-muted-foreground">{item.notes}</p> : null}
-                    {item.taskCount > 0 ? (
-                      <span className="w-fit rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
-                        {item.taskCount} görev
-                      </span>
-                    ) : null}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button asChild className="flex-1 font-semibold sm:flex-none">

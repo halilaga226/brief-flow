@@ -8,6 +8,7 @@ export type WorkItemDTO = {
   opposingParty: string
   courtName: string
   fileNumber: string
+  courtFile: string
   workToDo: string
   notes: string
   ownerId: string
@@ -20,6 +21,7 @@ function validateWorkItem(input: {
   opposingParty: string
   courtName: string
   fileNumber: string
+  courtFile: string
   workToDo: string
   notes: string
 }) {
@@ -27,18 +29,21 @@ function validateWorkItem(input: {
   const opposingParty = cleanText(input.opposingParty)
   const courtName = cleanText(input.courtName)
   const fileNumber = cleanText(input.fileNumber)
+  const courtFile = cleanText(input.courtFile)
   const workToDo = cleanText(input.workToDo)
   const notes = cleanText(input.notes)
   if (clientName.length < 2) return "Müvekkil adı gerekli."
   if (opposingParty.length < 2) return "Karşı taraf gerekli."
   if (courtName.length < 2) return "Mahkeme adı gerekli."
-  if (fileNumber.length < 2) return "Dosya numarası gerekli."
+  if (fileNumber.length < 2) return "Dava dosyası gerekli."
+  if (courtFile.length < 2) return "Mahkeme dosyası gerekli."
   if (workToDo.length < 3) return "Yapılacak iş en az 3 karakter olmalı."
   return {
     clientName,
     opposingParty,
     courtName,
     fileNumber,
+    courtFile,
     workToDo,
     notes,
   }
@@ -59,6 +64,7 @@ export async function listWorkItems(actor: SessionUser): Promise<WorkItemDTO[]> 
     opposingParty: row.opposingParty,
     courtName: row.courtName,
     fileNumber: row.fileNumber,
+    courtFile: row.courtFile,
     workToDo: row.workToDo,
     notes: row.notes,
     ownerId: row.ownerId,
@@ -86,6 +92,7 @@ export async function createWorkItem(
     opposingParty: string
     courtName: string
     fileNumber: string
+    courtFile: string
     workToDo: string
     notes: string
   },

@@ -454,6 +454,54 @@ export function parseView(value: string | undefined): TaskView {
   return value === "pano" ? "pano" : "liste"
 }
 
+export const DUE_WINDOWS = ["1g", "3g", "1h", "1ay"] as const
+export type DueWindow = (typeof DUE_WINDOWS)[number]
+
+export function parseDueWindow(value: string | undefined): DueWindow | null {
+  if (value && (DUE_WINDOWS as readonly string[]).includes(value)) {
+    return value as DueWindow
+  }
+  return null
+}
+
+export function dueWindowDays(window: DueWindow) {
+  if (window === "1g") return 1
+  if (window === "3g") return 3
+  if (window === "1h") return 7
+  return 30
+}
+
+export function matchesDueWindow(
+  task: { dueDate: string; status: TaskStatus },
+  window: DueWindow | null,
+  now = new Date(),
+) {
+  if (!window) return true
+  if (task.status === "TAMAMLANDI") return false
+  const today = istanbulDayKeySafe(now)
+  const due = istanbulDayKeySafe(new Date(task.dueDate))
+  const limit = addDaysKeySafe(today, dueWindowDays(window) - 1)
+  return due >= today && due <= limit
+}
+
+function istanbulDayKeySafe(date: Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date)
+}
+
+function addDaysKeySafe(key: string, days: number) {
+  const [year, month, day] = key.split("-").map(Number)
+  const utc = new Date(Date.UTC(year, month - 1, day + days))
+  const yyyy = utc.getUTCFullYear()
+  const mm = String(utc.getUTCMonth() + 1).padStart(2, "0")
+  const dd = String(utc.getUTCDate()).padStart(2, "0")
+  return `${yyyy}-${mm}-${dd}`
+}
+
 export function matchesFilter(
   task: {
     status: TaskStatus

@@ -1,5 +1,6 @@
 export const BRAND = {
   name: "Atlı Karakaya Hukuk Bürosu",
   shortName: "Atlı Karakaya",
-  tagline: "Görev ve evrak akışı",
+  portalName: "Atlı Karakaya Hukuk Bürosu İş Takip Portalı",
+  tagline: "İş takip portalı",
 } as const

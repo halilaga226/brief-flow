@@ -1,4 +1,5 @@
 import { ClearDemoButton } from "@/components/portal/clear-demo-button"
+import { IntroToggle } from "@/components/portal/intro-tour"
 import { PasswordForm } from "@/components/portal/password-form"
 import { StatusBadge } from "@/components/portal/status-badge"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,6 @@ import {
   canManageUsers,
   CLIENT_CALL_META,
   isAdmin,
-  roleLabel,
   type TaskStatus,
 } from "@/lib/workflow"
 import { getAdminOverview, listClientCalls } from "@/server/admin"
@@ -32,31 +32,30 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto grid max-w-5xl gap-6">
       <div>
-        <p className="text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">
+        <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
           {formatTodayLabel()}
         </p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight md:text-4xl">
           {greeting()}, {firstName}
         </h1>
-        <p className="mt-2 text-sm font-medium text-muted-foreground">
-          {user.title || roleLabel(user.role)} · {user.email}
-        </p>
       </div>
+
+      <IntroToggle />
 
       <section className="grid gap-3 sm:grid-cols-3">
         {[
           {
-            label: "Sizden beklenen",
+            label: "Sıradaki",
             value: dashboard.counts.awaiting,
             href: "/gorevler?filtre=bekleyen",
           },
           {
-            label: "Arama yapılacak",
+            label: "Arama",
             value: calls.length,
             href: "/gorevler?filtre=arama",
           },
           {
-            label: "Açık iş",
+            label: "Açık",
             value: dashboard.counts.active,
             href: "/gorevler",
           },
@@ -64,9 +63,9 @@ export default async function SettingsPage() {
           <Link
             key={stat.label}
             href={stat.href}
-            className="rounded-2xl border border-border bg-card p-4 transition hover:border-primary/40 hover:bg-muted/50"
+            className="glass rounded-2xl p-4 transition hover:-translate-y-0.5"
           >
-            <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               {stat.label}
             </p>
             <p className="mt-2 text-3xl font-bold text-foreground">{stat.value}</p>
@@ -75,17 +74,17 @@ export default async function SettingsPage() {
       </section>
 
       {calls.length > 0 ? (
-        <section className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="flex items-center gap-2 text-lg font-bold">
+        <section className="glass rounded-2xl p-4">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Phone className="size-5 text-destructive" />
-            Arama yapılacak
+            Arama
           </h2>
           <ul className="mt-3 divide-y divide-border">
             {calls.slice(0, 6).map((item) => (
               <li key={item.id} className="py-3">
                 <Link href={`/gorevler/${item.id}`} className="block">
-                  <span className="block text-sm font-bold">{item.clientName}</span>
-                  <span className="text-sm font-medium text-muted-foreground">{item.title}</span>
+                  <span className="block text-sm font-semibold">{item.clientName}</span>
+                  <span className="text-sm text-muted-foreground">{item.title}</span>
                 </Link>
               </li>
             ))}
@@ -94,36 +93,31 @@ export default async function SettingsPage() {
       ) : null}
 
       {manageUsers ? (
-        <section className="rounded-2xl border border-border bg-card p-4">
+        <section className="glass rounded-2xl p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="flex items-center gap-2 text-lg font-bold">
-                <Users className="size-5 text-primary" />
-                Kullanıcılar
-              </h2>
-              <p className="mt-1 text-sm font-medium text-muted-foreground">
-                Avukat ve stajyer ekleyin veya silin.
-              </p>
-            </div>
-            <Button asChild className="font-bold">
-              <Link href="/kullanicilar">Kullanıcı paneli</Link>
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <Users className="size-5 text-primary" />
+              Kullanıcılar
+            </h2>
+            <Button asChild className="font-semibold">
+              <Link href="/kullanicilar">Aç</Link>
             </Button>
           </div>
         </section>
       ) : null}
 
       {overview ? (
-        <section className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="text-lg font-bold">Büro özeti</h2>
+        <section className="glass rounded-2xl p-4">
+          <h2 className="text-lg font-semibold">Büro</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-4">
             {[
-              { label: "Toplam iş", value: overview.counts.tasks },
+              { label: "İş", value: overview.counts.tasks },
               { label: "Açık", value: overview.counts.open },
               { label: "Arama", value: overview.counts.calls },
               { label: "Kullanıcı", value: overview.counts.users },
             ].map((stat) => (
-              <div key={stat.label} className="rounded-xl bg-muted px-3 py-2">
-                <p className="text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
+              <div key={stat.label} className="rounded-xl bg-muted/60 px-3 py-2">
+                <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                   {stat.label}
                 </p>
                 <p className="text-2xl font-bold">{stat.value}</p>
@@ -132,10 +126,7 @@ export default async function SettingsPage() {
           </div>
 
           <div className="mt-5 border-t border-border pt-4">
-            <h3 className="font-bold">Örnek veriyi sıfırla</h3>
-            <p className="mt-1 text-sm font-medium text-muted-foreground">
-              Seed işlerini ve @vekalet.local hesaplarını siler. Sizin hesabınız kalır.
-            </p>
+            <h3 className="font-semibold">Örnek veri</h3>
             <div className="mt-3">
               <ClearDemoButton />
             </div>
@@ -143,7 +134,7 @@ export default async function SettingsPage() {
 
           {overview.recentTasks.length > 0 ? (
             <div className="mt-5 border-t border-border pt-4">
-              <h3 className="font-bold">Son işler</h3>
+              <h3 className="font-semibold">Son işler</h3>
               <ul className="mt-2 divide-y divide-border">
                 {overview.recentTasks.slice(0, 6).map((task) => (
                   <li key={task.id}>
@@ -152,8 +143,8 @@ export default async function SettingsPage() {
                       className="flex flex-wrap items-center justify-between gap-2 py-3"
                     >
                       <span>
-                        <span className="block text-sm font-bold">{task.title}</span>
-                        <span className="text-xs font-medium text-muted-foreground">
+                        <span className="block text-sm font-semibold">{task.title}</span>
+                        <span className="text-xs text-muted-foreground">
                           {task.clientName} · {CLIENT_CALL_META[task.clientCallStatus]}
                         </span>
                       </span>
@@ -167,8 +158,8 @@ export default async function SettingsPage() {
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-lg font-bold">Parola</h2>
+      <section className="glass rounded-2xl p-4">
+        <h2 className="text-lg font-semibold">Parola</h2>
         <div className="mt-3">
           <PasswordForm />
         </div>

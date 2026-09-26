@@ -36,7 +36,8 @@ export default async function AssignFromWorkItemPage({
   const description = [
     `Mahkeme: ${item.courtName}`,
     `Karşı taraf: ${item.opposingParty}`,
-    `Dosya: ${item.fileNumber}`,
+    `Dava dosyası: ${item.fileNumber}`,
+    `Mahkeme dosyası: ${item.courtFile}`,
     "",
     `Yapılacak iş: ${item.workToDo}`,
     item.notes ? `Notlar: ${item.notes}` : "",

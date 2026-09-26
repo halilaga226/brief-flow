@@ -70,6 +70,7 @@ model WorkItem {
   opposingParty String
   courtName     String
   fileNumber    String
+  courtFile     String
   workToDo      String
   notes         String   @default("")
   ownerId       String

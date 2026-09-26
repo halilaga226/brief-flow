@@ -7,6 +7,7 @@ import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts"
 import { roleLabel } from "@/lib/workflow"
 import { signIn } from "next-auth/react"
 import { useState } from "react"
+import { markWelcomePending } from "@/components/portal/welcome-splash"
 
 export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
   const [username, setUsername] = useState("")
@@ -27,6 +28,7 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
       setError("Kullanıcı adı veya parola hatalı.")
       return
     }
+    markWelcomePending()
     window.location.assign("/ana")
   }
 
