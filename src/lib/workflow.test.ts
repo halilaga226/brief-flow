@@ -4,6 +4,8 @@ import { dueTone } from "./format"
 import {
   canComplete,
   canCreateTask,
+  canManageOps,
+  canQueueSend,
   canReview,
   canUploadDraft,
   fileHref,
@@ -60,6 +62,15 @@ describe("state machine", () => {
       canReview({ status: "ATANDI", assignerId: lawyer }, lawyer, "LAWYER"),
       false,
     )
+  })
+
+  it("lets the assigning lawyer decide expense, call and send after approval", () => {
+    const task = { status: "ONAYLANDI" as const, assignerId: lawyer }
+    assert.equal(canManageOps(task, lawyer, "LAWYER"), true)
+    assert.equal(canQueueSend(task, lawyer, "LAWYER"), true)
+    assert.equal(canManageOps(task, otherLawyer, "LAWYER"), false)
+    assert.equal(canManageOps(task, intern, "INTERN"), false)
+    assert.equal(canQueueSend({ status: "GONDERIM_BEKLIYOR", assignerId: lawyer }, lawyer, "LAWYER"), false)
   })
 
   it("requires the dispatch step and the assignee before completion", () => {

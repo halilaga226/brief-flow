@@ -9,9 +9,14 @@ import {
   approveTask,
   completeTask,
   createTask,
+  markExpensePaid,
+  queueForSend,
   requestRevision,
+  setClientCallStatus,
   uploadDraft,
 } from "@/server/tasks"
+import { clearDemoData } from "@/server/admin"
+import type { ClientCallStatus } from "@/lib/workflow"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
@@ -104,7 +109,75 @@ export async function approveTaskAction(
     return actionError(error)
   }
   revalidateTask(taskId)
-  return { ok: true, message: "Taslak onaylandı. İş gönderime düştü." }
+  return { ok: true, message: "Taslak onaylandı. Masraf, arama ve gönderim sizin kararınız." }
+}
+
+export async function markExpenseAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    await markExpensePaid(user, taskId)
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateTask(taskId)
+  return { ok: true, message: "Masraf yatırıldı olarak işaretlendi." }
+}
+
+export async function setClientCallAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  const status = readText(formData, "status") as ClientCallStatus
+  try {
+    await setClientCallStatus(user, taskId, status)
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateTask(taskId)
+  revalidatePath("/panel")
+  revalidatePath("/admin")
+  return { ok: true, message: "Müvekkil araması güncellendi." }
+}
+
+export async function queueSendAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    await queueForSend(user, taskId)
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateTask(taskId)
+  return { ok: true, message: "İş gönderime alındı." }
+}
+
+export async function clearDemoAction(
+  _prev: ActionState,
+  _formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  try {
+    const result = await clearDemoData(user)
+    revalidatePath("/panel")
+    revalidatePath("/gorevler")
+    revalidatePath("/admin")
+    revalidatePath("/kullanicilar")
+    return {
+      ok: true,
+      message: `${result.tasks} görev ve ${result.users} örnek hesap silindi.`,
+    }
+  } catch (error) {
+    return actionError(error)
+  }
 }
 
 export async function completeTaskAction(

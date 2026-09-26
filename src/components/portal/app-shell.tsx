@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import type { NotificationDTO, SessionUser } from "@/lib/dto"
 import { initials } from "@/lib/format"
-import { canCreateTask, canManageUsers, roleLabel } from "@/lib/workflow"
+import { canCreateTask, canManageUsers, isAdmin, roleLabel } from "@/lib/workflow"
 import { cn } from "@/lib/utils"
-import { FolderOpen, LayoutDashboard, LogOut, Menu, Plus, Scale, Users, UserRound } from "lucide-react"
+import { FolderOpen, LayoutDashboard, LogOut, Menu, Plus, Scale, Shield, Users, UserRound } from "lucide-react"
 import { motion, useReducedMotion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -28,15 +28,18 @@ function NavLinks({
   inSheet = false,
   canAssign = false,
   canManage = false,
+  showAdmin = false,
 }: {
   inSheet?: boolean
   canAssign?: boolean
   canManage?: boolean
+  showAdmin?: boolean
 }) {
   void canAssign
   const pathname = usePathname()
   const links = [
     ...baseLinks,
+    ...(showAdmin ? [{ href: "/admin", label: "Yönetim", icon: Shield }] : []),
     ...(canManage ? [{ href: "/kullanicilar", label: "Kullanıcılar", icon: Users }] : []),
     { href: "/hesap", label: "Hesabım", icon: UserRound },
   ]
@@ -46,7 +49,7 @@ function NavLinks({
         const Icon = link.icon
         const active = isActive(pathname, link.href)
         const className = cn(
-          "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition",
+          "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition",
           active
             ? "bg-zinc-900 text-white"
             : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
@@ -85,6 +88,7 @@ export function AppShell({
   const reduce = useReducedMotion()
   const lawyer = canCreateTask(user.role)
   const manager = canManageUsers(user.role)
+  const admin = isAdmin(user.role)
 
   return (
     <div className="min-h-screen bg-white text-zinc-900">
@@ -101,15 +105,15 @@ export function AppShell({
               <Scale className="size-4" />
             </span>
             <span>
-              <span className="block text-base font-semibold tracking-tight">Vekâlet</span>
-              <span className="block text-[11px] text-zinc-500">İş ve belge akışı</span>
+              <span className="block text-base font-bold tracking-tight">Vekâlet</span>
+              <span className="block text-[11px] font-medium text-zinc-500">İş ve belge akışı</span>
             </span>
           </Link>
         </div>
         <div className="flex-1 px-3 py-4">
-          <NavLinks canAssign={lawyer} canManage={manager} />
+          <NavLinks canAssign={lawyer} canManage={manager} showAdmin={admin} />
           {lawyer ? (
-            <Button asChild className="mt-4 w-full bg-zinc-900 text-white hover:bg-zinc-800">
+            <Button asChild className="mt-4 w-full bg-zinc-900 font-bold text-white hover:bg-zinc-800">
               <Link href="/gorevler/yeni">
                 <Plus />
                 Yeni görev
@@ -119,18 +123,18 @@ export function AppShell({
         </div>
         <div className="border-t border-zinc-200 p-3">
           <div className="mb-2 flex items-center gap-2 px-2">
-            <span className="flex size-9 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-700">
+            <span className="flex size-9 items-center justify-center rounded-full bg-zinc-100 text-xs font-bold text-zinc-700">
               {initials(user.name)}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-sm font-medium">{user.name}</span>
-              <span className="block truncate text-xs text-zinc-500">
+              <span className="block truncate text-sm font-bold">{user.name}</span>
+              <span className="block truncate text-xs font-medium text-zinc-500">
                 {user.title || roleLabel(user.role)}
               </span>
             </span>
           </div>
           <form action={signOutAction}>
-            <Button type="submit" variant="ghost" className="w-full justify-start text-zinc-600">
+            <Button type="submit" variant="ghost" className="w-full justify-start font-semibold text-zinc-600">
               <LogOut />
               Çıkış
             </Button>
@@ -148,15 +152,15 @@ export function AppShell({
             </SheetTrigger>
             <SheetContent side="left" className="w-72 bg-white">
               <div className="mt-8 px-2">
-                <p className="text-lg font-semibold">Vekâlet</p>
+                <p className="text-lg font-bold">Vekâlet</p>
                 <div className="mt-4">
-                  <NavLinks inSheet canAssign={lawyer} canManage={manager} />
+                  <NavLinks inSheet canAssign={lawyer} canManage={manager} showAdmin={admin} />
                 </div>
                 {lawyer ? (
                   <SheetClose asChild>
                     <Link
                       href="/gorevler/yeni"
-                      className="mt-4 flex h-9 items-center justify-center gap-2 rounded-lg bg-zinc-900 text-sm text-white"
+                      className="mt-4 flex h-9 items-center justify-center gap-2 rounded-lg bg-zinc-900 text-sm font-bold text-white"
                     >
                       <Plus className="size-4" />
                       Yeni görev
@@ -166,10 +170,10 @@ export function AppShell({
               </div>
             </SheetContent>
           </Sheet>
-          <p className="text-base font-semibold md:hidden">Vekâlet</p>
+          <p className="text-base font-bold md:hidden">Vekâlet</p>
           <div className="flex-1" />
           {lawyer ? (
-            <Button asChild size="sm" className="hidden bg-zinc-900 sm:inline-flex">
+            <Button asChild size="sm" className="hidden bg-zinc-900 font-bold sm:inline-flex">
               <Link href="/gorevler/yeni">
                 <Plus />
                 Yeni görev

@@ -6,6 +6,8 @@ import {
   canComment,
   canComplete,
   canCreateTask,
+  canManageOps,
+  canQueueSend,
   canReview,
   canUploadDraft,
   canViewTask,
@@ -18,6 +20,7 @@ import {
   validateNote,
   validateTaskDraft,
   validateTrackingCode,
+  type ClientCallStatus,
 } from "@/lib/workflow"
 import {
   sameMonth,
@@ -329,7 +332,7 @@ export async function approveTask(actor: SessionUser, taskId: string, rawNote: s
     }
     await tx.task.update({
       where: { id: taskId },
-      data: { status: "GONDERIM_BEKLIYOR" },
+      data: { status: "ONAYLANDI" },
     })
     await tx.taskLog.create({
       data: {
@@ -337,7 +340,7 @@ export async function approveTask(actor: SessionUser, taskId: string, rawNote: s
         actorId: actor.id,
         type: "APPROVED",
         fromStatus: task.status,
-        toStatus: "GONDERIM_BEKLIYOR",
+        toStatus: "ONAYLANDI",
         note: note || null,
       },
     })
@@ -346,7 +349,115 @@ export async function approveTask(actor: SessionUser, taskId: string, rawNote: s
         userId: task.assigneeId,
         taskId,
         title: "Taslak onaylandı",
-        body: `${actor.name} gönderime hazır işaretledi: ${task.title}`,
+        body: `${actor.name} taslağı onayladı. Gönderim kararını avukat verecek: ${task.title}`,
+      },
+    })
+  })
+}
+
+export async function markExpensePaid(actor: SessionUser, taskId: string) {
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (!canManageOps(existing, actor.id, actor.role)) {
+    throw new WorkflowError("Masraf işaretleme yetkiniz yok.")
+  }
+  if (existing.expensePaid) {
+    throw new WorkflowError("Masraf zaten yatırıldı olarak işaretli.")
+  }
+  await prisma.$transaction(async (tx) => {
+    const task = await tx.task.findUnique({ where: { id: taskId } })
+    if (!task || !canManageOps(task, actor.id, actor.role)) {
+      throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
+    }
+    await tx.task.update({
+      where: { id: taskId },
+      data: { expensePaid: true, expensePaidAt: new Date() },
+    })
+    await tx.taskLog.create({
+      data: {
+        taskId,
+        actorId: actor.id,
+        type: "EXPENSE_MARKED",
+        fromStatus: task.status,
+        toStatus: task.status,
+        note: "Masraf yatırıldı.",
+      },
+    })
+  })
+}
+
+export async function setClientCallStatus(
+  actor: SessionUser,
+  taskId: string,
+  status: ClientCallStatus,
+) {
+  if (status !== "ARANACAK" && status !== "YAPILDI" && status !== "YOK") {
+    throw new WorkflowError("Geçersiz arama durumu.")
+  }
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (!canManageOps(existing, actor.id, actor.role)) {
+    throw new WorkflowError("Müvekkil araması için yetkiniz yok.")
+  }
+  await prisma.$transaction(async (tx) => {
+    const task = await tx.task.findUnique({ where: { id: taskId } })
+    if (!task || !canManageOps(task, actor.id, actor.role)) {
+      throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
+    }
+    await tx.task.update({
+      where: { id: taskId },
+      data: { clientCallStatus: status },
+    })
+    await tx.taskLog.create({
+      data: {
+        taskId,
+        actorId: actor.id,
+        type: "CLIENT_CALL_UPDATED",
+        fromStatus: task.status,
+        toStatus: task.status,
+        note:
+          status === "ARANACAK"
+            ? "Müvekkil aranacak."
+            : status === "YAPILDI"
+              ? "Müvekkil araması yapıldı."
+              : "Müvekkil araması kaldırıldı.",
+        meta: JSON.stringify({ clientCallStatus: status }),
+      },
+    })
+  })
+}
+
+export async function queueForSend(actor: SessionUser, taskId: string) {
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (!canQueueSend(existing, actor.id, actor.role)) {
+    throw new WorkflowError("Gönderime alma yetkiniz yok.")
+  }
+  await prisma.$transaction(async (tx) => {
+    const task = await tx.task.findUnique({ where: { id: taskId } })
+    if (!task || !canQueueSend(task, actor.id, actor.role)) {
+      throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
+    }
+    await tx.task.update({
+      where: { id: taskId },
+      data: { status: "GONDERIM_BEKLIYOR" },
+    })
+    await tx.taskLog.create({
+      data: {
+        taskId,
+        actorId: actor.id,
+        type: "SEND_QUEUED",
+        fromStatus: task.status,
+        toStatus: "GONDERIM_BEKLIYOR",
+        note: "Atayan avukat gönderime aldı.",
+      },
+    })
+    await tx.notification.create({
+      data: {
+        userId: task.assigneeId,
+        taskId,
+        title: "Gönderim bekliyor",
+        body: `${actor.name} işi gönderime aldı: ${task.title}`,
       },
     })
   })

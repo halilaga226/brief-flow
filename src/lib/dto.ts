@@ -1,4 +1,10 @@
-import type { DueTone, Role, TaskStatus, VisualTone } from "@/lib/workflow"
+import type {
+  ClientCallStatus,
+  DueTone,
+  Role,
+  TaskStatus,
+  VisualTone,
+} from "@/lib/workflow"
 
 export type SessionUser = {
   id: string
@@ -37,6 +43,8 @@ export type TaskCardDTO = {
   relationLabel: string
   needsAction: boolean
   trackingCode: string | null
+  expensePaid: boolean
+  clientCallStatus: ClientCallStatus
   updatedAt: string
   completedAt: string | null
   logs: TimelineEventDTO[]
@@ -77,6 +85,8 @@ export type TaskDetailDTO = TaskCardDTO & {
   myTurn: boolean
   canUpload: boolean
   canReview: boolean
+  canManageOps: boolean
+  canQueueSend: boolean
   canComplete: boolean
   nextStep: string
   latestDraft: { name: string; href: string | null; external: boolean } | null

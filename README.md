@@ -4,20 +4,32 @@ Küçük ve orta ölçekli hukuk büroları için görev, taslak inceleme ve evr
 
 ## Roller
 
-- **Avukat** görev atar, taslağı onaylar veya revize ister. Kendisinin atadığı, kendisine atanan ve taraf olduğu işleri görür.
-- **Stajyer** yalnızca kendisine atanan işleri görür. Görev atayamaz. Onaydan sonra evrak kodunu girerek işi kapatır.
+- **Avukat** görev atar, taslağı onaylar veya revize ister. Onaydan sonra masraf, müvekkil araması ve gönderime alma kararını verir.
+- **Stajyer** yalnızca kendisine atanan işleri görür. Görev atayamaz. Gönderime alınan işte evrak kodunu girerek işi kapatır.
+- **Yönetici (ADMIN)** tüm işleri görür, kullanıcı ekler/düzenler ve Yönetim panelinden örnek veriyi sıfırlar.
 
-Üçüncü kişiler kaydı göremez. Yönetici / büro geneli görünümü yoktur.
+Üçüncü kişiler kaydı göremez.
 
 ## Görev döngüsü
 
 1. `ATANDI` — avukat başlık, müvekkil, dosya no, son teslim, talimat ve isteğe bağlı ek ile işi atar.
 2. `INCELEME_BEKLIYOR` — yürüten kişi taslağı yükler.
-3. `REVIZE_ISTENDI` — avukat not düşerek işi geri gönderir. Yeni taslak yine incelemeye döner.
-4. `GONDERIM_BEKLIYOR` — avukat onaylar.
-5. `TAMAMLANDI` — yürüten kişi UYAP, PTT veya merci kodunu girer. Kod yoksa iş kapanmaz.
+3. `REVIZE_ISTENDI` — avukat not düşerek işi geri gönderir.
+4. `ONAYLANDI` — atayan avukat onaylar; masraf yatırma, arama yapılacak / yapıldı ve gönderime alma kararlarını burada verir.
+5. `GONDERIM_BEKLIYOR` — atayan avukat gönderime alır.
+6. `TAMAMLANDI` — yürüten kişi UYAP, PTT veya merci kodunu girer. Kod yoksa iş kapanmaz.
 
-Pano sürükle-bırak değildir. Her kartın üzerine gelince veya geçmiş düğmesinden işlem saati, not ve kod görünür. Görev içinde kısa bir iç not dizisi vardır.
+Görevler varsayılan olarak **liste** görünümündedir. Pano isteğe bağlıdır; sürükle-bırak yoktur.
+
+## Örnek veriyi kaldırma (sıfırdan başlama)
+
+1. Yönetici hesabıyla giriş yapın (`avukathalilkarakaya@gmail.com` veya oluşturduğunuz ADMIN).
+2. Sol menüden **Yönetim** açın.
+3. **Örnek işleri ve hesapları sil** → onaylayın.
+4. Tüm görevler ve `@vekalet.local` deneme hesapları silinir. Kendi yönetici hesabınız kalır.
+5. **Kullanıcılar** sayfasından gerçek avukat/stajyer ekleyip yeni iş atayın.
+
+Örnek hesapla girişliyken temizleme yapılamaz; önce kendi yönetici hesabınızla girin.
 
 ## Kurulum
 
@@ -30,7 +42,7 @@ npm run dev
 
 Uygulama [http://127.0.0.1:4317](http://127.0.0.1:4317) adresinde açılır. `AUTH_SECRET` için `openssl rand -base64 32` kullanın.
 
-Veritabanı yerel SQLite'tır (`prisma/dev.db`). Şema Prisma ile durur; Postgres veya Supabase'e geçmek için `provider` ve `DATABASE_URL` değiştirilip `npm run setup` tekrarlanır.
+Veritabanı PostgreSQL / Supabase pooler ile çalışır (`DATABASE_URL`, `DIRECT_URL`).
 
 ## Deneme hesapları
 
@@ -43,23 +55,23 @@ Ortak parola: `Vekalet2026!`
 | Elif Yılmaz | Stajyer | elif.yilmaz@vekalet.local |
 | Can Öztürk | Stajyer | can.ozturk@vekalet.local |
 
-Giriş ekranındaki kartlar hesabı doğrudan açar. Örnek veri, avukatlar arası bir işin stajyere görünmediğini de içerir.
+Yönetim panelinden silinene kadar giriş ekranında görünürler.
 
 ## Google Drive
 
-Kimlik yokken mod `mock`tur. Yüklenen baytlar diske veya veritabanına yazılmaz; önizleme sayfası yalnızca meta veriyi gösterir.
+Kimlik yokken mod `mock`tur. Yüklenen baytlar diske veya veritabanına yazılmaz.
 
-Gerçek yükleme için:
+Gerçek yükleme için (yönetim / ops özellikleri oturduktan sonra):
 
 1. Google Cloud'da Drive API'yi açın ve bir servis hesabı oluşturun.
 2. JSON anahtarını tek satır `GOOGLE_SERVICE_ACCOUNT_JSON` olarak yazın.
-3. Dosyaların duracağı klasörü kendi Drive'ınızda oluşturun. Servis hesaplarının kotası olmadığı için klasör size ait olmalıdır.
+3. Dosyaların duracağı klasörü kendi Drive'ınızda oluşturun.
 4. Klasörü servis hesabının e-postasıyla **Düzenleyici** olarak paylaşın.
 5. Klasör kimliğini `GOOGLE_DRIVE_FOLDER_ID` alanına yazın.
-6. `DRIVE_SHARE_MODE=private` kalsın. `anyone` seçilirse bağlantısı olan herkes dosyayı okuyabilir; müvekkil evrakı için önerilmez.
+6. `DRIVE_SHARE_MODE=private` kalsın.
 7. Sunucuyu yeniden başlatın.
 
-Modül `src/lib/drive.ts` içindedir: klasör doğrulama, yükleme, paylaşım bağlantısı ve başarısız kayıtta Drive dosyasını silme.
+Modül `src/lib/drive.ts` içindedir.
 
 ## Komutlar
 

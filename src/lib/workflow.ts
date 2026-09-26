@@ -5,10 +5,14 @@ export const STATUSES = [
   "ATANDI",
   "INCELEME_BEKLIYOR",
   "REVIZE_ISTENDI",
+  "ONAYLANDI",
   "GONDERIM_BEKLIYOR",
   "TAMAMLANDI",
 ] as const
 export type TaskStatus = (typeof STATUSES)[number]
+
+export const CLIENT_CALL_STATUSES = ["YOK", "ARANACAK", "YAPILDI"] as const
+export type ClientCallStatus = (typeof CLIENT_CALL_STATUSES)[number]
 
 export type DueTone = "done" | "overdue" | "today" | "soon" | "later"
 export type VisualTone = "yellow" | "red" | "neutral"
@@ -19,6 +23,7 @@ export const FILTERS = [
   "geciken",
   "yaklasan",
   "inceleme",
+  "arama",
   "tamam",
 ] as const
 export type TaskFilter = (typeof FILTERS)[number]
@@ -63,14 +68,24 @@ export const STATUS_META: Record<
     label: "Revize istendi",
     hint: "Avukat notuyla iş yürütücüye döndü.",
   },
+  ONAYLANDI: {
+    label: "Onaylandı",
+    hint: "Atayan avukat masraf, arama ve gönderim kararını verir.",
+  },
   GONDERIM_BEKLIYOR: {
     label: "Gönderim bekliyor",
-    hint: "Onaylandı. Evrak koduyla tamamlanacak.",
+    hint: "Atayan avukat gönderime aldı. Evrak kodu girilecek.",
   },
   TAMAMLANDI: {
     label: "Tamamlandı",
     hint: "Gönderim kodu işlendi.",
   },
+}
+
+export const CLIENT_CALL_META: Record<ClientCallStatus, string> = {
+  YOK: "Arama yok",
+  ARANACAK: "Arama yapılacak",
+  YAPILDI: "Arama yapıldı",
 }
 
 export const BOARD_COLUMNS: {
@@ -88,6 +103,11 @@ export const BOARD_COLUMNS: {
     status: "REVIZE_ISTENDI",
     title: "Revize",
     description: "Düzeltme istendi",
+  },
+  {
+    status: "ONAYLANDI",
+    title: "Onaylandı",
+    description: "Masraf / arama / gönderim",
   },
   {
     status: "GONDERIM_BEKLIYOR",
@@ -124,7 +144,13 @@ export function logLabel(type: string) {
     case "REVISION_REQUESTED":
       return "Revizyon istendi"
     case "APPROVED":
-      return "Onaylandı, gönderime hazır"
+      return "Taslak onaylandı"
+    case "EXPENSE_MARKED":
+      return "Masraf yatırıldı"
+    case "CLIENT_CALL_UPDATED":
+      return "Müvekkil araması güncellendi"
+    case "SEND_QUEUED":
+      return "Gönderime alındı"
     case "COMPLETED":
       return "Gönderim tamamlandı"
     default:
@@ -157,12 +183,7 @@ export function needsMyAction(
   role?: Role,
 ) {
   if (role === "ADMIN") {
-    return (
-      task.status === "ATANDI" ||
-      task.status === "REVIZE_ISTENDI" ||
-      task.status === "INCELEME_BEKLIYOR" ||
-      task.status === "GONDERIM_BEKLIYOR"
-    )
+    return task.status !== "TAMAMLANDI"
   }
   if (
     task.assigneeId === userId &&
@@ -172,7 +193,10 @@ export function needsMyAction(
   ) {
     return true
   }
-  return task.assignerId === userId && task.status === "INCELEME_BEKLIYOR"
+  if (task.assignerId === userId) {
+    return task.status === "INCELEME_BEKLIYOR" || task.status === "ONAYLANDI"
+  }
+  return false
 }
 
 export function canUploadDraft(
@@ -191,6 +215,26 @@ export function canReview(
 ) {
   if (task.status !== "INCELEME_BEKLIYOR") return false
   return isAdmin(role) || (role === "LAWYER" && task.assignerId === userId)
+}
+
+export function canManageOps(
+  task: { status: TaskStatus; assignerId: string },
+  userId: string,
+  role: Role,
+) {
+  if (!(task.status === "ONAYLANDI" || task.status === "GONDERIM_BEKLIYOR")) {
+    return false
+  }
+  return isAdmin(role) || task.assignerId === userId
+}
+
+export function canQueueSend(
+  task: { status: TaskStatus; assignerId: string },
+  userId: string,
+  role: Role,
+) {
+  if (task.status !== "ONAYLANDI") return false
+  return isAdmin(role) || task.assignerId === userId
 }
 
 export function canComplete(
@@ -214,17 +258,20 @@ export function taskVisualTone(input: {
   status: TaskStatus
   dueTone: DueTone
   needsAction: boolean
+  clientCallStatus?: ClientCallStatus
 }): VisualTone {
   if (
     input.status === "REVIZE_ISTENDI" ||
     input.dueTone === "overdue" ||
-    input.dueTone === "today"
+    input.dueTone === "today" ||
+    input.clientCallStatus === "ARANACAK"
   ) {
     return "red"
   }
   if (
     input.status === "TAMAMLANDI" ||
     input.status === "ATANDI" ||
+    input.status === "ONAYLANDI" ||
     input.needsAction
   ) {
     return "yellow"
@@ -232,9 +279,26 @@ export function taskVisualTone(input: {
   return "neutral"
 }
 
-export function nextStepCopy(input: { status: TaskStatus; myTurn: boolean }) {
+export function nextStepCopy(input: {
+  status: TaskStatus
+  myTurn: boolean
+  expensePaid?: boolean
+  clientCallStatus?: ClientCallStatus
+}) {
   if (input.status === "TAMAMLANDI") {
     return "Gönderim kodu işlendi. Bu iş kapanmış durumda."
+  }
+  if (input.status === "ONAYLANDI" && input.myTurn) {
+    const bits = [
+      input.expensePaid ? "Masraf yatırıldı." : "Masraf yatırmayı işaretleyin.",
+      input.clientCallStatus === "ARANACAK"
+        ? "Müvekkil aranacak."
+        : input.clientCallStatus === "YAPILDI"
+          ? "Arama yapıldı."
+          : "Gerekirse müvekkil aramasını işaretleyin.",
+      "Hazır olduğunuzda gönderime alın.",
+    ]
+    return bits.join(" ")
   }
   if (input.myTurn) {
     if (input.status === "ATANDI") {
@@ -255,6 +319,9 @@ export function nextStepCopy(input: { status: TaskStatus; myTurn: boolean }) {
   }
   if (input.status === "INCELEME_BEKLIYOR") {
     return "Atayan avukatın incelemesi bekleniyor."
+  }
+  if (input.status === "ONAYLANDI") {
+    return "Atayan avukat masraf, arama ve gönderim kararını veriyor."
   }
   if (input.status === "GONDERIM_BEKLIYOR") {
     return "Gönderim ve evrak kodu karşı taraftan bekleniyor."
@@ -381,11 +448,16 @@ export function parseFilter(value: string | undefined): TaskFilter {
 }
 
 export function parseView(value: string | undefined): TaskView {
-  return value === "liste" ? "liste" : "pano"
+  return value === "pano" ? "pano" : "liste"
 }
 
 export function matchesFilter(
-  task: { status: TaskStatus; dueTone: DueTone; needsAction: boolean },
+  task: {
+    status: TaskStatus
+    dueTone: DueTone
+    needsAction: boolean
+    clientCallStatus?: ClientCallStatus
+  },
   filter: TaskFilter,
 ) {
   switch (filter) {
@@ -397,6 +469,8 @@ export function matchesFilter(
       return task.dueTone === "today" || task.dueTone === "soon"
     case "inceleme":
       return task.status === "INCELEME_BEKLIYOR"
+    case "arama":
+      return task.clientCallStatus === "ARANACAK"
     case "tamam":
       return task.status === "TAMAMLANDI"
     default:

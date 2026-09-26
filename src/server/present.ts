@@ -8,6 +8,8 @@ import {
 } from "@/lib/format"
 import {
   canComplete,
+  canManageOps,
+  canQueueSend,
   canReview,
   canUploadDraft,
   fileHref,
@@ -19,7 +21,7 @@ import {
   roleLabel,
   taskVisualTone,
 } from "@/lib/workflow"
-import type { Role } from "@/lib/workflow"
+import type { ClientCallStatus, Role } from "@/lib/workflow"
 import type {
   ActivityDTO,
   CommentDTO,
@@ -99,6 +101,7 @@ export function toTaskCard(
       status: record.status,
       dueTone: tone,
       needsAction,
+      clientCallStatus: record.clientCallStatus as ClientCallStatus,
     }),
     status: record.status,
     assignerId: record.assignerId,
@@ -108,6 +111,8 @@ export function toTaskCard(
     relationLabel,
     needsAction,
     trackingCode: record.trackingCode,
+    expensePaid: record.expensePaid,
+    clientCallStatus: record.clientCallStatus as ClientCallStatus,
     updatedAt: record.updatedAt.toISOString(),
     completedAt: record.completedAt?.toISOString() ?? null,
     logs: toTimeline(record),
@@ -165,8 +170,15 @@ export function toTaskDetail(
     myTurn,
     canUpload: canUploadDraft(record, userId, role),
     canReview: canReview(record, userId, role),
+    canManageOps: canManageOps(record, userId, role),
+    canQueueSend: canQueueSend(record, userId, role),
     canComplete: canComplete(record, userId, role),
-    nextStep: nextStepCopy({ status: record.status, myTurn }),
+    nextStep: nextStepCopy({
+      status: record.status,
+      myTurn,
+      expensePaid: record.expensePaid,
+      clientCallStatus: record.clientCallStatus as ClientCallStatus,
+    }),
     latestDraft: latest
       ? { name: latest.name, href: latest.href, external: latest.external }
       : null,

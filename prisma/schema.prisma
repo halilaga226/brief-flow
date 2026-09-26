@@ -18,8 +18,15 @@ enum TaskStatus {
   ATANDI
   INCELEME_BEKLIYOR
   REVIZE_ISTENDI
+  ONAYLANDI
   GONDERIM_BEKLIYOR
   TAMAMLANDI
+}
+
+enum ClientCallStatus {
+  YOK
+  ARANACAK
+  YAPILDI
 }
 
 enum FileKind {
@@ -32,6 +39,9 @@ enum LogType {
   DRAFT_UPLOADED
   REVISION_REQUESTED
   APPROVED
+  EXPENSE_MARKED
+  CLIENT_CALL_UPDATED
+  SEND_QUEUED
   COMPLETED
 }
 
@@ -64,6 +74,9 @@ model Task {
   assigneeId   String
   trackingCode String?
   completedAt  DateTime?
+  expensePaid       Boolean          @default(false)
+  expensePaidAt     DateTime?
+  clientCallStatus  ClientCallStatus @default(YOK)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 

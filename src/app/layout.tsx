@@ -7,11 +7,13 @@ import "./globals.css"
 const outfit = Outfit({
   subsets: ["latin", "latin-ext"],
   variable: "--font-sans",
+  weight: ["400", "500", "600", "700", "800"],
 })
 
 const newsreader = Newsreader({
   subsets: ["latin", "latin-ext"],
   variable: "--font-newsreader",
+  weight: ["400", "600", "700"],
 })
 
 export const metadata: Metadata = {

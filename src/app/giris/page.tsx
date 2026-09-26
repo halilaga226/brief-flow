@@ -13,11 +13,11 @@ export default function LoginPage() {
       <section className="relative hidden items-end bg-zinc-950 px-10 py-12 text-white lg:flex">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(250,204,21,0.18),transparent_42%)]" />
         <div className="relative max-w-md">
-          <p className="text-sm font-medium text-yellow-300">Vekâlet</p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight">
+          <p className="text-sm font-bold text-yellow-300">Vekâlet</p>
+          <h1 className="mt-3 text-4xl font-bold tracking-tight">
             İşler net. Renkler net.
           </h1>
-          <p className="mt-4 text-sm leading-relaxed text-zinc-300">
+          <p className="mt-4 text-sm font-medium leading-relaxed text-zinc-300">
             Sarı: gelen veya biten iş. Kırmızı: süresi gelen veya revizeye dönen iş. Yönetici tüm
             dosyaları görür.
           </p>
@@ -25,8 +25,8 @@ export default function LoginPage() {
       </section>
       <section className="flex items-center justify-center bg-white px-5 py-10">
         <div className="w-full max-w-md">
-          <p className="text-2xl font-semibold tracking-tight">Giriş</p>
-          <p className="mt-1 text-sm text-zinc-500">Büro hesabınızla devam edin.</p>
+          <p className="text-2xl font-bold tracking-tight">Giriş</p>
+          <p className="mt-1 text-sm font-medium text-zinc-500">Büro hesabınızla devam edin.</p>
           <div className="mt-8">
             <LoginForm showDemo={showDemo} />
           </div>
