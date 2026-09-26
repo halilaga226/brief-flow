@@ -164,6 +164,8 @@ export async function clearDemoAction(
   _prev: ActionState,
   _formData: FormData,
 ): Promise<ActionState> {
+  void _prev
+  void _formData
   const user = await requireUser()
   try {
     const result = await clearDemoData(user)

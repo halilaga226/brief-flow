@@ -1,17 +1,17 @@
 import type { Metadata } from "next"
-import { Fraunces, Plus_Jakarta_Sans } from "next/font/google"
+import { Newsreader, Outfit } from "next/font/google"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { BRAND } from "@/lib/brand"
 import "./globals.css"
 
-const jakarta = Plus_Jakarta_Sans({
+const outfit = Outfit({
   subsets: ["latin", "latin-ext"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700", "800"],
 })
 
-const fraunces = Fraunces({
+const newsreader = Newsreader({
   subsets: ["latin", "latin-ext"],
   variable: "--font-display",
   weight: ["500", "600", "700"],
@@ -32,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <body className={`${jakarta.variable} ${fraunces.variable} antialiased`}>
+      <body className={`${outfit.variable} ${newsreader.variable} antialiased`}>
         <TooltipProvider>
           {children}
           <Toaster />
