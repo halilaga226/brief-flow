@@ -53,8 +53,12 @@ async function main() {
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10)
   await prisma.user.createMany({
     data: DEMO_ACCOUNTS.map((account) => ({
-      ...account,
+      id: account.id,
+      name: account.name,
+      username: account.username,
       email: account.email.toLowerCase(),
+      role: account.role,
+      title: account.title,
       passwordHash,
     })),
   })

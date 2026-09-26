@@ -35,7 +35,7 @@ export default async function SettingsPage() {
         <p className="text-xs font-bold tracking-[0.14em] text-[var(--brand-muted)] uppercase">
           {formatTodayLabel()}
         </p>
-        <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight md:text-4xl">
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight md:text-4xl">
           {greeting()}, {firstName}
         </h1>
         <p className="mt-2 text-sm font-medium text-[var(--brand-muted)]">

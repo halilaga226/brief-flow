@@ -148,7 +148,7 @@ export function TaskBoard({ tasks, view }: { tasks: TaskCardDTO[]; view: TaskVie
                   >
                     <Link href={`/gorevler/${task.id}`} className="absolute inset-0" aria-label={task.title} />
                     <div className="min-w-0 pr-8 md:pr-0">
-                      <p className="text-sm font-bold leading-snug">{task.title}</p>
+                      <p className="text-sm font-semibold leading-snug">{task.title}</p>
                       <p className="mt-0.5 text-xs font-semibold text-[var(--brand-muted)] md:hidden">
                         {task.clientName} · {task.fileNumber}
                       </p>

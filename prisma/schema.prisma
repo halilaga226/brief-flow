@@ -48,7 +48,8 @@ enum LogType {
 model User {
   id           String   @id
   name         String
-  email        String   @unique
+  username     String   @unique
+  email        String?  @unique
   passwordHash String
   role         Role
   title        String

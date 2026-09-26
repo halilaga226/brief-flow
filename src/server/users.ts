@@ -4,18 +4,21 @@ import { prisma } from "@/lib/prisma"
 import {
   assertLawyer,
   isDemoEmail,
+  isDemoUsername,
   validateNewPassword,
   validatePersonEmail,
   validatePersonName,
   validatePersonRole,
   validatePersonTitle,
+  validateUsername,
 } from "@/lib/users"
 import { WorkflowError, roleLabel } from "@/lib/workflow"
 
 export type ManagedUser = {
   id: string
   name: string
-  email: string
+  username: string
+  email: string | null
   title: string
   role: "LAWYER" | "INTERN" | "ADMIN"
   roleLabel: string
@@ -47,10 +50,11 @@ export async function listManagedUsers(actor: SessionUser) {
     const related =
       taskCount + user._count.comments + user._count.logs + user._count.files
     const isSelf = user.id === actor.id
-    const isDemo = isDemoEmail(user.email)
+    const isDemo = isDemoEmail(user.email) || isDemoUsername(user.username)
     return {
       id: user.id,
       name: user.name,
+      username: user.username,
       email: user.email,
       title: user.title,
       role: user.role,
@@ -67,6 +71,7 @@ export async function createOfficeUser(
   actor: SessionUser,
   input: {
     name: string
+    username: string
     email: string
     title: string
     role: string
@@ -76,6 +81,8 @@ export async function createOfficeUser(
   assertLawyer(actor.role)
   const name = validatePersonName(input.name)
   if (!name.ok) throw new WorkflowError(name.error)
+  const username = validateUsername(input.username)
+  if (!username.ok) throw new WorkflowError(username.error)
   const email = validatePersonEmail(input.email)
   if (!email.ok) throw new WorkflowError(email.error)
   const title = validatePersonTitle(input.title)
@@ -85,21 +92,28 @@ export async function createOfficeUser(
   const password = validateNewPassword(input.password)
   if (!password.ok) throw new WorkflowError(password.error)
 
-  const existing = await prisma.user.findUnique({ where: { email: email.email } })
-  if (existing) throw new WorkflowError("Bu e-posta zaten kayıtlı.")
+  const existingUsername = await prisma.user.findUnique({
+    where: { username: username.username },
+  })
+  if (existingUsername) throw new WorkflowError("Bu kullanıcı adı zaten alınmış.")
+  if (email.email) {
+    const existingEmail = await prisma.user.findUnique({ where: { email: email.email } })
+    if (existingEmail) throw new WorkflowError("Bu e-posta zaten kayıtlı.")
+  }
 
   const passwordHash = await bcrypt.hash(password.password, 12)
   const created = await prisma.user.create({
     data: {
       id: `user_${crypto.randomUUID().replace(/-/g, "").slice(0, 20)}`,
       name: name.name,
+      username: username.username,
       email: email.email,
       title: title.title,
       role: role.role,
       passwordHash,
     },
   })
-  return { id: created.id, email: created.email, name: created.name }
+  return { id: created.id, username: created.username, name: created.name }
 }
 
 export async function resetOfficePassword(
@@ -116,7 +130,7 @@ export async function resetOfficePassword(
     where: { id: userId },
     data: { passwordHash: await bcrypt.hash(password.password, 12) },
   })
-  return { email: user.email, name: user.name }
+  return { username: user.username, name: user.name }
 }
 
 export async function changeOwnPassword(
@@ -175,5 +189,5 @@ export async function deleteOfficeUser(actor: SessionUser, userId: string) {
     await tx.notification.deleteMany({ where: { userId } })
     await tx.user.delete({ where: { id: userId } })
   })
-  return { name: user.name, email: user.email }
+  return { name: user.name, username: user.username }
 }

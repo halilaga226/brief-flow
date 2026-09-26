@@ -2,6 +2,7 @@ import type { Role } from "@/lib/workflow"
 import { cleanText, WorkflowError } from "@/lib/workflow"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const USERNAME_RE = /^[a-z0-9][a-z0-9._-]{2,31}$/
 
 export function validatePersonName(raw: string) {
   const name = cleanText(raw)
@@ -17,12 +18,24 @@ export function validatePersonTitle(raw: string) {
   return { ok: true as const, title }
 }
 
+export function validateUsername(raw: string) {
+  const username = cleanText(raw).toLowerCase()
+  if (!USERNAME_RE.test(username)) {
+    return {
+      ok: false as const,
+      error: "Kullanıcı adı 3–32 karakter; küçük harf, rakam, nokta, tire veya alt çizgi.",
+    }
+  }
+  return { ok: true as const, username }
+}
+
 export function validatePersonEmail(raw: string) {
   const email = cleanText(raw).toLowerCase()
+  if (!email) return { ok: true as const, email: null as string | null }
   if (!EMAIL_RE.test(email)) return { ok: false as const, error: "Geçerli bir e-posta yazın." }
   if (email.length > 120) return { ok: false as const, error: "E-posta çok uzun." }
   if (email.endsWith("@vekalet.local")) {
-    return { ok: false as const, error: "Deneme e-postası kullanılamaz. Gerçek e-posta yazın." }
+    return { ok: false as const, error: "Deneme e-postası kullanılamaz." }
   }
   return { ok: true as const, email }
 }
@@ -55,6 +68,11 @@ export function assertLawyer(role: Role) {
   }
 }
 
-export function isDemoEmail(email: string) {
+export function isDemoEmail(email: string | null | undefined) {
+  if (!email) return false
   return email.toLowerCase().endsWith("@vekalet.local")
+}
+
+export function isDemoUsername(username: string) {
+  return ["ayse.demir", "mehmet.kaya", "elif.yilmaz", "can.ozturk"].includes(username.toLowerCase())
 }

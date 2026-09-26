@@ -41,9 +41,9 @@ function NavLinks({
         const Icon = link.icon
         const active = isActive(pathname, link.href)
         const className = cn(
-          "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition",
+          "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition",
           active
-            ? "bg-[var(--brand-primary)] text-white shadow-sm"
+            ? "bg-[var(--brand-primary)] font-semibold text-white shadow-sm"
             : "text-[var(--brand-ink)]/70 hover:bg-[var(--brand-soft)] hover:text-[var(--brand-ink)]",
         )
         if (inSheet) {
@@ -96,7 +96,7 @@ export function AppShell({
               <Scale className="size-4" />
             </span>
             <span className="min-w-0">
-              <span className="block truncate font-[family-name:var(--font-display)] text-sm font-bold leading-tight tracking-tight">
+              <span className="block truncate text-sm font-semibold leading-tight tracking-tight">
                 {BRAND.shortName}
               </span>
               <span className="block text-[11px] font-semibold text-[var(--brand-muted)]">
@@ -125,7 +125,7 @@ export function AppShell({
               {initials(user.name)}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-sm font-bold">{user.name}</span>
+              <span className="block truncate text-sm font-semibold">{user.name}</span>
               <span className="block truncate text-xs font-medium text-[var(--brand-muted)]">
                 {user.title || roleLabel(user.role)}
               </span>
@@ -154,7 +154,7 @@ export function AppShell({
             </SheetTrigger>
             <SheetContent side="left" className="w-[min(20rem,92vw)] bg-white">
               <div className="mt-8 px-2">
-                <p className="font-[family-name:var(--font-display)] text-lg font-bold leading-tight">
+                <p className="text-lg font-semibold leading-tight">
                   {BRAND.shortName}
                 </p>
                 <p className="text-xs font-semibold text-[var(--brand-muted)]">Hukuk Bürosu</p>
@@ -175,7 +175,7 @@ export function AppShell({
               </div>
             </SheetContent>
           </Sheet>
-          <p className="min-w-0 truncate font-[family-name:var(--font-display)] text-sm font-bold md:hidden">
+          <p className="min-w-0 truncate text-sm font-semibold md:hidden">
             {BRAND.shortName}
           </p>
           <div className="flex-1" />

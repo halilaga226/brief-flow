@@ -10,21 +10,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email: { label: "E-posta", type: "email" },
+        username: { label: "Kullanıcı adı", type: "text" },
         password: { label: "Parola", type: "password" },
       },
       async authorize(credentials) {
         const parsed = z
           .object({
-            email: z.string().email(),
+            username: z.string().trim().min(3).max(32),
             password: z.string().min(1),
           })
           .safeParse(credentials)
         if (!parsed.success) return null
 
         try {
+          const username = parsed.data.username.toLowerCase()
           const user = await prisma.user.findUnique({
-            where: { email: parsed.data.email.toLowerCase() },
+            where: { username },
           })
           if (!user) return null
           const ok = await bcrypt.compare(parsed.data.password, user.passwordHash)
@@ -32,7 +33,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return {
             id: user.id,
             name: user.name,
-            email: user.email,
+            email: user.email ?? `${user.username}@local`,
             role: user.role,
             title: user.title,
           }

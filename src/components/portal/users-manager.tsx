@@ -33,11 +33,11 @@ function CreateUserForm() {
   useActionResult(state)
 
   return (
-    <form action={action} className="grid gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+    <form action={action} className="grid gap-3 rounded-2xl border border-[var(--brand-border)] bg-white p-4">
       <div>
-        <h2 className="font-serif text-xl">Yeni kullanıcı</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Kişiye e-posta ve geçici parolayı iletin. İlk girişten sonra kendi parolasını değiştirmesini söyleyin.
+        <h2 className="text-xl font-semibold">Yeni kullanıcı</h2>
+        <p className="mt-1 text-sm text-[var(--brand-muted)]">
+          Giriş kullanıcı adı ve geçici parolayı kişiye iletin.
         </p>
       </div>
       {state?.error ? (
@@ -51,14 +51,14 @@ function CreateUserForm() {
           <Input id="name" name="name" required className="h-10" placeholder="Halil Karakaya" />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="email">E-posta</Label>
+          <Label htmlFor="username">Kullanıcı adı</Label>
           <Input
-            id="email"
-            name="email"
-            type="email"
+            id="username"
+            name="username"
             required
             className="h-10"
-            placeholder="halil@buroadi.com"
+            placeholder="halil.karakaya"
+            autoComplete="off"
           />
         </div>
         <div className="grid gap-1.5">
@@ -79,6 +79,16 @@ function CreateUserForm() {
             </SelectContent>
           </Select>
         </div>
+        <div className="grid gap-1.5 sm:col-span-2">
+          <Label htmlFor="email">E-posta (isteğe bağlı)</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            className="h-10"
+            placeholder="halil@buroadi.com"
+          />
+        </div>
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="password">Geçici parola</Label>
@@ -94,7 +104,7 @@ function CreateUserForm() {
         />
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={pending} className="bg-zinc-900">
+        <Button type="submit" disabled={pending} className="bg-[var(--brand-primary)] font-semibold">
           {pending ? "Ekleniyor…" : "Kullanıcıyı ekle"}
         </Button>
       </div>
@@ -115,7 +125,7 @@ function ResetPasswordDialog({ user }: { user: ManagedUser }) {
         <DialogHeader>
           <DialogTitle>Parola sıfırla</DialogTitle>
           <DialogDescription>
-            {user.name} için yeni geçici parola belirleyin. Kişiye güvenli kanaldan iletin.
+            {user.name} (@{user.username}) için yeni geçici parola belirleyin.
           </DialogDescription>
         </DialogHeader>
         <form action={action} className="grid gap-3">
@@ -168,32 +178,34 @@ export function UsersManager({ users }: { users: ManagedUser[] }) {
   return (
     <div className="grid gap-5">
       <CreateUserForm />
-      <section className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
-        <div className="border-b px-4 py-3">
-          <h2 className="font-serif text-xl">Büro kullanıcıları</h2>
-          <p className="text-xs text-muted-foreground">
-            Deneme hesapları (@vekalet.local) işi yoksa silinebilir.
-          </p>
+      <section className="overflow-hidden rounded-2xl border border-[var(--brand-border)] bg-white">
+        <div className="border-b border-[var(--brand-border)] px-4 py-3">
+          <h2 className="text-xl font-semibold">Büro kullanıcıları</h2>
+          <p className="text-sm text-[var(--brand-muted)]">Giriş kullanıcı adı ile yapılır.</p>
         </div>
-        <ul className="divide-y">
+        <ul className="divide-y divide-[var(--brand-border)]">
           {users.map((user) => (
-            <li key={user.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <li
+              key={user.id}
+              className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div>
-                <p className="text-sm font-medium">
+                <p className="text-sm font-semibold">
                   {user.name}
                   {user.isSelf ? (
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">(siz)</span>
+                    <span className="ml-2 text-xs font-normal text-[var(--brand-muted)]">(siz)</span>
                   ) : null}
                   {user.isDemo ? (
-                    <span className="ml-2 rounded-full bg-[#f3ead2] px-2 py-0.5 text-[11px] text-[#7a5b12]">
+                    <span className="ml-2 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 text-[11px] text-[var(--brand-primary)]">
                       Deneme
                     </span>
                   ) : null}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {user.title} · {user.roleLabel} · {user.email}
+                <p className="text-sm text-[var(--brand-muted)]">
+                  @{user.username} · {user.title} · {user.roleLabel}
+                  {user.email ? ` · ${user.email}` : ""}
                 </p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-[var(--brand-muted)]">
                   {user.taskCount} görev kaydı
                   {!user.canDelete && !user.isSelf
                     ? " · silmek için önce bağlı işler temizlenmeli"

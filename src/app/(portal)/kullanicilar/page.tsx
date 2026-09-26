@@ -29,7 +29,7 @@ export default async function UsersPage() {
     <div className="mx-auto grid max-w-3xl gap-5">
       <div>
         <p className="text-xs font-bold tracking-[0.14em] text-[var(--brand-muted)] uppercase">Büro</p>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight md:text-4xl">
+        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
           Kullanıcılar
         </h1>
         <p className="mt-2 text-sm font-semibold text-[var(--brand-muted)]">

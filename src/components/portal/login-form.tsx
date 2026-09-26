@@ -9,22 +9,22 @@ import { signIn } from "next-auth/react"
 import { useState } from "react"
 
 export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
-  async function enter(nextEmail: string, nextPassword: string) {
+  async function enter(nextUsername: string, nextPassword: string) {
     setPending(true)
     setError(null)
     const result = await signIn("credentials", {
-      email: nextEmail,
+      username: nextUsername,
       password: nextPassword,
       redirect: false,
     })
     if (!result || result.error) {
       setPending(false)
-      setError("E-posta veya parola hatalı.")
+      setError("Kullanıcı adı veya parola hatalı.")
       return
     }
     window.location.assign("/gorevler")
@@ -36,20 +36,20 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
         className="grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
-          void enter(email, password)
+          void enter(username, password)
         }}
       >
         <div className="grid gap-1.5">
-          <Label htmlFor="email">E-posta</Label>
+          <Label htmlFor="username">Kullanıcı adı</Label>
           <Input
-            id="email"
-            type="email"
+            id="username"
+            type="text"
             autoComplete="username"
             required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="h-10"
-            placeholder="adsoyad@buroadi.com"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            className="h-11"
+            placeholder="ornek.kullanici"
           />
         </div>
         <div className="grid gap-1.5">
@@ -61,7 +61,7 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="h-10"
+            className="h-11"
           />
         </div>
         {error ? (
@@ -69,7 +69,11 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
             {error}
           </p>
         ) : null}
-        <Button type="submit" disabled={pending} className="h-11 bg-[var(--brand-primary)] font-bold hover:bg-[var(--brand-primary-hover)]">
+        <Button
+          type="submit"
+          disabled={pending}
+          className="h-11 bg-[var(--brand-primary)] font-semibold hover:bg-[var(--brand-primary-hover)]"
+        >
           {pending ? "Giriş yapılıyor…" : "Giriş yap"}
         </Button>
       </form>
@@ -87,15 +91,15 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
                 type="button"
                 disabled={pending}
                 onClick={() => {
-                  setEmail(account.email)
+                  setUsername(account.username)
                   setPassword(DEMO_PASSWORD)
-                  void enter(account.email, DEMO_PASSWORD)
+                  void enter(account.username, DEMO_PASSWORD)
                 }}
                 className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-left hover:bg-muted disabled:opacity-60"
               >
                 <span>
                   <span className="block text-sm font-medium">{account.name}</span>
-                  <span className="block text-xs text-muted-foreground">{account.title}</span>
+                  <span className="block text-xs text-muted-foreground">@{account.username}</span>
                 </span>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] ring-1 ring-border">
                   {roleLabel(account.role)}
@@ -106,7 +110,7 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
         </div>
       ) : (
         <p className="text-xs leading-relaxed text-muted-foreground">
-          Hesabınız yoksa bürodaki bir avukattan kullanıcı açmasını isteyin.
+          Kullanıcı adınızı büro yöneticisi belirler.
         </p>
       )}
     </div>

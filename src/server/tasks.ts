@@ -125,7 +125,7 @@ export async function listAssignees(actor: SessionUser) {
       name: user.name,
       title: user.title,
       role: user.role,
-      email: user.email,
+      email: user.email ?? "",
     }))
     .sort((a, b) => {
       const diff = rank(a.role) - rank(b.role)

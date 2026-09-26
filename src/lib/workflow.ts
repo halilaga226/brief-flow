@@ -19,11 +19,14 @@ export type VisualTone = "yellow" | "red" | "neutral"
 
 export const FILTERS = [
   "tum",
+  "atanan",
+  "atadigim",
   "bekleyen",
-  "geciken",
-  "yaklasan",
   "inceleme",
+  "onay",
+  "gonderim",
   "arama",
+  "geciken",
   "tamam",
 ] as const
 export type TaskFilter = (typeof FILTERS)[number]
@@ -457,18 +460,27 @@ export function matchesFilter(
     dueTone: DueTone
     needsAction: boolean
     clientCallStatus?: ClientCallStatus
+    assignerId?: string
+    assigneeId?: string
   },
   filter: TaskFilter,
+  userId?: string,
 ) {
   switch (filter) {
+    case "atanan":
+      return Boolean(userId) && task.assigneeId === userId
+    case "atadigim":
+      return Boolean(userId) && task.assignerId === userId
     case "bekleyen":
       return task.needsAction
     case "geciken":
       return task.dueTone === "overdue"
-    case "yaklasan":
-      return task.dueTone === "today" || task.dueTone === "soon"
     case "inceleme":
       return task.status === "INCELEME_BEKLIYOR"
+    case "onay":
+      return task.status === "ONAYLANDI"
+    case "gonderim":
+      return task.status === "GONDERIM_BEKLIYOR"
     case "arama":
       return task.clientCallStatus === "ARANACAK"
     case "tamam":

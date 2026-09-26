@@ -29,6 +29,7 @@ export async function createUserAction(
   try {
     const created = await createOfficeUser(actor, {
       name: readText(formData, "name"),
+      username: readText(formData, "username"),
       email: readText(formData, "email"),
       title: readText(formData, "title"),
       role: readText(formData, "role"),
@@ -36,9 +37,10 @@ export async function createUserAction(
     })
     revalidatePath("/kullanicilar")
     revalidatePath("/gorevler/yeni")
+    revalidatePath("/ayarlar")
     return {
       ok: true,
-      message: `${created.name} eklendi. Giriş: ${created.email}`,
+      message: `${created.name} eklendi. Giriş adı: ${created.username}`,
     }
   } catch (error) {
     return actionError(error)

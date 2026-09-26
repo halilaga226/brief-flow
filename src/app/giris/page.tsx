@@ -18,10 +18,10 @@ export default function LoginPage() {
           <span className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/25">
             <Scale className="size-6" />
           </span>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-[var(--brand-ink)] sm:text-4xl">
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[var(--brand-ink)] sm:text-4xl">
             {BRAND.name}
           </h1>
-          <p className="mt-2 text-sm font-semibold text-[var(--brand-muted)]">Büro hesabınızla giriş yapın</p>
+          <p className="mt-2 text-sm text-[var(--brand-muted)]">Kullanıcı adınızla giriş yapın</p>
         </div>
         <div className="rounded-3xl border border-[var(--brand-border)] bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,61,46,0.08)] sm:p-7">
           <LoginForm showDemo={showDemo} />

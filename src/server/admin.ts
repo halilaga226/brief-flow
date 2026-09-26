@@ -1,7 +1,7 @@
 import type { SessionUser } from "@/lib/dto"
 import { prisma } from "@/lib/prisma"
 import { isAdmin, WorkflowError } from "@/lib/workflow"
-import { isDemoEmail } from "@/lib/users"
+import { isDemoEmail, isDemoUsername } from "@/lib/users"
 
 export async function getAdminOverview(actor: SessionUser) {
   if (!isAdmin(actor.role)) {
@@ -14,8 +14,13 @@ export async function getAdminOverview(actor: SessionUser) {
       prisma.task.count({ where: { status: { not: "TAMAMLANDI" } } }),
       prisma.task.count({ where: { clientCallStatus: "ARANACAK" } }),
       prisma.user.findMany({
-        where: { email: { endsWith: "@vekalet.local" } },
-        select: { id: true, name: true, email: true },
+        where: {
+          OR: [
+            { email: { endsWith: "@vekalet.local" } },
+            { username: { in: ["ayse.demir", "mehmet.kaya", "elif.yilmaz", "can.ozturk"] } },
+          ],
+        },
+        select: { id: true, name: true, email: true, username: true },
       }),
       prisma.task.findMany({
         orderBy: { updatedAt: "desc" },
@@ -50,14 +55,20 @@ export async function clearDemoData(actor: SessionUser) {
   if (!isAdmin(actor.role)) {
     throw new WorkflowError("Yalnızca yönetici örnek veriyi silebilir.")
   }
-  if (isDemoEmail(actor.email)) {
+  const actorRow = await prisma.user.findUnique({ where: { id: actor.id } })
+  if (actorRow && (isDemoEmail(actorRow.email) || isDemoUsername(actorRow.username))) {
     throw new WorkflowError(
       "Örnek hesapla girişliyken temizleme yapılamaz. Kendi yönetici hesabınızla girin.",
     )
   }
 
   const demoUsers = await prisma.user.findMany({
-    where: { email: { endsWith: "@vekalet.local" } },
+    where: {
+      OR: [
+        { email: { endsWith: "@vekalet.local" } },
+        { username: { in: ["ayse.demir", "mehmet.kaya", "elif.yilmaz", "can.ozturk"] } },
+      ],
+    },
     select: { id: true },
   })
   const demoIds = demoUsers.map((user) => user.id)
