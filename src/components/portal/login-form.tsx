@@ -27,7 +27,7 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
       setError("Kullanıcı adı veya parola hatalı.")
       return
     }
-    window.location.assign("/")
+    window.location.assign("/ana")
   }
 
   return (

@@ -25,14 +25,14 @@ function dueText(task: TaskCardDTO) {
 }
 
 function dueClass(tone: DueTone) {
-  if (tone === "overdue" || tone === "today") return "text-destructive"
-  if (tone === "soon") return "text-[var(--brand-accent)]"
+  if (tone === "overdue") return "text-red-600 dark:text-red-300"
+  if (tone === "today" || tone === "soon") return "text-orange-600 dark:text-orange-300"
   return "text-muted-foreground"
 }
 
 function toneRing(tone: VisualTone) {
-  if (tone === "red") return "ring-destructive/40 bg-destructive/10"
-  if (tone === "yellow") return "ring-[var(--brand-accent)]/40 bg-accent"
+  if (tone === "red") return "ring-red-400/50 bg-red-500/10"
+  if (tone === "yellow") return "ring-orange-400/50 bg-orange-500/10"
   return "ring-border bg-card"
 }
 
@@ -142,8 +142,8 @@ export function TaskBoard({ tasks, view }: { tasks: TaskCardDTO[]; view: TaskVie
                   <div
                     className={cn(
                       "relative grid gap-2 px-3 py-3.5 sm:px-4 md:grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr_auto] md:items-center",
-                      task.visualTone === "red" && "bg-destructive/10",
-                      task.visualTone === "yellow" && "bg-accent/60",
+                      task.visualTone === "red" && "bg-red-500/10",
+                      task.visualTone === "yellow" && "bg-orange-500/10",
                     )}
                   >
                     <Link href={`/gorevler/${task.id}`} className="absolute inset-0" aria-label={task.title} />

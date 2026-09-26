@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Source_Sans_3 } from "next/font/google"
+import { Outfit, Source_Sans_3 } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
@@ -10,6 +10,12 @@ const sourceSans = Source_Sans_3({
   subsets: ["latin", "latin-ext"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
+})
+
+const outfit = Outfit({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-display",
+  weight: ["500", "600", "700", "800"],
 })
 
 export const metadata: Metadata = {
@@ -27,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <body className={`${sourceSans.variable} antialiased`}>
+      <body className={`${sourceSans.variable} ${outfit.variable} antialiased`}>
         <ThemeProvider>
           <TooltipProvider>
             {children}

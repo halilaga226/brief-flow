@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import {
   ClipboardList,
   FolderOpen,
+  Home,
   LogOut,
   Menu,
   Plus,
@@ -26,6 +27,7 @@ import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 
 function isActive(pathname: string, href: string) {
+  if (href === "/ana") return pathname === "/ana"
   if (href === "/gorevler") {
     return pathname === "/gorevler" || pathname.startsWith("/gorevler/")
   }
@@ -46,6 +48,7 @@ function NavLinks({
 }) {
   const pathname = usePathname()
   const links = [
+    { href: "/ana", label: "Ana sayfa", icon: Home },
     ...(canAssign ? [{ href: "/is-listesi", label: "İş listesi", icon: ClipboardList }] : []),
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(canManage ? [{ href: "/kullanicilar", label: "Kullanıcılar", icon: Users }] : []),
@@ -59,8 +62,8 @@ function NavLinks({
         const className = cn(
           "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition",
           active
-            ? "bg-primary font-semibold text-primary-foreground shadow-sm"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            ? "bg-sidebar-primary font-semibold text-sidebar-primary-foreground shadow-sm shadow-blue-500/20"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
         )
         if (inSheet) {
           return (
@@ -97,6 +100,14 @@ export function AppShell({
   const lawyer = canCreateTask(user.role)
   const manager = canManageUsers(user.role)
 
+  const mobileLinks = [
+    { href: "/ana", label: "Ana", icon: Home },
+    ...(lawyer ? [{ href: "/is-listesi", label: "İşler", icon: ClipboardList }] : []),
+    { href: "/gorevler", label: "Görevler", icon: FolderOpen },
+    ...(manager && !lawyer ? [{ href: "/kullanicilar", label: "Kullanıcı", icon: Users }] : []),
+    { href: "/ayarlar", label: "Ayarlar", icon: Settings },
+  ]
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <a
@@ -105,24 +116,24 @@ export function AppShell({
       >
         İçeriğe geç
       </a>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-border bg-card md:flex">
-        <div className="border-b border-border px-4 py-4">
-          <Link href={lawyer ? "/is-listesi" : "/gorevler"} className="flex items-center gap-2.5">
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+        <div className="border-b border-sidebar-border px-4 py-4">
+          <Link href="/ana" className="flex items-center gap-2.5">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30">
               <Scale className="size-4" />
             </span>
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold leading-tight tracking-tight">
                 {BRAND.shortName}
               </span>
-              <span className="block text-[11px] font-medium text-muted-foreground">Hukuk Bürosu</span>
+              <span className="block text-[11px] font-medium text-sidebar-foreground/60">Hukuk Bürosu</span>
             </span>
           </Link>
         </div>
         <div className="flex-1 px-3 py-4">
           <NavLinks canAssign={lawyer} canManage={manager} />
           {lawyer ? (
-            <Button asChild className="mt-4 w-full font-semibold">
+            <Button asChild className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 font-semibold text-white hover:from-orange-600 hover:to-amber-600">
               <Link href="/gorevler/yeni">
                 <Plus />
                 Görev ver
@@ -130,20 +141,20 @@ export function AppShell({
             </Button>
           ) : null}
         </div>
-        <div className="border-t border-border p-3">
+        <div className="border-t border-sidebar-border p-3">
           <div className="mb-2 flex items-center gap-2 px-2">
-            <span className="flex size-9 items-center justify-center rounded-full bg-muted text-xs font-semibold text-primary">
+            <span className="flex size-9 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-blue-300">
               {initials(user.name)}
             </span>
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold">{user.name}</span>
-              <span className="block truncate text-xs text-muted-foreground">
+              <span className="block truncate text-xs text-sidebar-foreground/60">
                 {user.title || roleLabel(user.role)}
               </span>
             </span>
           </div>
           <form action={signOutAction}>
-            <Button type="submit" variant="ghost" className="w-full justify-start text-muted-foreground">
+            <Button type="submit" variant="ghost" className="w-full justify-start text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground">
               <LogOut />
               Çıkış
             </Button>
@@ -159,10 +170,10 @@ export function AppShell({
                 <Menu />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[min(20rem,92vw)] bg-card">
+            <SheetContent side="left" className="w-[min(20rem,92vw)] border-sidebar-border bg-sidebar text-sidebar-foreground">
               <div className="mt-8 px-2">
                 <p className="text-lg font-semibold leading-tight">{BRAND.shortName}</p>
-                <p className="text-xs font-medium text-muted-foreground">Hukuk Bürosu</p>
+                <p className="text-xs font-medium text-sidebar-foreground/60">Hukuk Bürosu</p>
                 <div className="mt-4">
                   <NavLinks inSheet canAssign={lawyer} canManage={manager} />
                 </div>
@@ -173,7 +184,7 @@ export function AppShell({
           <div className="flex-1" />
           <ThemeToggle />
           {lawyer ? (
-            <Button asChild size="sm" className="hidden font-semibold sm:inline-flex">
+            <Button asChild size="sm" className="hidden bg-gradient-to-r from-orange-500 to-amber-500 font-semibold text-white sm:inline-flex">
               <Link href="/gorevler/yeni">
                 <Plus />
                 Görev ver
@@ -196,15 +207,11 @@ export function AppShell({
         <nav
           className={cn(
             "fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-card/95 px-1 py-1 backdrop-blur md:hidden",
-            lawyer ? "grid-cols-4" : manager ? "grid-cols-3" : "grid-cols-2",
+            `grid-cols-${Math.min(mobileLinks.length, 5)}`,
           )}
+          style={{ gridTemplateColumns: `repeat(${mobileLinks.length}, minmax(0, 1fr))` }}
         >
-          {[
-            ...(lawyer ? [{ href: "/is-listesi", label: "İşler", icon: ClipboardList }] : []),
-            { href: "/gorevler", label: "Görevler", icon: FolderOpen },
-            ...(manager ? [{ href: "/kullanicilar", label: "Kullanıcı", icon: Users }] : []),
-            { href: "/ayarlar", label: "Ayarlar", icon: Settings },
-          ].map((link) => {
+          {mobileLinks.map((link) => {
             const Icon = link.icon
             const active = isActive(pathname, link.href)
             return (

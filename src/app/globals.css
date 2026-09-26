@@ -9,8 +9,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-sans);
-  --font-heading: var(--font-sans);
+  --font-serif: var(--font-display);
+  --font-heading: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -40,6 +40,11 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-zone-overdue: var(--zone-overdue);
+  --color-zone-soon: var(--zone-soon);
+  --color-zone-done: var(--zone-done);
+  --color-zone-active: var(--zone-active);
+  --color-zone-review: var(--zone-review);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -50,92 +55,102 @@
 }
 
 :root {
-  --brand-canvas: #ecfdf8;
-  --brand-ink: #042f2e;
-  --brand-muted: #0f766e;
-  --brand-border: #99f6e4;
-  --brand-soft: #ccfbf1;
-  --brand-primary: #0d9488;
-  --brand-primary-hover: #0f766e;
+  --brand-canvas: #f4f6fb;
+  --brand-ink: #0f172a;
+  --brand-muted: #64748b;
+  --brand-border: #dbe3f0;
+  --brand-soft: #e8eefc;
+  --brand-primary: #2563eb;
+  --brand-primary-hover: #1d4ed8;
   --brand-accent: #f97316;
   --brand-accent-hover: #ea580c;
   --brand-danger: #ef4444;
-  --background: #ecfdf8;
-  --foreground: #042f2e;
+  --zone-overdue: #ef4444;
+  --zone-soon: #f97316;
+  --zone-done: #16a34a;
+  --zone-active: #2563eb;
+  --zone-review: #8b5cf6;
+  --background: #f4f6fb;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #042f2e;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #042f2e;
-  --primary: #0d9488;
-  --primary-foreground: #f0fdfa;
-  --secondary: #ccfbf1;
-  --secondary-foreground: #134e4a;
-  --muted: #d1fae5;
-  --muted-foreground: #115e59;
+  --popover-foreground: #0f172a;
+  --primary: #2563eb;
+  --primary-foreground: #f8fafc;
+  --secondary: #e8eefc;
+  --secondary-foreground: #1e3a8a;
+  --muted: #eef2f7;
+  --muted-foreground: #64748b;
   --accent: #ffedd5;
   --accent-foreground: #9a3412;
   --destructive: #ef4444;
-  --border: #99f6e4;
-  --input: #5eead4;
-  --ring: #14b8a6;
-  --chart-1: #14b8a6;
+  --border: #dbe3f0;
+  --input: #cbd5e1;
+  --ring: #3b82f6;
+  --chart-1: #2563eb;
   --chart-2: #f97316;
   --chart-3: #ef4444;
-  --chart-4: #06b6d4;
-  --chart-5: #0f766e;
-  --radius: 1rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #042f2e;
-  --sidebar-primary: #0d9488;
-  --sidebar-primary-foreground: #f0fdfa;
-  --sidebar-accent: #ccfbf1;
-  --sidebar-accent-foreground: #134e4a;
-  --sidebar-border: #99f6e4;
-  --sidebar-ring: #14b8a6;
+  --chart-4: #8b5cf6;
+  --chart-5: #16a34a;
+  --radius: 1.1rem;
+  --sidebar: #0b1220;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #f8fafc;
+  --sidebar-accent: #152038;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #3b82f6;
 }
 
 .dark {
-  --brand-canvas: #021a18;
-  --brand-ink: #ecfdf8;
-  --brand-muted: #5eead4;
-  --brand-border: #115e59;
-  --brand-soft: #0f3d38;
-  --brand-primary: #2dd4bf;
-  --brand-primary-hover: #5eead4;
+  --brand-canvas: #070b14;
+  --brand-ink: #f1f5f9;
+  --brand-muted: #94a3b8;
+  --brand-border: #1e293b;
+  --brand-soft: #152038;
+  --brand-primary: #60a5fa;
+  --brand-primary-hover: #93c5fd;
   --brand-accent: #fb923c;
   --brand-accent-hover: #fdba74;
   --brand-danger: #f87171;
-  --background: #021a18;
-  --foreground: #ecfdf8;
-  --card: #0a2a26;
-  --card-foreground: #ecfdf8;
-  --popover: #0a2a26;
-  --popover-foreground: #ecfdf8;
-  --primary: #2dd4bf;
-  --primary-foreground: #042f2e;
-  --secondary: #0f3d38;
-  --secondary-foreground: #ccfbf1;
-  --muted: #0f3d38;
-  --muted-foreground: #99f6e4;
+  --zone-overdue: #f87171;
+  --zone-soon: #fb923c;
+  --zone-done: #4ade80;
+  --zone-active: #60a5fa;
+  --zone-review: #a78bfa;
+  --background: #070b14;
+  --foreground: #f1f5f9;
+  --card: #0f1629;
+  --card-foreground: #f1f5f9;
+  --popover: #0f1629;
+  --popover-foreground: #f1f5f9;
+  --primary: #60a5fa;
+  --primary-foreground: #0b1220;
+  --secondary: #152038;
+  --secondary-foreground: #dbeafe;
+  --muted: #152038;
+  --muted-foreground: #94a3b8;
   --accent: #431407;
   --accent-foreground: #fdba74;
   --destructive: #f87171;
-  --border: #115e59;
-  --input: #134e4a;
-  --ring: #2dd4bf;
-  --chart-1: #2dd4bf;
+  --border: #1e293b;
+  --input: #334155;
+  --ring: #60a5fa;
+  --chart-1: #60a5fa;
   --chart-2: #fb923c;
   --chart-3: #f87171;
-  --chart-4: #22d3ee;
-  --chart-5: #99f6e4;
-  --sidebar: #041f1c;
-  --sidebar-foreground: #ecfdf8;
-  --sidebar-primary: #2dd4bf;
-  --sidebar-primary-foreground: #042f2e;
-  --sidebar-accent: #0f3d38;
-  --sidebar-accent-foreground: #ccfbf1;
-  --sidebar-border: #115e59;
-  --sidebar-ring: #2dd4bf;
+  --chart-4: #a78bfa;
+  --chart-5: #4ade80;
+  --sidebar: #050914;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #60a5fa;
+  --sidebar-primary-foreground: #0b1220;
+  --sidebar-accent: #152038;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #60a5fa;
 }
 
 @layer base {
@@ -149,13 +164,15 @@
     @apply bg-background text-foreground antialiased font-normal;
     line-height: 1.55;
     background-image:
-      radial-gradient(ellipse 80% 50% at 0% -10%, color-mix(in oklab, var(--primary) 18%, transparent), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 0%, color-mix(in oklab, var(--brand-accent) 14%, transparent), transparent);
+      radial-gradient(ellipse 70% 45% at 0% -5%, color-mix(in oklab, var(--primary) 16%, transparent), transparent),
+      radial-gradient(ellipse 55% 40% at 100% 0%, color-mix(in oklab, var(--brand-accent) 14%, transparent), transparent),
+      radial-gradient(ellipse 40% 30% at 70% 100%, color-mix(in oklab, var(--zone-review) 10%, transparent), transparent);
     background-attachment: fixed;
   }
   h1,
   h2,
   h3 {
+    font-family: var(--font-display), var(--font-sans), sans-serif;
     @apply font-semibold tracking-tight;
   }
   ::selection {
