@@ -8,7 +8,9 @@ import {
   canCreateTask,
   canReview,
   canUploadDraft,
+  canViewTask,
   cleanText,
+  isAdmin,
   isParticipant,
   safeFileName,
   validateComment,
@@ -27,9 +29,9 @@ import {
   toTaskDetail,
 } from "@/server/present"
 
-async function visibleTask(taskId: string, userId: string) {
+async function visibleTask(taskId: string, actor: SessionUser) {
   const task = await prisma.task.findUnique({ where: { id: taskId } })
-  if (!task || !isParticipant(task, userId)) return null
+  if (!task || !canViewTask(task, actor.id, actor.role)) return null
   return task
 }
 
@@ -37,13 +39,15 @@ function otherParty(task: { assignerId: string; assigneeId: string }, userId: st
   return userId === task.assignerId ? task.assigneeId : task.assignerId
 }
 
-export async function listTasks(userId: string) {
+export async function listTasks(userId: string, role: SessionUser["role"]) {
   const tasks = await prisma.task.findMany({
-    where: { OR: [{ assignerId: userId }, { assigneeId: userId }] },
+    where: isAdmin(role)
+      ? undefined
+      : { OR: [{ assignerId: userId }, { assigneeId: userId }] },
     include: taskCardInclude,
     orderBy: { updatedAt: "desc" },
   })
-  return tasks.map((task) => toTaskCard(task, userId))
+  return tasks.map((task) => toTaskCard(task, userId, role))
 }
 
 export async function getTask(userId: string, role: SessionUser["role"], taskId: string) {
@@ -51,7 +55,7 @@ export async function getTask(userId: string, role: SessionUser["role"], taskId:
     where: { id: taskId },
     include: taskDetailInclude,
   })
-  if (!task || !isParticipant(task, userId)) return null
+  if (!task || !canViewTask(task, userId, role)) return null
   return toTaskDetail(task, userId, role)
 }
 
@@ -64,11 +68,13 @@ export async function listNotifications(userId: string) {
   return rows.map(toNotification)
 }
 
-export async function recentActivity(userId: string) {
+export async function recentActivity(userId: string, role: SessionUser["role"]) {
   const rows = await prisma.taskLog.findMany({
-    where: {
-      task: { OR: [{ assignerId: userId }, { assigneeId: userId }] },
-    },
+    where: isAdmin(role)
+      ? undefined
+      : {
+          task: { OR: [{ assignerId: userId }, { assigneeId: userId }] },
+        },
     include: { actor: true, task: true },
     orderBy: { createdAt: "desc" },
     take: 8,
@@ -76,10 +82,10 @@ export async function recentActivity(userId: string) {
   return rows.map(toActivity)
 }
 
-export async function getDashboard(userId: string) {
+export async function getDashboard(userId: string, role: SessionUser["role"]) {
   const [tasks, activity] = await Promise.all([
-    listTasks(userId),
-    recentActivity(userId),
+    listTasks(userId, role),
+    recentActivity(userId, role),
   ])
   const awaiting = tasks
     .filter((task) => task.needsAction)
@@ -103,12 +109,13 @@ export async function getDashboard(userId: string) {
 
 export async function listAssignees(actor: SessionUser) {
   if (!canCreateTask(actor.role)) {
-    throw new WorkflowError("Yalnızca avukatlar görev atayabilir.")
+    throw new WorkflowError("Yalnızca avukat veya yönetici görev atayabilir.")
   }
   const users = await prisma.user.findMany({
     where: { id: { not: actor.id } },
     orderBy: { name: "asc" },
   })
+  const rank = (role: string) => (role === "ADMIN" ? 0 : role === "LAWYER" ? 1 : 2)
   return users
     .map((user) => ({
       id: user.id,
@@ -118,7 +125,8 @@ export async function listAssignees(actor: SessionUser) {
       email: user.email,
     }))
     .sort((a, b) => {
-      if (a.role !== b.role) return a.role === "LAWYER" ? -1 : 1
+      const diff = rank(a.role) - rank(b.role)
+      if (diff !== 0) return diff
       return a.name.localeCompare(b.name, "tr")
     })
 }
@@ -146,7 +154,7 @@ export async function createTask(
   file?: File | null,
 ) {
   if (!canCreateTask(actor.role)) {
-    throw new WorkflowError("Yalnızca avukatlar görev atayabilir.")
+    throw new WorkflowError("Yalnızca avukat veya yönetici görev atayabilir.")
   }
   const problem = validateTaskDraft(input)
   if (problem) throw new WorkflowError(problem)
@@ -212,16 +220,16 @@ export async function createTask(
 }
 
 export async function uploadDraft(actor: SessionUser, taskId: string, file: File) {
-  const existing = await visibleTask(taskId, actor.id)
+  const existing = await visibleTask(taskId, actor)
   if (!existing) throw new WorkflowError("Görev bulunamadı.")
-  if (!canUploadDraft(existing, actor.id)) {
+  if (!canUploadDraft(existing, actor.id, actor.role)) {
     throw new WorkflowError("Bu aşamada taslak yüklenemez.")
   }
   const stored = await storeUpload(file)
   try {
     await prisma.$transaction(async (tx) => {
       const task = await tx.task.findUnique({ where: { id: taskId } })
-      if (!task || !canUploadDraft(task, actor.id)) {
+      if (!task || !canUploadDraft(task, actor.id, actor.role)) {
         throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
       }
       await tx.taskFile.create({
@@ -269,7 +277,7 @@ export async function uploadDraft(actor: SessionUser, taskId: string, file: File
 export async function requestRevision(actor: SessionUser, taskId: string, rawNote: string) {
   const noteResult = validateNote(rawNote, "Revizyon notu")
   if (!noteResult.ok) throw new WorkflowError(noteResult.error)
-  const existing = await visibleTask(taskId, actor.id)
+  const existing = await visibleTask(taskId, actor)
   if (!existing) throw new WorkflowError("Görev bulunamadı.")
   if (!canReview(existing, actor.id, actor.role)) {
     throw new WorkflowError("Bu taslağı revizeye gönderme yetkiniz yok.")
@@ -308,7 +316,7 @@ export async function requestRevision(actor: SessionUser, taskId: string, rawNot
 export async function approveTask(actor: SessionUser, taskId: string, rawNote: string) {
   const note = cleanText(rawNote)
   if (note.length > 2000) throw new WorkflowError("Onay notu 2000 karakteri aşamaz.")
-  const existing = await visibleTask(taskId, actor.id)
+  const existing = await visibleTask(taskId, actor)
   if (!existing) throw new WorkflowError("Görev bulunamadı.")
   if (!canReview(existing, actor.id, actor.role)) {
     throw new WorkflowError("Bu taslağı onaylama yetkiniz yok.")
@@ -347,15 +355,15 @@ export async function approveTask(actor: SessionUser, taskId: string, rawNote: s
 export async function completeTask(actor: SessionUser, taskId: string, rawCode: string) {
   const codeResult = validateTrackingCode(rawCode)
   if (!codeResult.ok) throw new WorkflowError(codeResult.error)
-  const existing = await visibleTask(taskId, actor.id)
+  const existing = await visibleTask(taskId, actor)
   if (!existing) throw new WorkflowError("Görev bulunamadı.")
-  if (!canComplete(existing, actor.id)) {
+  if (!canComplete(existing, actor.id, actor.role)) {
     throw new WorkflowError("Bu iş şu anda tamamlanamaz.")
   }
 
   await prisma.$transaction(async (tx) => {
     const task = await tx.task.findUnique({ where: { id: taskId } })
-    if (!task || !canComplete(task, actor.id)) {
+    if (!task || !canComplete(task, actor.id, actor.role)) {
       throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
     }
     await tx.task.update({
@@ -391,8 +399,8 @@ export async function completeTask(actor: SessionUser, taskId: string, rawCode: 
 export async function addComment(actor: SessionUser, taskId: string, rawBody: string) {
   const comment = validateComment(rawBody)
   if (!comment.ok) throw new WorkflowError(comment.error)
-  const existing = await visibleTask(taskId, actor.id)
-  if (!existing || !canComment(existing, actor.id)) {
+  const existing = await visibleTask(taskId, actor)
+  if (!existing || !canComment(existing, actor.id, actor.role)) {
     throw new WorkflowError("Bu işe not yazamazsınız.")
   }
   await prisma.$transaction(async (tx) => {
@@ -403,20 +411,29 @@ export async function addComment(actor: SessionUser, taskId: string, rawBody: st
       where: { id: taskId },
       data: { updatedAt: new Date() },
     })
-    await tx.notification.create({
-      data: {
-        userId: otherParty(existing, actor.id),
-        taskId,
-        title: "Yeni iç not",
-        body: `${actor.name}: ${comment.body.slice(0, 140)}`,
-      },
-    })
+    const recipients = isParticipant(existing, actor.id)
+      ? [otherParty(existing, actor.id)]
+      : [existing.assignerId, existing.assigneeId].filter((id) => id !== actor.id)
+    for (const userId of [...new Set(recipients)]) {
+      await tx.notification.create({
+        data: {
+          userId,
+          taskId,
+          title: "Yeni iç not",
+          body: `${actor.name}: ${comment.body.slice(0, 140)}`,
+        },
+      })
+    }
   })
 }
 
-export async function markTaskRead(userId: string, taskId: string) {
-  const task = await visibleTask(taskId, userId)
-  if (!task) return 0
+export async function markTaskRead(
+  userId: string,
+  taskId: string,
+  role: SessionUser["role"],
+) {
+  const task = await prisma.task.findUnique({ where: { id: taskId } })
+  if (!task || !canViewTask(task, userId, role)) return 0
   const result = await prisma.notification.updateMany({
     where: { userId, taskId, read: false },
     data: { read: true },

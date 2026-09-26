@@ -17,7 +17,7 @@ export type ManagedUser = {
   name: string
   email: string
   title: string
-  role: "LAWYER" | "INTERN"
+  role: "LAWYER" | "INTERN" | "ADMIN"
   roleLabel: string
   isDemo: boolean
   isSelf: boolean

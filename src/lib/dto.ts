@@ -1,4 +1,4 @@
-import type { DueTone, Role, TaskStatus } from "@/lib/workflow"
+import type { DueTone, Role, TaskStatus, VisualTone } from "@/lib/workflow"
 
 export type SessionUser = {
   id: string
@@ -28,6 +28,7 @@ export type TaskCardDTO = {
   dueDate: string
   dueLabel: string
   dueTone: DueTone
+  visualTone: VisualTone
   status: TaskStatus
   assignerId: string
   assigneeId: string

@@ -28,8 +28,9 @@ describe("privacy and roles", () => {
     assert.equal(isParticipant(task, otherLawyer), false)
   })
 
-  it("lets only lawyers assign work", () => {
+  it("lets lawyers and admins assign work", () => {
     assert.equal(canCreateTask("LAWYER"), true)
+    assert.equal(canCreateTask("ADMIN"), true)
     assert.equal(canCreateTask("INTERN"), false)
   })
 })
@@ -46,6 +47,7 @@ describe("state machine", () => {
       false,
     )
     assert.equal(canUploadDraft({ status: "ATANDI", assigneeId: intern }, lawyer), false)
+    assert.equal(canUploadDraft({ status: "ATANDI", assigneeId: intern }, lawyer, "ADMIN"), true)
   })
 
   it("lets only the assigning lawyer review a draft", () => {
@@ -53,6 +55,7 @@ describe("state machine", () => {
     assert.equal(canReview(task, lawyer, "LAWYER"), true)
     assert.equal(canReview(task, otherLawyer, "LAWYER"), false)
     assert.equal(canReview(task, intern, "INTERN"), false)
+    assert.equal(canReview(task, otherLawyer, "ADMIN"), true)
     assert.equal(
       canReview({ status: "ATANDI", assignerId: lawyer }, lawyer, "LAWYER"),
       false,

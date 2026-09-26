@@ -28,8 +28,8 @@ export function validatePersonEmail(raw: string) {
 }
 
 export function validatePersonRole(raw: string): { ok: true; role: Role } | { ok: false; error: string } {
-  if (raw === "LAWYER" || raw === "INTERN") return { ok: true, role: raw }
-  return { ok: false, error: "Rol avukat veya stajyer olmalı." }
+  if (raw === "LAWYER" || raw === "INTERN" || raw === "ADMIN") return { ok: true, role: raw }
+  return { ok: false, error: "Rol avukat, stajyer veya yönetici olmalı." }
 }
 
 export function validateNewPassword(raw: string) {
@@ -50,8 +50,8 @@ export function validateNewPassword(raw: string) {
 }
 
 export function assertLawyer(role: Role) {
-  if (role !== "LAWYER") {
-    throw new WorkflowError("Yalnızca avukatlar kullanıcı yönetebilir.")
+  if (role !== "LAWYER" && role !== "ADMIN") {
+    throw new WorkflowError("Yalnızca avukat veya yönetici kullanıcı yönetebilir.")
   }
 }
 

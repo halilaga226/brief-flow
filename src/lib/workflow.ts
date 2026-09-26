@@ -1,4 +1,4 @@
-export const ROLES = ["LAWYER", "INTERN"] as const
+export const ROLES = ["LAWYER", "INTERN", "ADMIN"] as const
 export type Role = (typeof ROLES)[number]
 
 export const STATUSES = [
@@ -11,6 +11,7 @@ export const STATUSES = [
 export type TaskStatus = (typeof STATUSES)[number]
 
 export type DueTone = "done" | "overdue" | "today" | "soon" | "later"
+export type VisualTone = "yellow" | "red" | "neutral"
 
 export const FILTERS = [
   "tum",
@@ -101,7 +102,17 @@ export const BOARD_COLUMNS: {
 ]
 
 export function roleLabel(role: Role) {
-  return role === "LAWYER" ? "Avukat" : "Stajyer"
+  if (role === "ADMIN") return "Yönetici"
+  if (role === "LAWYER") return "Avukat"
+  return "Stajyer"
+}
+
+export function isAdmin(role: Role) {
+  return role === "ADMIN"
+}
+
+export function canManageUsers(role: Role) {
+  return role === "ADMIN" || role === "LAWYER"
 }
 
 export function logLabel(type: string) {
@@ -128,14 +139,31 @@ export function isParticipant(
   return task.assignerId === userId || task.assigneeId === userId
 }
 
+export function canViewTask(
+  task: { assignerId: string; assigneeId: string },
+  userId: string,
+  role: Role,
+) {
+  return isAdmin(role) || isParticipant(task, userId)
+}
+
 export function canCreateTask(role: Role) {
-  return role === "LAWYER"
+  return role === "LAWYER" || role === "ADMIN"
 }
 
 export function needsMyAction(
   task: { status: TaskStatus; assignerId: string; assigneeId: string },
   userId: string,
+  role?: Role,
 ) {
+  if (role === "ADMIN") {
+    return (
+      task.status === "ATANDI" ||
+      task.status === "REVIZE_ISTENDI" ||
+      task.status === "INCELEME_BEKLIYOR" ||
+      task.status === "GONDERIM_BEKLIYOR"
+    )
+  }
   if (
     task.assigneeId === userId &&
     (task.status === "ATANDI" ||
@@ -150,11 +178,10 @@ export function needsMyAction(
 export function canUploadDraft(
   task: { status: TaskStatus; assigneeId: string },
   userId: string,
+  role?: Role,
 ) {
-  return (
-    task.assigneeId === userId &&
-    (task.status === "ATANDI" || task.status === "REVIZE_ISTENDI")
-  )
+  if (!(task.status === "ATANDI" || task.status === "REVIZE_ISTENDI")) return false
+  return isAdmin(role ?? "INTERN") || task.assigneeId === userId
 }
 
 export function canReview(
@@ -162,25 +189,47 @@ export function canReview(
   userId: string,
   role: Role,
 ) {
-  return (
-    role === "LAWYER" &&
-    task.assignerId === userId &&
-    task.status === "INCELEME_BEKLIYOR"
-  )
+  if (task.status !== "INCELEME_BEKLIYOR") return false
+  return isAdmin(role) || (role === "LAWYER" && task.assignerId === userId)
 }
 
 export function canComplete(
   task: { status: TaskStatus; assigneeId: string },
   userId: string,
+  role?: Role,
 ) {
-  return task.assigneeId === userId && task.status === "GONDERIM_BEKLIYOR"
+  if (task.status !== "GONDERIM_BEKLIYOR") return false
+  return isAdmin(role ?? "INTERN") || task.assigneeId === userId
 }
 
 export function canComment(
   task: { assignerId: string; assigneeId: string },
   userId: string,
+  role?: Role,
 ) {
-  return isParticipant(task, userId)
+  return isAdmin(role ?? "INTERN") || isParticipant(task, userId)
+}
+
+export function taskVisualTone(input: {
+  status: TaskStatus
+  dueTone: DueTone
+  needsAction: boolean
+}): VisualTone {
+  if (
+    input.status === "REVIZE_ISTENDI" ||
+    input.dueTone === "overdue" ||
+    input.dueTone === "today"
+  ) {
+    return "red"
+  }
+  if (
+    input.status === "TAMAMLANDI" ||
+    input.status === "ATANDI" ||
+    input.needsAction
+  ) {
+    return "yellow"
+  }
+  return "neutral"
 }
 
 export function nextStepCopy(input: { status: TaskStatus; myTurn: boolean }) {

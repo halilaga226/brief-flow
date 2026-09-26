@@ -52,7 +52,7 @@ export function PasswordForm() {
           autoComplete="new-password"
         />
       </div>
-      <Button type="submit" disabled={pending} className="bg-[#16324f]">
+        <Button type="submit" disabled={pending} className="bg-zinc-900">
         {pending ? "Kaydediliyor…" : "Parolayı güncelle"}
       </Button>
     </form>

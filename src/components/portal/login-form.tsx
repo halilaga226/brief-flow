@@ -69,7 +69,7 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
             {error}
           </p>
         ) : null}
-        <Button type="submit" disabled={pending} className="h-10 bg-[#16324f]">
+        <Button type="submit" disabled={pending} className="h-10 bg-zinc-900">
           {pending ? "Giriş yapılıyor…" : "Giriş yap"}
         </Button>
       </form>

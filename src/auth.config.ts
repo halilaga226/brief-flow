@@ -31,7 +31,12 @@ export const authConfig = {
     },
     session({ session, token }) {
       session.user.id = typeof token.id === "string" ? token.id : ""
-      session.user.role = token.role === "INTERN" ? "INTERN" : "LAWYER"
+      session.user.role =
+        token.role === "ADMIN"
+          ? "ADMIN"
+          : token.role === "INTERN"
+            ? "INTERN"
+            : "LAWYER"
       session.user.title = typeof token.title === "string" ? token.title : ""
       return session
     },

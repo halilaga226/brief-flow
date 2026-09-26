@@ -11,7 +11,7 @@ export async function signOutAction() {
 
 export async function markTaskReadAction(taskId: string) {
   const user = await requireUser()
-  const count = await markTaskRead(user.id, taskId)
+  const count = await markTaskRead(user.id, taskId, user.role)
   if (count > 0) {
     revalidatePath("/panel")
     revalidatePath("/gorevler")

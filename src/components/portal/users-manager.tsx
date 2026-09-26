@@ -75,6 +75,7 @@ function CreateUserForm() {
             <SelectContent>
               <SelectItem value="LAWYER">Avukat</SelectItem>
               <SelectItem value="INTERN">Stajyer</SelectItem>
+              <SelectItem value="ADMIN">Yönetici</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -93,7 +94,7 @@ function CreateUserForm() {
         />
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={pending} className="bg-[#16324f]">
+        <Button type="submit" disabled={pending} className="bg-zinc-900">
           {pending ? "Ekleniyor…" : "Kullanıcıyı ekle"}
         </Button>
       </div>

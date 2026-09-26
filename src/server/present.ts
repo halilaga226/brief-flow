@@ -11,12 +11,15 @@ import {
   canReview,
   canUploadDraft,
   fileHref,
+  isAdmin,
   logLabel,
   needsMyAction,
   nextStepCopy,
   parseLogMeta,
   roleLabel,
+  taskVisualTone,
 } from "@/lib/workflow"
+import type { Role } from "@/lib/workflow"
 import type {
   ActivityDTO,
   CommentDTO,
@@ -70,9 +73,19 @@ function toTimeline(record: TaskCardRecord): TimelineEventDTO[] {
   })
 }
 
-export function toTaskCard(record: TaskCardRecord, userId: string): TaskCardDTO {
+export function toTaskCard(
+  record: TaskCardRecord,
+  userId: string,
+  role: Role = "INTERN",
+): TaskCardDTO {
   const dueDate = record.dueDate.toISOString()
   const tone = dueTone(dueDate, record.status)
+  const needsAction = needsMyAction(record, userId, role)
+  const relationLabel = isAdmin(role)
+    ? `${record.assigner.name} → ${record.assignee.name}`
+    : record.assigneeId === userId
+      ? "Size atandı"
+      : "Siz atadınız"
   return {
     id: record.id,
     title: record.title,
@@ -82,13 +95,18 @@ export function toTaskCard(record: TaskCardRecord, userId: string): TaskCardDTO 
     dueDate,
     dueLabel: formatDay(dueDate),
     dueTone: tone,
+    visualTone: taskVisualTone({
+      status: record.status,
+      dueTone: tone,
+      needsAction,
+    }),
     status: record.status,
     assignerId: record.assignerId,
     assigneeId: record.assigneeId,
     assignerName: record.assigner.name,
     assigneeName: record.assignee.name,
-    relationLabel: record.assigneeId === userId ? "Size atandı" : "Siz atadınız",
-    needsAction: needsMyAction(record, userId),
+    relationLabel,
+    needsAction,
     trackingCode: record.trackingCode,
     updatedAt: record.updatedAt.toISOString(),
     completedAt: record.completedAt?.toISOString() ?? null,
@@ -111,8 +129,12 @@ function toFile(file: TaskDetailRecord["files"][number]): TaskFileDTO {
   }
 }
 
-export function toTaskDetail(record: TaskDetailRecord, userId: string, role: "LAWYER" | "INTERN"): TaskDetailDTO {
-  const card = toTaskCard(record, userId)
+export function toTaskDetail(
+  record: TaskDetailRecord,
+  userId: string,
+  role: Role,
+): TaskDetailDTO {
+  const card = toTaskCard(record, userId, role)
   const files = record.files.map(toFile)
   const drafts = files.filter((file) => file.kind === "DRAFT")
   const latest = drafts[drafts.length - 1] ?? null
@@ -141,9 +163,9 @@ export function toTaskDetail(record: TaskDetailRecord, userId: string, role: "LA
     assignerRole: record.assigner.role,
     assigneeRole: record.assignee.role,
     myTurn,
-    canUpload: canUploadDraft(record, userId),
+    canUpload: canUploadDraft(record, userId, role),
     canReview: canReview(record, userId, role),
-    canComplete: canComplete(record, userId),
+    canComplete: canComplete(record, userId, role),
     nextStep: nextStepCopy({ status: record.status, myTurn }),
     latestDraft: latest
       ? { name: latest.name, href: latest.href, external: latest.external }

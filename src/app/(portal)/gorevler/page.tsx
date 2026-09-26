@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { requireUser } from "@/lib/session"
 import {
+  canCreateTask,
   matchesFilter,
   matchesQuery,
   parseFilter,
@@ -45,7 +46,7 @@ export default async function TasksPage({
   const query = params.q ?? ""
   const filter = parseFilter(params.filtre)
   const view = parseView(params.gorunum)
-  const tasks = await listTasks(user.id)
+  const tasks = await listTasks(user.id, user.role)
   const visible = tasks.filter((task) => matchesFilter(task, filter) && matchesQuery(task, query))
 
   return (
@@ -53,13 +54,13 @@ export default async function TasksPage({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs tracking-[0.16em] text-muted-foreground uppercase">İş akışı</p>
-          <h1 className="font-serif text-3xl md:text-4xl">Görevler</h1>
+          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Görevler</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Sütunlar serbest sürüklenmez. Durum, taslak, onay ve evrak kodu adımlarıyla ilerler.
           </p>
         </div>
-        {user.role === "LAWYER" ? (
-          <Button asChild className="bg-[#16324f]">
+        {canCreateTask(user.role) ? (
+          <Button asChild className="bg-zinc-900">
             <Link href="/gorevler/yeni">Yeni görev</Link>
           </Button>
         ) : null}
@@ -109,7 +110,7 @@ export default async function TasksPage({
             <Link
               key={item.id}
               href={hrefFor({ q: query, filtre: item.id, gorunum: view })}
-              className={`shrink-0 rounded-full px-3 py-1 text-sm ring-1 ${active ? "bg-[#16324f] text-white ring-[#16324f]" : "bg-card text-foreground ring-border"}`}
+              className={`shrink-0 rounded-full px-3 py-1 text-sm ring-1 ${active ? "bg-zinc-900 text-white ring-zinc-900" : "bg-card text-foreground ring-border"}`}
             >
               {item.label}
               <span className="ml-1 text-xs opacity-70">{count}</span>
@@ -120,13 +121,13 @@ export default async function TasksPage({
 
       {tasks.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-card px-6 py-16 text-center">
-          <p className="font-serif text-3xl">Henüz dahil olduğunuz bir iş yok</p>
+          <p className="text-3xl font-semibold tracking-tight">Henüz dahil olduğunuz bir iş yok</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            {user.role === "LAWYER"
+            {canCreateTask(user.role)
               ? "Bir stajyere veya başka bir avukata ilk işi atayın."
               : "Bir avukat size iş atadığında burada görünecek."}
           </p>
-          {user.role === "LAWYER" ? (
+          {canCreateTask(user.role) ? (
             <Button asChild className="mt-4 bg-[#16324f]">
               <Link href="/gorevler/yeni">İlk görevi ata</Link>
             </Button>

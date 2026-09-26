@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 export async function requireUser(): Promise<SessionUser> {
   const session = await auth()
   const user = session?.user
-  if (!user?.id || (user.role !== "LAWYER" && user.role !== "INTERN")) {
+  if (!user?.id || (user.role !== "LAWYER" && user.role !== "INTERN" && user.role !== "ADMIN")) {
     redirect("/giris")
   }
   return {

@@ -2,7 +2,7 @@ import { TaskLinkList } from "@/components/portal/task-link-list"
 import { Button } from "@/components/ui/button"
 import { formatTodayLabel, greeting } from "@/lib/format"
 import { requireUser } from "@/lib/session"
-import { roleLabel } from "@/lib/workflow"
+import { canCreateTask, isAdmin, roleLabel } from "@/lib/workflow"
 import { getDashboard } from "@/server/tasks"
 import type { Metadata } from "next"
 import Link from "next/link"
@@ -19,7 +19,7 @@ const steps = [
 
 export default async function PanelPage() {
   const user = await requireUser()
-  const dashboard = await getDashboard(user.id)
+  const dashboard = await getDashboard(user.id, user.role)
   const firstName = user.name.split(" ")[0]
   const stats = [
     {
@@ -53,18 +53,20 @@ export default async function PanelPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs tracking-[0.16em] text-muted-foreground uppercase">{formatTodayLabel()}</p>
-          <h1 className="mt-1 font-serif text-3xl md:text-4xl">
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight md:text-4xl">
             {greeting()}, {firstName}.
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            {user.role === "LAWYER"
-              ? "Yalnızca atadığınız veya size atanan işler görünür. Büro geneli yönetici görünümü kapalıdır."
-              : "Yalnızca size atanan işler görünür. Görev atama yetkisi avukatlardadır."}{" "}
+            {isAdmin(user.role)
+              ? "Yönetici olarak tüm işleri görür ve düzenlersiniz."
+              : user.role === "LAWYER"
+                ? "Atadığınız ve size atanan işleri görürsünüz."
+                : "Yalnızca size atanan işleri görürsünüz."}{" "}
             Rolünüz: {user.title || roleLabel(user.role)}.
           </p>
         </div>
-        {user.role === "LAWYER" ? (
-          <Button asChild className="bg-[#16324f]">
+        {canCreateTask(user.role) ? (
+          <Button asChild className="bg-zinc-900">
             <Link href="/gorevler/yeni">İş ata</Link>
           </Button>
         ) : null}
@@ -75,21 +77,21 @@ export default async function PanelPage() {
           <Link
             key={stat.label}
             href={stat.href}
-            className="rounded-xl bg-card p-4 ring-1 ring-foreground/10 transition hover:-translate-y-px hover:ring-[#16324f]/30"
+            className="rounded-xl bg-card p-4 ring-1 ring-foreground/10 transition hover:-translate-y-px hover:ring-zinc-300"
           >
             <p className="text-xs tracking-[0.14em] text-muted-foreground uppercase">{stat.label}</p>
-            <p className="mt-2 font-serif text-4xl">{stat.value}</p>
+            <p className="mt-2 text-4xl font-semibold tracking-tight">{stat.value}</p>
             <p className="mt-1 text-xs text-muted-foreground">{stat.hint}</p>
           </Link>
         ))}
       </section>
 
-      <section className="grid gap-3 rounded-xl bg-[#12263a] p-4 text-[#e7eef5] sm:grid-cols-5">
+      <section className="grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-zinc-800 sm:grid-cols-5">
         {steps.map(([title, body], index) => (
-          <div key={title} className="border-white/10 sm:border-l sm:pl-3 sm:first:border-l-0 sm:first:pl-0">
-            <p className="font-mono text-[11px] text-[#b08968]">0{index + 1}</p>
+          <div key={title} className="border-zinc-200 sm:border-l sm:pl-3 sm:first:border-l-0 sm:first:pl-0">
+            <p className="font-mono text-[11px] text-zinc-400">0{index + 1}</p>
             <p className="mt-1 text-sm font-medium">{title}</p>
-            <p className="mt-1 text-xs leading-relaxed text-[#c5d2df]">{body}</p>
+            <p className="mt-1 text-xs leading-relaxed text-zinc-500">{body}</p>
           </div>
         ))}
       </section>
@@ -97,8 +99,8 @@ export default async function PanelPage() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="font-serif text-2xl">Sıradaki işleriniz</h2>
-            <Link href="/gorevler?filtre=bekleyen" className="text-sm text-[#0f5c45] underline-offset-4 hover:underline">
+            <h2 className="text-xl font-semibold">Sıradaki işleriniz</h2>
+            <Link href="/gorevler?filtre=bekleyen" className="text-sm text-zinc-900 underline-offset-4 hover:underline">
               Tümü
             </Link>
           </div>
@@ -107,7 +109,7 @@ export default async function PanelPage() {
           </div>
         </section>
         <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-          <h2 className="font-serif text-2xl">Son hareket</h2>
+          <h2 className="text-xl font-semibold">Son hareket</h2>
           {dashboard.activity.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">Henüz işlem kaydı yok.</p>
           ) : (

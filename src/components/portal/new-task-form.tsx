@@ -32,6 +32,7 @@ export function NewTaskForm({
   const [state, action, pending] = useActionState(createTaskAction, null)
   const lawyers = people.filter((person) => person.role === "LAWYER")
   const interns = people.filter((person) => person.role === "INTERN")
+  const admins = people.filter((person) => person.role === "ADMIN")
 
   return (
     <form action={action} className="grid gap-4">
@@ -67,6 +68,16 @@ export function NewTaskForm({
               <SelectValue placeholder="Kişi seçin" />
             </SelectTrigger>
             <SelectContent position="popper" className="w-[var(--radix-select-trigger-width)]">
+              {admins.length > 0 ? (
+                <SelectGroup>
+                  <SelectLabel>Yöneticiler</SelectLabel>
+                  {admins.map((person) => (
+                    <SelectItem key={person.id} value={person.id}>
+                      {person.name} · {person.title || roleLabel(person.role)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ) : null}
               {lawyers.length > 0 ? (
                 <SelectGroup>
                   <SelectLabel>Avukatlar</SelectLabel>
@@ -118,7 +129,7 @@ export function NewTaskForm({
         </p>
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={pending || !assigneeId} className="bg-[#16324f]">
+        <Button type="submit" disabled={pending || !assigneeId} className="bg-zinc-900">
           {pending ? "Atanıyor…" : "Görevi ata"}
         </Button>
       </div>
