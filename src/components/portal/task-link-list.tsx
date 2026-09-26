@@ -8,7 +8,7 @@ import Link from "next/link"
 
 export function TaskLinkList({ tasks }: { tasks: TaskCardDTO[] }) {
   if (tasks.length === 0) {
-    return <p className="text-sm text-muted-foreground">Şu an sizden beklenen bir adım yok.</p>
+    return <p className="text-sm font-medium text-zinc-500">Şu an sizden beklenen bir adım yok.</p>
   }
 
   return (
@@ -19,10 +19,10 @@ export function TaskLinkList({ tasks }: { tasks: TaskCardDTO[] }) {
             <HoverCardTrigger asChild>
               <Link href={`/gorevler/${task.id}`} className="block py-3 hover:bg-muted/60">
                 <span className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm font-medium">{task.title}</span>
+                  <span className="text-sm font-bold">{task.title}</span>
                   <StatusBadge status={task.status} />
                 </span>
-                <span className="mt-1 block text-xs text-muted-foreground">
+                <span className="mt-1 block text-xs font-medium text-zinc-500">
                   {task.clientName} · {task.fileNumber} · {task.dueLabel}
                 </span>
               </Link>
