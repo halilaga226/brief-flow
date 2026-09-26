@@ -92,7 +92,7 @@ export async function changePasswordAction(
       readText(formData, "currentPassword"),
       readText(formData, "nextPassword"),
     )
-    revalidatePath("/hesap")
+    revalidatePath("/ayarlar")
     return { ok: true, message: "Parolanız güncellendi." }
   } catch (error) {
     return actionError(error)

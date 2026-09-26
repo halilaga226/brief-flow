@@ -27,7 +27,7 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
       setError("E-posta veya parola hatalı.")
       return
     }
-    window.location.assign("/panel")
+    window.location.assign("/gorevler")
   }
 
   return (
@@ -69,7 +69,7 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
             {error}
           </p>
         ) : null}
-        <Button type="submit" disabled={pending} className="h-10 bg-zinc-900">
+        <Button type="submit" disabled={pending} className="h-11 bg-[var(--brand-primary)] font-bold hover:bg-[var(--brand-primary-hover)]">
           {pending ? "Giriş yapılıyor…" : "Giriş yap"}
         </Button>
       </form>

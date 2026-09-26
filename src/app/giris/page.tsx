@@ -1,4 +1,6 @@
 import { LoginForm } from "@/components/portal/login-form"
+import { BRAND } from "@/lib/brand"
+import { Scale } from "lucide-react"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -9,29 +11,22 @@ export default function LoginPage() {
   const showDemo = process.env.DEMO_LOGIN === "true"
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      <section className="relative hidden items-end bg-zinc-950 px-10 py-12 text-white lg:flex">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(250,204,21,0.18),transparent_42%)]" />
-        <div className="relative max-w-md">
-          <p className="text-sm font-bold text-yellow-300">Vekâlet</p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight">
-            İşler net. Renkler net.
+    <div className="relative min-h-screen overflow-hidden bg-[var(--brand-canvas)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(46,196,182,0.22),transparent_42%),radial-gradient(circle_at_88%_12%,rgba(255,159,67,0.28),transparent_36%),radial-gradient(circle_at_70%_80%,rgba(15,61,46,0.08),transparent_40%)]" />
+      <div className="relative mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center px-5 py-10">
+        <div className="mb-8 text-center">
+          <span className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/25">
+            <Scale className="size-6" />
+          </span>
+          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-[var(--brand-ink)] sm:text-4xl">
+            {BRAND.name}
           </h1>
-          <p className="mt-4 text-sm font-medium leading-relaxed text-zinc-300">
-            Sarı: gelen veya biten iş. Kırmızı: süresi gelen veya revizeye dönen iş. Yönetici tüm
-            dosyaları görür.
-          </p>
+          <p className="mt-2 text-sm font-semibold text-[var(--brand-muted)]">Büro hesabınızla giriş yapın</p>
         </div>
-      </section>
-      <section className="flex items-center justify-center bg-white px-5 py-10">
-        <div className="w-full max-w-md">
-          <p className="text-2xl font-bold tracking-tight">Giriş</p>
-          <p className="mt-1 text-sm font-medium text-zinc-500">Büro hesabınızla devam edin.</p>
-          <div className="mt-8">
-            <LoginForm showDemo={showDemo} />
-          </div>
+        <div className="rounded-3xl border border-[var(--brand-border)] bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,61,46,0.08)] sm:p-7">
+          <LoginForm showDemo={showDemo} />
         </div>
-      </section>
+      </div>
     </div>
   )
 }

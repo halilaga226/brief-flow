@@ -13,7 +13,7 @@ export async function markTaskReadAction(taskId: string) {
   const user = await requireUser()
   const count = await markTaskRead(user.id, taskId, user.role)
   if (count > 0) {
-    revalidatePath("/panel")
+    revalidatePath("/ayarlar")
     revalidatePath("/gorevler")
   }
   return count
@@ -22,6 +22,6 @@ export async function markTaskReadAction(taskId: string) {
 export async function markAllReadAction() {
   const user = await requireUser()
   await markAllRead(user.id)
-  revalidatePath("/panel")
+  revalidatePath("/ayarlar")
   revalidatePath("/gorevler")
 }

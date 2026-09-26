@@ -2,12 +2,12 @@ import { STATUS_META, type TaskStatus } from "@/lib/workflow"
 import { cn } from "@/lib/utils"
 
 const tones: Record<TaskStatus, string> = {
-  ATANDI: "bg-amber-100 text-amber-950 ring-amber-200",
-  INCELEME_BEKLIYOR: "bg-zinc-100 text-zinc-800 ring-zinc-200",
-  REVIZE_ISTENDI: "bg-red-100 text-red-800 ring-red-200",
-  ONAYLANDI: "bg-yellow-200 text-yellow-950 ring-yellow-300",
-  GONDERIM_BEKLIYOR: "bg-amber-50 text-amber-900 ring-amber-200",
-  TAMAMLANDI: "bg-yellow-300 text-yellow-950 ring-yellow-400",
+  ATANDI: "bg-[#ffe3b8] text-[#7a3e00] ring-[#ffc878]",
+  INCELEME_BEKLIYOR: "bg-[#d9f3ee] text-[#0f6b57] ring-[#9ed9cd]",
+  REVIZE_ISTENDI: "bg-[#ffe0db] text-[#9b2c1f] ring-[#f5b0a6]",
+  ONAYLANDI: "bg-[#fff1c9] text-[#7a3e00] ring-[#ffd56a]",
+  GONDERIM_BEKLIYOR: "bg-[#e7f6f0] text-[#0f6b57] ring-[#9ed9cd]",
+  TAMAMLANDI: "bg-[#0f6b57] text-white ring-[#0f6b57]",
 }
 
 export function StatusBadge({ status }: { status: TaskStatus }) {

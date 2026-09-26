@@ -21,7 +21,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 function revalidateTask(taskId: string) {
-  revalidatePath("/panel")
+  revalidatePath("/ayarlar")
   revalidatePath("/gorevler")
   revalidatePath(`/gorevler/${taskId}`)
 }
@@ -140,8 +140,8 @@ export async function setClientCallAction(
     return actionError(error)
   }
   revalidateTask(taskId)
-  revalidatePath("/panel")
-  revalidatePath("/admin")
+  revalidatePath("/ayarlar")
+  revalidatePath("/ayarlar")
   return { ok: true, message: "Müvekkil araması güncellendi." }
 }
 
@@ -167,9 +167,8 @@ export async function clearDemoAction(
   const user = await requireUser()
   try {
     const result = await clearDemoData(user)
-    revalidatePath("/panel")
+    revalidatePath("/ayarlar")
     revalidatePath("/gorevler")
-    revalidatePath("/admin")
     revalidatePath("/kullanicilar")
     return {
       ok: true,

@@ -25,9 +25,9 @@ function dueText(task: TaskCardDTO) {
 }
 
 function dueClass(tone: DueTone) {
-  if (tone === "overdue" || tone === "today") return "text-red-600"
-  if (tone === "soon") return "text-amber-700"
-  return "text-zinc-500"
+  if (tone === "overdue" || tone === "today") return "text-[var(--brand-danger)]"
+  if (tone === "soon") return "text-[#b45309]"
+  return "text-[var(--brand-muted)]"
 }
 
 function toneRing(tone: VisualTone) {
@@ -126,8 +126,8 @@ export function TaskBoard({ tasks, view }: { tasks: TaskCardDTO[]; view: TaskVie
 
   if (view === "liste") {
     return (
-      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-        <div className="hidden grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr_auto] gap-3 border-b border-zinc-100 px-4 py-2 text-xs font-medium text-zinc-500 md:grid">
+      <div className="overflow-hidden rounded-2xl border border-[var(--brand-border)] bg-white shadow-[0_1px_0_rgba(15,61,46,0.04)]">
+        <div className="hidden grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr_auto] gap-3 border-b border-[var(--brand-border)] px-4 py-2 text-xs font-bold text-[var(--brand-muted)] md:grid">
           <span>İş</span>
           <span>Müvekkil</span>
           <span>Durum</span>
@@ -136,33 +136,41 @@ export function TaskBoard({ tasks, view }: { tasks: TaskCardDTO[]; view: TaskVie
         </div>
         <ul>
           {tasks.map((task) => (
-            <li key={task.id} className="border-b border-zinc-100 last:border-b-0">
+            <li key={task.id} className="border-b border-[var(--brand-border)] last:border-b-0">
               <HoverCard openDelay={400}>
                 <HoverCardTrigger asChild>
                   <div
                     className={cn(
-                      "relative grid gap-2 px-4 py-3 md:grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr_auto] md:items-center",
-                      task.visualTone === "red" && "bg-red-50/60",
-                      task.visualTone === "yellow" && "bg-yellow-50/70",
+                      "relative grid gap-2 px-3 py-3.5 sm:px-4 md:grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr_auto] md:items-center",
+                      task.visualTone === "red" && "bg-[#fff5f3]",
+                      task.visualTone === "yellow" && "bg-[#fff9ef]",
                     )}
                   >
                     <Link href={`/gorevler/${task.id}`} className="absolute inset-0" aria-label={task.title} />
-                    <div>
-                      <p className="text-sm font-bold">{task.title}</p>
-                      <p className="text-xs text-zinc-500 md:hidden">
+                    <div className="min-w-0 pr-8 md:pr-0">
+                      <p className="text-sm font-bold leading-snug">{task.title}</p>
+                      <p className="mt-0.5 text-xs font-semibold text-[var(--brand-muted)] md:hidden">
                         {task.clientName} · {task.fileNumber}
                       </p>
-                      <p className="text-[11px] text-zinc-500">{task.relationLabel}</p>
+                      <p className="text-[11px] font-medium text-[var(--brand-muted)]">{task.relationLabel}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 md:hidden">
+                        <StatusBadge status={task.status} />
+                        <span className={cn("text-xs font-bold", dueClass(task.dueTone))}>{dueText(task)}</span>
+                      </div>
                     </div>
-                    <p className="hidden text-sm md:block">
+                    <p className="hidden text-sm font-semibold md:block">
                       {task.clientName}
-                      <span className="mt-0.5 block font-mono text-xs text-zinc-500">{task.fileNumber}</span>
+                      <span className="mt-0.5 block font-mono text-xs font-medium text-[var(--brand-muted)]">
+                        {task.fileNumber}
+                      </span>
                     </p>
-                    <div>
+                    <div className="hidden md:block">
                       <StatusBadge status={task.status} />
                     </div>
-                    <p className={cn("text-sm", dueClass(task.dueTone))}>{dueText(task)}</p>
-                    <div className="relative z-10 justify-self-end">
+                    <p className={cn("hidden text-sm font-bold md:block", dueClass(task.dueTone))}>
+                      {dueText(task)}
+                    </p>
+                    <div className="absolute top-3 right-2 z-10 md:static md:justify-self-end">
                       <HistoryButton task={task} />
                     </div>
                   </div>

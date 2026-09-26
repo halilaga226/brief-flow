@@ -1,6 +1,6 @@
-# Vekâlet
+# Atlı Karakaya Hukuk Bürosu
 
-Küçük ve orta ölçekli hukuk büroları için görev, taslak inceleme ve evrak gönderim portalı. Avukat iş atar; stajyer veya diğer avukat yürütür. Belge içeriği sunucuda durmaz: Google Drive kimliği tanımlıysa dosya klasöre gider, değilse yalnızca ad, boyut ve bağlantı kaydı tutulur.
+Görev, taslak inceleme ve evrak gönderim portalı.
 
 ## Roller
 
