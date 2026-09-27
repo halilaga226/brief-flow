@@ -109,24 +109,26 @@ export function WorkItemAgenda({
 }: {
   items: WorkItemDTO[]
   canCreate?: boolean
+  /** @deprecated kept for callers; button always renders when canCreate */
+  showHeaderAction?: boolean
 }) {
   const [formOpen, setFormOpen] = useState(false)
 
+  const addButton = canCreate ? (
+    <Button
+      type="button"
+      onClick={() => setFormOpen(true)}
+      className="font-semibold"
+      disabled={formOpen}
+    >
+      <Plus />
+      İş ekle
+    </Button>
+  ) : null
+
   return (
     <div className="grid gap-4">
-      {canCreate ? (
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            onClick={() => setFormOpen(true)}
-            className="font-semibold"
-            disabled={formOpen}
-          >
-            <Plus />
-            İş ekle
-          </Button>
-        </div>
-      ) : null}
+      {canCreate ? <div className="flex justify-end">{addButton}</div> : null}
 
       {canCreate ? (
         <CreateWorkItemForm open={formOpen} onClose={() => setFormOpen(false)} />
@@ -150,8 +152,8 @@ export function WorkItemAgenda({
       ) : (
         <div className="-mx-3 overflow-x-auto sm:-mx-4 md:mx-0">
           <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
-            <thead className="sticky top-14 z-10 bg-background">
-              <tr className="border-y border-border text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
+            <thead>
+              <tr className="border-y border-border bg-background text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
                 <th className="px-2 py-1.5 font-bold">Mahkeme</th>
                 <th className="px-2 py-1.5 font-bold">Dosya no</th>
                 <th className="px-2 py-1.5 font-bold">Yapılacaklar</th>

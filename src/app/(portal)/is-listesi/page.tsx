@@ -53,7 +53,7 @@ export default async function WorkListPage() {
               Mahkeme, dosya no, yapılacaklar ve özel not.
             </p>
           </div>
-          <WorkItemAgenda items={items} canCreate />
+          <WorkItemAgenda items={items} canCreate showHeaderAction />
         </section>
       </div>
     )
