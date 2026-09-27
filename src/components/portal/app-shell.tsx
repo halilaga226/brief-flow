@@ -21,7 +21,7 @@ import {
   Settings,
   Users,
 } from "lucide-react"
-import { motion, useReducedMotion } from "framer-motion"
+import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
@@ -49,7 +49,7 @@ function NavLinks({
   const pathname = usePathname()
   const links = [
     { href: "/ana", label: "Ana sayfa", icon: Home },
-    ...(canAssign ? [{ href: "/is-listesi", label: "İş listesi", icon: ClipboardList }] : []),
+    { href: "/is-listesi", label: "İş listesi", icon: ClipboardList },
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(canManage ? [{ href: "/kullanicilar", label: "Kullanıcılar", icon: Users }] : []),
     { href: "/ayarlar", label: "Ayarlar", icon: Settings },
@@ -96,13 +96,12 @@ export function AppShell({
   children: ReactNode
 }) {
   const pathname = usePathname()
-  const reduce = useReducedMotion()
   const lawyer = canCreateTask(user.role)
   const manager = canManageUsers(user.role)
 
   const mobileLinks = [
     { href: "/ana", label: "Ana", icon: Home },
-    ...(lawyer ? [{ href: "/is-listesi", label: "İşler", icon: ClipboardList }] : []),
+    { href: "/is-listesi", label: "İşler", icon: ClipboardList },
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(manager && !lawyer ? [{ href: "/kullanicilar", label: "Kullanıcı", icon: Users }] : []),
     { href: "/ayarlar", label: "Ayarlar", icon: Settings },
@@ -133,10 +132,10 @@ export function AppShell({
         <div className="flex-1 px-3 py-4">
           <NavLinks canAssign={lawyer} canManage={manager} />
           {lawyer ? (
-            <Button asChild className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 font-semibold text-white hover:from-orange-600 hover:to-amber-600">
+            <Button asChild className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 font-bold text-white hover:from-orange-600 hover:to-amber-600">
               <Link href="/gorevler/yeni">
                 <Plus />
-                Görev ver
+                Görev olarak ata
               </Link>
             </Button>
           ) : null}
@@ -184,10 +183,10 @@ export function AppShell({
           <div className="flex-1" />
           <ThemeToggle />
           {lawyer ? (
-            <Button asChild size="sm" className="hidden bg-gradient-to-r from-orange-500 to-amber-500 font-semibold text-white sm:inline-flex">
+            <Button asChild size="sm" className="hidden bg-gradient-to-r from-orange-500 to-amber-500 font-bold text-white sm:inline-flex">
               <Link href="/gorevler/yeni">
                 <Plus />
-                Görev ver
+                Görev olarak ata
               </Link>
             </Button>
           ) : null}
@@ -197,18 +196,14 @@ export function AppShell({
           id="icerik"
           key={pathname}
           className="px-3 py-5 pb-24 sm:px-4 md:px-8 md:py-8 md:pb-8"
-          initial={reduce ? false : { opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          initial={false}
+          animate={{ opacity: 1 }}
         >
           {children}
         </motion.main>
 
         <nav
-          className={cn(
-            "fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-card/95 px-1 py-1 backdrop-blur md:hidden",
-            `grid-cols-${Math.min(mobileLinks.length, 5)}`,
-          )}
+          className="fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-card/80 px-1 py-1 backdrop-blur-xl md:hidden"
           style={{ gridTemplateColumns: `repeat(${mobileLinks.length}, minmax(0, 1fr))` }}
         >
           {mobileLinks.map((link) => {

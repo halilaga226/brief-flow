@@ -4,49 +4,62 @@ import { getDriveStatus } from "@/lib/drive"
 import { addDaysKey, istanbulDayKey } from "@/lib/format"
 import { requireUser } from "@/lib/session"
 import { canCreateTask } from "@/lib/workflow"
-import { listAssignees } from "@/server/tasks"
+import { getTask, listAssignees } from "@/server/tasks"
 import type { Metadata } from "next"
 import Link from "next/link"
 
-export const metadata: Metadata = { title: "Görev ver" }
+export const metadata: Metadata = { title: "Görev olarak ata" }
 
-export default async function NewTaskPage() {
+export default async function NewTaskPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>
+}) {
   const user = await requireUser()
   if (!canCreateTask(user.role)) {
     return (
-      <div className="mx-auto max-w-lg rounded-xl bg-card px-6 py-12 text-center ring-1 ring-foreground/10">
-        <p className="text-xs tracking-[0.16em] text-muted-foreground uppercase">Yetki</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Bu hesap görev atayamaz</h1>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Bu hesap yalnızca kendisine atanan işleri görür, taslağı yükler ve onaydan sonra evrak kodunu işler.
-        </p>
+      <div className="glass mx-auto max-w-lg rounded-2xl px-6 py-12 text-center">
+        <h1 className="text-3xl font-bold tracking-tight">Yetki yok</h1>
         <Button asChild className="mt-5">
-          <Link href="/gorevler">Görevlere dön</Link>
+          <Link href="/is-listesi">İş listesi</Link>
         </Button>
       </div>
     )
   }
 
+  const params = await searchParams
   const people = await listAssignees(user)
   const drive = getDriveStatus()
   const defaultDue = addDaysKey(istanbulDayKey(new Date()), 3)
+  const source = params.from ? await getTask(user.id, user.role, params.from) : null
 
   return (
     <div className="mx-auto grid max-w-3xl gap-5">
       <div>
-        <Link href="/is-listesi" className="text-sm text-muted-foreground hover:text-foreground">
-          İş listesine dön
+        <Link href="/is-listesi" className="text-sm font-semibold text-muted-foreground hover:text-foreground">
+          İş listesi
         </Link>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Görev ver</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          İş, seçtiğiniz avukat veya stajyere düşer. Üçüncü kişiler bu kaydı göremez.
-        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Görev olarak ata</h1>
       </div>
-      <div className="rounded-2xl border border-border bg-card p-4 md:p-6">
+      <div className="glass rounded-2xl p-4 md:p-6">
         {people.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Atanacak başka kullanıcı yok.</p>
+          <p className="text-sm text-muted-foreground">Atanacak kullanıcı yok.</p>
         ) : (
-          <NewTaskForm people={people} defaultDue={defaultDue} drive={drive} />
+          <NewTaskForm
+            people={people}
+            defaultDue={defaultDue}
+            drive={drive}
+            prefill={
+              source
+                ? {
+                    title: source.title,
+                    clientName: source.clientName,
+                    fileNumber: source.fileNumber,
+                    description: source.description,
+                  }
+                : undefined
+            }
+          />
         )}
       </div>
     </div>

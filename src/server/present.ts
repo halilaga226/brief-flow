@@ -111,6 +111,7 @@ export function toTaskCard(
     relationLabel,
     needsAction,
     trackingCode: record.trackingCode,
+    listColor: record.listColor,
     expensePaid: record.expensePaid,
     clientCallStatus: record.clientCallStatus as ClientCallStatus,
     updatedAt: record.updatedAt.toISOString(),

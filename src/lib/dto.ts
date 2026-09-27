@@ -43,6 +43,7 @@ export type TaskCardDTO = {
   relationLabel: string
   needsAction: boolean
   trackingCode: string | null
+  listColor: string | null
   expensePaid: boolean
   clientCallStatus: ClientCallStatus
   updatedAt: string

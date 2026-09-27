@@ -36,15 +36,15 @@ export const metadata: Metadata = { title: "Görevler" }
 
 const folders: { id: TaskFilter; label: string; icon: LucideIcon }[] = [
   { id: "tum", label: "Tümü", icon: FolderOpen },
+  { id: "atandi", label: "Atanan işler", icon: Inbox },
+  { id: "inceleme", label: "Onaya gidenler", icon: ClipboardList },
+  { id: "gonderilecek", label: "Gönderilecekler", icon: Send },
+  { id: "tamam", label: "Tamamlananlar", icon: CheckCircle2 },
   { id: "atanan", label: "Bana atanan", icon: UserRound },
   { id: "atadigim", label: "Atadığım", icon: UserCheck },
   { id: "bekleyen", label: "Sıradaki", icon: Inbox },
-  { id: "inceleme", label: "İnceleme", icon: ClipboardList },
-  { id: "onay", label: "Onay", icon: CheckCircle2 },
-  { id: "gonderim", label: "Gönderim", icon: Send },
-  { id: "arama", label: "Arama", icon: Phone },
-  { id: "tamam", label: "Tamam", icon: CheckCircle2 },
   { id: "geciken", label: "Geciken", icon: Inbox },
+  { id: "arama", label: "Arama", icon: Phone },
 ]
 
 const windows: { id: DueWindow; label: string }[] = [

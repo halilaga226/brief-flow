@@ -48,9 +48,16 @@ export async function listTasks(userId: string, role: SessionUser["role"]) {
       ? undefined
       : { OR: [{ assignerId: userId }, { assigneeId: userId }] },
     include: taskCardInclude,
-    orderBy: { updatedAt: "desc" },
+    orderBy: [{ dueDate: "asc" }, { updatedAt: "desc" }],
   })
-  return tasks.map((task) => toTaskCard(task, userId, role))
+  return tasks
+    .map((task) => toTaskCard(task, userId, role))
+    .sort((a, b) => {
+      const aDone = a.status === "TAMAMLANDI" ? 1 : 0
+      const bDone = b.status === "TAMAMLANDI" ? 1 : 0
+      if (aDone !== bDone) return aDone - bDone
+      return a.dueDate.localeCompare(b.dueDate)
+    })
 }
 
 export async function getTask(userId: string, role: SessionUser["role"], taskId: string) {
@@ -99,12 +106,18 @@ export async function getDashboard(userId: string, role: SessionUser["role"]) {
     activity,
     counts: {
       awaiting: awaiting.length,
+      assigned: tasks.filter((task) => task.status === "ATANDI" || task.status === "REVIZE_ISTENDI")
+        .length,
       inReview: tasks.filter((task) => task.status === "INCELEME_BEKLIYOR").length,
+      toSend: tasks.filter(
+        (task) => task.status === "ONAYLANDI" || task.status === "GONDERIM_BEKLIYOR",
+      ).length,
       dueSoon: tasks.filter((task) => task.dueTone === "today" || task.dueTone === "soon").length,
       overdue: tasks.filter((task) => task.dueTone === "overdue").length,
       completedThisMonth: tasks.filter(
         (task) => task.status === "TAMAMLANDI" && sameMonth(task.completedAt),
       ).length,
+      completed: tasks.filter((task) => task.status === "TAMAMLANDI").length,
       active: tasks.filter((task) => task.status !== "TAMAMLANDI").length,
     },
   }
@@ -516,6 +529,22 @@ export async function completeTask(actor: SessionUser, taskId: string, rawCode: 
         body: `${actor.name} evrak kodunu işledi: ${task.title}`,
       },
     })
+  })
+}
+
+export async function setTaskListColor(
+  actor: SessionUser,
+  taskId: string,
+  color: string | null,
+) {
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  const allowed = new Set(["", "red", "orange", "green", "blue", "pink", "auto"])
+  const next = !color || color === "auto" ? null : color
+  if (next && !allowed.has(next)) throw new WorkflowError("Geçersiz renk.")
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { listColor: next },
   })
 }
 

@@ -95,6 +95,7 @@ model Task {
   assigneeId   String
   workItemId   String?
   trackingCode String?
+  listColor    String?
   completedAt  DateTime?
   expensePaid       Boolean          @default(false)
   expensePaidAt     DateTime?
@@ -114,6 +115,7 @@ model Task {
   @@index([assigneeId])
   @@index([status])
   @@index([workItemId])
+  @@index([dueDate])
 }
 
 model TaskComment {

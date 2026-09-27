@@ -28,6 +28,8 @@ export const FILTERS = [
   "arama",
   "geciken",
   "tamam",
+  "atandi",
+  "gonderilecek",
 ] as const
 export type TaskFilter = (typeof FILTERS)[number]
 
@@ -180,6 +182,14 @@ export function canCreateTask(role: Role) {
   return role === "LAWYER" || role === "ADMIN"
 }
 
+export function canAccessWorkList(_role: Role) {
+  return true
+}
+
+export function canAssignTask(role: Role) {
+  return role === "LAWYER" || role === "ADMIN"
+}
+
 export function needsMyAction(
   task: { status: TaskStatus; assignerId: string; assigneeId: string },
   userId: string,
@@ -241,12 +251,15 @@ export function canQueueSend(
 }
 
 export function canComplete(
-  task: { status: TaskStatus; assigneeId: string },
+  task: { status: TaskStatus; assigneeId: string; assignerId?: string },
   userId: string,
   role?: Role,
 ) {
-  if (task.status !== "GONDERIM_BEKLIYOR") return false
-  return isAdmin(role ?? "INTERN") || task.assigneeId === userId
+  if (task.status !== "GONDERIM_BEKLIYOR" && task.status !== "ONAYLANDI") return false
+  if (isAdmin(role ?? "INTERN")) return true
+  if (task.assigneeId === userId && task.status === "GONDERIM_BEKLIYOR") return true
+  if (task.assignerId === userId && (role === "LAWYER" || role === "ADMIN")) return true
+  return false
 }
 
 export function canComment(
@@ -533,6 +546,10 @@ export function matchesFilter(
       return task.clientCallStatus === "ARANACAK"
     case "tamam":
       return task.status === "TAMAMLANDI"
+    case "atandi":
+      return task.status === "ATANDI" || task.status === "REVIZE_ISTENDI"
+    case "gonderilecek":
+      return task.status === "ONAYLANDI" || task.status === "GONDERIM_BEKLIYOR"
     default:
       return true
   }

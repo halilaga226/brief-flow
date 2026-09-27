@@ -110,11 +110,7 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
             ))}
           </div>
         </div>
-      ) : (
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Kullanıcı adınızı büro yöneticisi belirler.
-        </p>
-      )}
+      ) : null}
     </div>
   )
 }

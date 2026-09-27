@@ -73,16 +73,23 @@ describe("state machine", () => {
     assert.equal(canQueueSend({ status: "GONDERIM_BEKLIYOR", assignerId: lawyer }, lawyer, "LAWYER"), false)
   })
 
-  it("requires the dispatch step and the assignee before completion", () => {
+  it("lets assignee or assigning lawyer complete after send queue", () => {
     assert.equal(
-      canComplete({ status: "GONDERIM_BEKLIYOR", assigneeId: intern }, intern),
+      canComplete({ status: "GONDERIM_BEKLIYOR", assigneeId: intern, assignerId: lawyer }, intern),
       true,
     )
     assert.equal(
-      canComplete({ status: "GONDERIM_BEKLIYOR", assigneeId: intern }, lawyer),
+      canComplete(
+        { status: "GONDERIM_BEKLIYOR", assigneeId: intern, assignerId: lawyer },
+        lawyer,
+        "LAWYER",
+      ),
+      true,
+    )
+    assert.equal(
+      canComplete({ status: "INCELEME_BEKLIYOR", assigneeId: intern, assignerId: lawyer }, intern),
       false,
     )
-    assert.equal(canComplete({ status: "INCELEME_BEKLIYOR", assigneeId: intern }, intern), false)
   })
 
   it("puts the next action on the right person", () => {

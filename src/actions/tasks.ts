@@ -13,6 +13,7 @@ import {
   queueForSend,
   requestRevision,
   setClientCallStatus,
+  setTaskListColor,
   uploadDraft,
 } from "@/server/tasks"
 import { clearDemoData } from "@/server/admin"
@@ -22,7 +23,9 @@ import { redirect } from "next/navigation"
 
 function revalidateTask(taskId: string) {
   revalidatePath("/ayarlar")
+  revalidatePath("/ana")
   revalidatePath("/gorevler")
+  revalidatePath("/is-listesi")
   revalidatePath(`/gorevler/${taskId}`)
 }
 
@@ -196,6 +199,21 @@ export async function completeTaskAction(
   }
   revalidateTask(taskId)
   return { ok: true, message: "Görev evrak koduyla tamamlandı." }
+}
+
+export async function setTaskColorAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    await setTaskListColor(user, taskId, readText(formData, "listColor") || null)
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateTask(taskId)
+  return { ok: true, message: "Renk güncellendi." }
 }
 
 export async function addCommentAction(
