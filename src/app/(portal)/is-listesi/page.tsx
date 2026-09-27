@@ -25,15 +25,15 @@ export default async function WorkListPage() {
     const given = tasks.filter((task) => task.assignerId === user.id)
 
     return (
-      <div className="mx-auto grid w-full max-w-4xl gap-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mx-auto w-full max-w-[80rem] space-y-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">İş listesi</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Verdiğiniz görevler burada listelenir. Dosya kaydı için İş ekle kullanın.
+              Verdiğiniz görevler ve dosya kayıtları — satır satır liste.
             </p>
           </div>
-          <Button asChild className="w-full font-semibold sm:w-auto">
+          <Button asChild className="font-semibold">
             <Link href="#is-ekle">
               <Plus />
               İş ekle
@@ -41,21 +41,16 @@ export default async function WorkListPage() {
           </Button>
         </div>
 
-        <section className="grid gap-3">
-          <div className="flex items-end justify-between gap-3">
-            <h2 className="text-lg font-semibold tracking-tight">Verdiğim görevler</h2>
-            <p className="text-sm font-medium text-muted-foreground tabular-nums">{given.length}</p>
+        <section className="space-y-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="text-base font-semibold">Verdiğim görevler</h2>
+            <span className="text-sm text-muted-foreground tabular-nums">{given.length}</span>
           </div>
           <TaskWorkList tasks={given} canAssign={canAssign} userId={user.id} mode="given" />
         </section>
 
-        <section className="grid gap-3" id="is-ekle">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">Dosya kayıtları</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Mahkeme, dosya no, yapılacaklar ve özel not.
-            </p>
-          </div>
+        <section className="space-y-3" id="is-ekle">
+          <h2 className="text-base font-semibold">Dosya kayıtları</h2>
           <WorkItemAgenda items={items} canCreate />
         </section>
       </div>
@@ -65,7 +60,7 @@ export default async function WorkListPage() {
   const tasks = await listTasksCached(user.id, user.role)
 
   return (
-    <div className="mx-auto grid w-full max-w-4xl gap-4">
+    <div className="mx-auto w-full max-w-[80rem] space-y-4">
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">İş listesi</h1>
       <TaskWorkList tasks={tasks} canAssign={false} userId={user.id} />
     </div>

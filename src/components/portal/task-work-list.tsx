@@ -29,38 +29,38 @@ const COLORS = [
 const DUE_CHIPS: { id: DueWindow | "all" | "gecikmis"; label: string }[] = [
   { id: "all", label: "Tümü" },
   { id: "gecikmis", label: "Gecikmiş" },
-  { id: "1g", label: "1 gün" },
-  { id: "3g", label: "3 gün" },
-  { id: "1h", label: "1 hafta" },
-  { id: "1ay", label: "1 ay" },
+  { id: "1g", label: "1g" },
+  { id: "3g", label: "3g" },
+  { id: "1h", label: "1h" },
+  { id: "1ay", label: "1ay" },
 ]
 
 type Scope = "all" | "mine" | "given"
 
-function accentBar(task: TaskCardDTO) {
-  if (task.listColor === "red") return "border-l-[#ff3b30]"
-  if (task.listColor === "orange") return "border-l-[#ff9f0a]"
-  if (task.listColor === "green") return "border-l-[#34c759]"
-  if (task.listColor === "blue") return "border-l-[#007aff]"
-  if (task.listColor === "pink") return "border-l-[#ff2d55]"
-  if (task.status === "TAMAMLANDI" || task.dueTone === "done") return "border-l-[#34c759]"
-  if (task.dueTone === "overdue") return "border-l-[#ff3b30]"
-  if (task.dueTone === "today" || task.dueTone === "soon") return "border-l-[#ff9f0a]"
-  return "border-l-primary/50"
+function rowTone(task: TaskCardDTO) {
+  if (task.listColor === "red") return "bg-[#ff3b30]/15"
+  if (task.listColor === "orange") return "bg-[#ff9f0a]/15"
+  if (task.listColor === "green") return "bg-[#34c759]/15"
+  if (task.listColor === "blue") return "bg-[#007aff]/12"
+  if (task.listColor === "pink") return "bg-[#ff2d55]/15"
+  if (task.status === "TAMAMLANDI") return "bg-[#34c759]/12"
+  if (task.dueTone === "overdue") return "bg-[#ff3b30]/15"
+  if (task.dueTone === "today" || task.dueTone === "soon") return "bg-[#ff9f0a]/12"
+  return "bg-transparent"
 }
 
 function ColorPicker({ taskId, value }: { taskId: string; value: string | null }) {
   const [state, action, pending] = useActionState(setTaskColorAction, null)
   useActionResult(state)
   return (
-    <form action={action} className="shrink-0">
+    <form action={action}>
       <input type="hidden" name="taskId" value={taskId} />
       <select
         name="listColor"
         defaultValue={value ?? "auto"}
         disabled={pending}
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
-        className="h-9 rounded-lg border border-border bg-background px-2 text-xs font-medium"
+        className="h-8 w-full max-w-[5.5rem] rounded border border-border bg-background px-1 text-[11px] font-medium"
         aria-label="Renk"
       >
         {COLORS.map((color) => (
@@ -73,86 +73,9 @@ function ColorPicker({ taskId, value }: { taskId: string; value: string | null }
   )
 }
 
-function TaskRow({
-  task,
-  canAssign,
-}: {
-  task: TaskCardDTO
-  canAssign: boolean
-}) {
-  return (
-    <li
-      className={cn(
-        "rounded-xl border border-border bg-card shadow-sm border-l-4",
-        accentBar(task),
-      )}
-    >
-      <div className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-start gap-2">
-            <Link
-              href={`/gorevler/${task.id}`}
-              className="min-w-0 flex-1 text-base font-bold leading-snug text-foreground hover:underline"
-            >
-              {task.title}
-            </Link>
-            <StatusBadge status={task.status} />
-          </div>
-
-          <p className="text-sm font-semibold text-foreground">
-            {task.clientName}
-            <span className="mx-1.5 text-muted-foreground">·</span>
-            <span className="font-mono text-xs font-medium text-muted-foreground">
-              {task.fileNumber}
-            </span>
-          </p>
-
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <span>
-              <span className="font-medium text-foreground/70">Veren:</span> {task.assignerName}
-            </span>
-            <span>
-              <span className="font-medium text-foreground/70">Yürüten:</span> {task.assigneeName}
-            </span>
-            <span
-              className={cn(
-                "font-semibold",
-                task.dueTone === "overdue" && "text-[#ff3b30]",
-                (task.dueTone === "soon" || task.dueTone === "today") && "text-[#c2410c] dark:text-[#ff9f0a]",
-                (task.dueTone === "done" || task.status === "TAMAMLANDI") && "text-[#15803d] dark:text-[#34c759]",
-              )}
-            >
-              Son gün: {task.dueLabel}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <ColorPicker taskId={task.id} value={task.listColor} />
-          {canAssign ? (
-            <Button asChild size="sm" variant="outline" className="h-9 font-semibold">
-              <Link href={`/gorevler/yeni?from=${task.id}`}>
-                <UserPlus className="size-3.5" />
-                Ata
-              </Link>
-            </Button>
-          ) : (
-            <Button asChild size="sm" variant="outline" className="h-9 font-semibold">
-              <Link href={`/gorevler/${task.id}`}>Aç</Link>
-            </Button>
-          )}
-          {task.canDelete ? (
-            <DeleteTaskButton
-              taskId={task.id}
-              completed={task.status === "TAMAMLANDI"}
-              compact
-            />
-          ) : null}
-        </div>
-      </div>
-    </li>
-  )
-}
+/** Classic list row — CSS grid, never sticky header */
+const COL =
+  "grid grid-cols-1 gap-2 border-b border-border px-3 py-3 md:grid-cols-[minmax(10rem,1.6fr)_minmax(6rem,0.9fr)_5.5rem_minmax(5rem,0.7fr)_minmax(5rem,0.7fr)_6.5rem_auto_4.5rem_auto] md:items-center md:gap-2 md:py-2.5"
 
 export function TaskWorkList({
   tasks,
@@ -171,19 +94,6 @@ export function TaskWorkList({
   const [hideDone, setHideDone] = useState(true)
   const lockedGiven = mode === "given"
 
-  const workload = useMemo(() => {
-    const map = new Map<string, { name: string; open: number; overdue: number }>()
-    for (const task of tasks) {
-      if (task.status === "TAMAMLANDI") continue
-      const key = task.assigneeId
-      const row = map.get(key) ?? { name: task.assigneeName, open: 0, overdue: 0 }
-      row.open += 1
-      if (task.dueTone === "overdue") row.overdue += 1
-      map.set(key, row)
-    }
-    return [...map.values()].sort((a, b) => b.open - a.open || a.name.localeCompare(b.name, "tr"))
-  }, [tasks])
-
   const filtered = useMemo(() => {
     return tasks.filter((task) => {
       if (hideDone && task.status === "TAMAMLANDI") return false
@@ -199,108 +109,187 @@ export function TaskWorkList({
   }, [tasks, hideDone, lockedGiven, scope, userId, query, due])
 
   return (
-    <div className="grid gap-4">
-      {workload.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
-            İş yükü
-          </span>
-          {workload.map((person) => (
-            <span key={person.name} className="inline-flex items-center gap-1.5 font-semibold">
-              <span>{person.name}</span>
-              <span className="tabular-nums text-primary">{person.open}</span>
-              {person.overdue > 0 ? (
-                <span className="tabular-nums text-[#ff3b30]">· {person.overdue} gecikmiş</span>
-              ) : null}
-            </span>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="grid gap-2">
-        <div className="flex flex-wrap gap-1.5">
-          {!lockedGiven
-            ? (
-                [
-                  { id: "all" as const, label: "Hepsi" },
-                  { id: "mine" as const, label: "Bana gelen" },
-                  { id: "given" as const, label: "Benim verdiğim" },
-                ] as const
-              ).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setScope(item.id)}
-                  className={cn(
-                    "rounded-lg px-3 py-1.5 text-xs font-bold transition",
-                    scope === item.id
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  )}
-                >
-                  {item.label}
-                </button>
-              ))
-            : null}
-          <button
-            type="button"
-            onClick={() => setHideDone((value) => !value)}
-            className={cn(
-              "rounded-lg px-3 py-1.5 text-xs font-bold transition",
-              hideDone
-                ? "text-muted-foreground hover:bg-muted hover:text-foreground"
-                : "bg-foreground text-background",
-            )}
-          >
-            {hideDone ? "Tamamlananları göster" : "Tamamlananları gizle"}
-          </button>
-          <span className="ml-auto self-center text-xs font-semibold text-muted-foreground tabular-nums">
-            {filtered.length} / {tasks.length}
-          </span>
-        </div>
-
+    <div className="space-y-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        {!lockedGiven ? (
+          <div className="flex flex-wrap gap-1">
+            {(
+              [
+                { id: "all" as const, label: "Hepsi" },
+                { id: "mine" as const, label: "Bana gelen" },
+                { id: "given" as const, label: "Verdiğim" },
+              ] as const
+            ).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setScope(item.id)}
+                className={cn(
+                  "rounded px-2.5 py-1 text-xs font-bold",
+                  scope === item.id
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => setHideDone((v) => !v)}
+          className={cn(
+            "rounded px-2.5 py-1 text-xs font-bold",
+            hideDone ? "text-muted-foreground hover:text-foreground" : "bg-foreground text-background",
+          )}
+        >
+          {hideDone ? "Tamamlanan +" : "Tamamlanan −"}
+        </button>
         <Input
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(e) => setQuery(e.target.value)}
           placeholder="Ara…"
-          className="h-9 w-full max-w-md bg-background"
+          className="h-8 max-w-xs"
         />
-
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1">
           {DUE_CHIPS.map((chip) => (
             <button
               key={chip.id}
               type="button"
               onClick={() => setDue(chip.id)}
               className={cn(
-                "rounded-lg px-2.5 py-1 text-xs font-bold transition",
+                "rounded px-2 py-1 text-xs font-bold",
                 due === chip.id
                   ? chip.id === "gecikmis"
                     ? "bg-[#ff3b30] text-white"
                     : "bg-foreground text-background"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {chip.label}
             </button>
           ))}
         </div>
+        <span className="text-xs font-semibold text-muted-foreground tabular-nums sm:ml-auto">
+          {filtered.length}/{tasks.length}
+        </span>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card/40 px-4 py-12 text-center text-base text-muted-foreground">
-          {tasks.length === 0
-            ? lockedGiven
-              ? "Henüz verdiğiniz görev yok. «Görev olarak ata» ile ekleyin."
-              : "Kayıt yok"
-            : "Filtreye uyan kayıt yok — filtreleri sıfırlayın."}
-        </div>
+        <p className="border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+          Kayıt yok
+        </p>
       ) : (
-        <ul className="grid gap-3">
-          {filtered.map((task) => (
-            <TaskRow key={task.id} task={task} canAssign={canAssign} />
-          ))}
-        </ul>
+        <div className="rounded-lg border border-border bg-card">
+          {/* Header: normal flow only — never sticky */}
+          <div
+            className={cn(
+              COL,
+              "hidden bg-muted/50 text-[10px] font-bold tracking-wide text-muted-foreground uppercase md:grid",
+            )}
+            aria-hidden
+          >
+            <span>İş</span>
+            <span>Müvekkil</span>
+            <span>Dosya</span>
+            <span>Veren</span>
+            <span>Yürüten</span>
+            <span>Son gün</span>
+            <span>Durum</span>
+            <span>Renk</span>
+            <span />
+          </div>
+
+          <ul>
+            {filtered.map((task) => (
+              <li key={task.id} className={cn(COL, rowTone(task))}>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">İş</p>
+                  <Link
+                    href={`/gorevler/${task.id}`}
+                    className="line-clamp-2 text-sm font-bold leading-snug hover:underline"
+                  >
+                    {task.title}
+                  </Link>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                    Müvekkil
+                  </p>
+                  <p className="truncate text-sm font-semibold">{task.clientName}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                    Dosya
+                  </p>
+                  <p className="font-mono text-xs">{task.fileNumber}</p>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                    Veren
+                  </p>
+                  <p className="truncate text-sm text-muted-foreground">{task.assignerName}</p>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                    Yürüten
+                  </p>
+                  <p className="truncate text-sm text-muted-foreground">{task.assigneeName}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                    Son gün
+                  </p>
+                  <p
+                    className={cn(
+                      "text-sm font-bold",
+                      task.dueTone === "overdue" && "text-[#ff3b30]",
+                      (task.dueTone === "soon" || task.dueTone === "today") &&
+                        "text-[#c2410c] dark:text-[#ff9f0a]",
+                      task.status === "TAMAMLANDI" && "text-[#15803d] dark:text-[#34c759]",
+                    )}
+                  >
+                    {task.dueLabel}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                    Durum
+                  </p>
+                  <StatusBadge status={task.status} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                    Renk
+                  </p>
+                  <ColorPicker taskId={task.id} value={task.listColor} />
+                </div>
+                <div className="flex items-center gap-1 md:justify-end">
+                  {canAssign ? (
+                    <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
+                      <Link href={`/gorevler/yeni?from=${task.id}`}>
+                        <UserPlus className="size-3.5" />
+                        Ata
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
+                      <Link href={`/gorevler/${task.id}`}>Aç</Link>
+                    </Button>
+                  )}
+                  {task.canDelete ? (
+                    <DeleteTaskButton
+                      taskId={task.id}
+                      completed={task.status === "TAMAMLANDI"}
+                      compact
+                    />
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   )
