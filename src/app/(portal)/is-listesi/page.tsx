@@ -10,6 +10,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = { title: "İş listesi" }
+export const dynamic = "force-dynamic"
 
 export default async function WorkListPage() {
   const user = await requireUser()

@@ -126,65 +126,57 @@ export function TaskBoard({ tasks, view }: { tasks: TaskCardDTO[]; view: TaskVie
 
   if (view === "liste") {
     return (
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="hidden grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr_auto] gap-3 border-b border-border px-4 py-2 text-xs font-bold text-muted-foreground md:grid">
-          <span>İş</span>
-          <span>Müvekkil</span>
-          <span>Durum</span>
-          <span>Teslim</span>
-          <span className="sr-only">Geçmiş</span>
-        </div>
-        <ul>
-          {tasks.map((task) => (
-            <li key={task.id} className="border-b border-border last:border-b-0">
-              <HoverCard openDelay={400}>
-                <HoverCardTrigger asChild>
-                  <div
-                    className={cn(
-                      "relative grid gap-2 px-3 py-3.5 sm:px-4 md:grid-cols-[1.4fr_0.9fr_0.7fr_0.8fr_auto] md:items-center",
-                      task.visualTone === "red" && "bg-red-500/10",
-                      task.visualTone === "yellow" && "bg-orange-500/10",
-                    )}
-                  >
-                    <Link href={`/gorevler/${task.id}`} className="absolute inset-0" aria-label={task.title} />
-                    <div className="min-w-0 pr-8 md:pr-0">
-                      <p className="text-sm font-semibold leading-snug">{task.title}</p>
-                      <p className="mt-0.5 text-xs font-semibold text-muted-foreground md:hidden">
-                        {task.clientName} · {task.fileNumber}
+      <ul className="grid gap-3">
+        {tasks.map((task) => (
+          <li key={task.id}>
+            <HoverCard openDelay={400}>
+              <HoverCardTrigger asChild>
+                <div
+                  className={cn(
+                    "relative rounded-xl border border-border bg-card p-4 shadow-sm",
+                    task.visualTone === "red" && "border-l-4 border-l-red-500 bg-red-500/10",
+                    task.visualTone === "yellow" && "border-l-4 border-l-orange-500 bg-orange-500/10",
+                    task.visualTone === "neutral" && "border-l-4 border-l-primary/40",
+                  )}
+                >
+                  <Link
+                    href={`/gorevler/${task.id}`}
+                    className="absolute inset-0 rounded-xl"
+                    aria-label={task.title}
+                  />
+                  <div className="relative z-10 flex items-start justify-between gap-3 pointer-events-none">
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <p className="text-base font-bold leading-snug text-foreground">{task.title}</p>
+                      <p className="text-sm font-semibold text-foreground/90">
+                        {task.clientName}
+                        <span className="mx-1.5 text-muted-foreground">·</span>
+                        <span className="font-mono text-xs font-medium text-muted-foreground">
+                          {task.fileNumber}
+                        </span>
                       </p>
-                      <p className="text-[11px] font-medium text-muted-foreground">{task.relationLabel}</p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 md:hidden">
+                      <p className="text-xs font-medium text-muted-foreground">{task.relationLabel}</p>
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
                         <StatusBadge status={task.status} />
-                        <span className={cn("text-xs font-bold", dueClass(task.dueTone))}>{dueText(task)}</span>
+                        <span className={cn("text-sm font-bold", dueClass(task.dueTone))}>
+                          {dueText(task)}
+                        </span>
                       </div>
                     </div>
-                    <p className="hidden text-sm font-semibold md:block">
-                      {task.clientName}
-                      <span className="mt-0.5 block font-mono text-xs font-medium text-muted-foreground">
-                        {task.fileNumber}
-                      </span>
-                    </p>
-                    <div className="hidden md:block">
-                      <StatusBadge status={task.status} />
-                    </div>
-                    <p className={cn("hidden text-sm font-bold md:block", dueClass(task.dueTone))}>
-                      {dueText(task)}
-                    </p>
-                    <div className="absolute top-3 right-2 z-10 md:static md:justify-self-end">
+                    <div className="pointer-events-auto">
                       <HistoryButton task={task} />
                     </div>
                   </div>
-                </HoverCardTrigger>
-                <HoverCardContent className="w-80">
-                  <div className="max-h-72 overflow-y-auto">
-                    <TaskTimeline events={task.logs} />
-                  </div>
-                </HoverCardContent>
-              </HoverCard>
-            </li>
-          ))}
-        </ul>
-      </div>
+                </div>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="max-h-72 overflow-y-auto">
+                  <TaskTimeline events={task.logs} />
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+          </li>
+        ))}
+      </ul>
     )
   }
 
