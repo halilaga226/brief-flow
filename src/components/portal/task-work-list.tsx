@@ -217,7 +217,7 @@ export function TaskWorkList({
         </div>
       ) : null}
 
-      <div className="grid gap-3 rounded-xl border border-border bg-card/70 p-3">
+      <div className="grid gap-2">
         <div className="flex flex-wrap gap-1.5">
           {!lockedGiven
             ? (
@@ -232,10 +232,10 @@ export function TaskWorkList({
                   type="button"
                   onClick={() => setScope(item.id)}
                   className={cn(
-                    "rounded-lg px-3 py-2 text-xs font-bold transition",
+                    "rounded-lg px-3 py-1.5 text-xs font-bold transition",
                     scope === item.id
                       ? "bg-foreground text-background"
-                      : "bg-muted text-muted-foreground hover:text-foreground",
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
                   {item.label}
@@ -246,44 +246,44 @@ export function TaskWorkList({
             type="button"
             onClick={() => setHideDone((value) => !value)}
             className={cn(
-              "rounded-lg px-3 py-2 text-xs font-bold transition",
+              "rounded-lg px-3 py-1.5 text-xs font-bold transition",
               hideDone
-                ? "bg-muted text-muted-foreground hover:text-foreground"
+                ? "text-muted-foreground hover:bg-muted hover:text-foreground"
                 : "bg-foreground text-background",
             )}
           >
             {hideDone ? "Tamamlananları göster" : "Tamamlananları gizle"}
           </button>
+          <span className="ml-auto self-center text-xs font-semibold text-muted-foreground tabular-nums">
+            {filtered.length} / {tasks.length}
+          </span>
         </div>
 
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Müvekkil, dosya, iş, kişi ara…"
-          className="h-10 w-full bg-background"
+          placeholder="Ara…"
+          className="h-9 w-full max-w-md bg-background"
         />
 
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {DUE_CHIPS.map((chip) => (
             <button
               key={chip.id}
               type="button"
               onClick={() => setDue(chip.id)}
               className={cn(
-                "rounded-lg px-3 py-2 text-xs font-bold transition",
+                "rounded-lg px-2.5 py-1 text-xs font-bold transition",
                 due === chip.id
                   ? chip.id === "gecikmis"
                     ? "bg-[#ff3b30] text-white"
                     : "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground hover:text-foreground",
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
               {chip.label}
             </button>
           ))}
-          <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums">
-            {filtered.length} / {tasks.length}
-          </span>
         </div>
       </div>
 
