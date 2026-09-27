@@ -7,10 +7,8 @@ import type { ActivityDTO, TaskCardDTO } from "@/lib/dto"
 import { cn } from "@/lib/utils"
 import {
   CheckCircle2,
-  ClipboardList,
   FolderOpen,
   Inbox,
-  Plus,
   Send,
   ShieldCheck,
 } from "lucide-react"
@@ -81,29 +79,14 @@ export function HomeDashboard({
     <div className="mx-auto grid max-w-6xl gap-5">
       <section className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{greeting}</h1>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="secondary" className="font-bold">
-            <Link href="/is-listesi">
-              <ClipboardList />
-              İş listesi
+        {!canAssign ? (
+          <Button asChild variant="secondary" className="font-semibold">
+            <Link href="/gorevler">
+              <FolderOpen />
+              Görevler
             </Link>
           </Button>
-          {canAssign ? (
-            <Button asChild className="font-bold">
-              <Link href="/gorevler/yeni">
-                <Plus />
-                Görev olarak ata
-              </Link>
-            </Button>
-          ) : (
-            <Button asChild className="font-bold">
-              <Link href="/gorevler">
-                <FolderOpen />
-                Görevler
-              </Link>
-            </Button>
-          )}
-        </div>
+        ) : null}
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

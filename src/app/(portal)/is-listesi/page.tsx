@@ -1,11 +1,8 @@
 import { TaskWorkList } from "@/components/portal/task-work-list"
-import { Button } from "@/components/ui/button"
 import { requireUser } from "@/lib/session"
 import { canAssignTask } from "@/lib/workflow"
 import { listTasksCached } from "@/server/cached"
-import { Plus } from "lucide-react"
 import type { Metadata } from "next"
-import Link from "next/link"
 
 export const metadata: Metadata = { title: "İş listesi" }
 
@@ -16,17 +13,7 @@ export default async function WorkListPage() {
 
   return (
     <div className="mx-auto grid max-w-[72rem] gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">İş listesi</h1>
-        {canAssign ? (
-          <Button asChild className="font-bold">
-            <Link href="/gorevler/yeni">
-              <Plus />
-              Görev olarak ata
-            </Link>
-          </Button>
-        ) : null}
-      </div>
+      <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">İş listesi</h1>
       <TaskWorkList tasks={tasks} canAssign={canAssign} userId={user.id} />
     </div>
   )

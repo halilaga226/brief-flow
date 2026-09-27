@@ -22,7 +22,6 @@ import {
   FolderOpen,
   Inbox,
   Phone,
-  Plus,
   Search,
   Send,
   UserCheck,
@@ -127,14 +126,6 @@ export default async function TasksPage({
       <div className="grid min-w-0 gap-4">
         <div className="flex items-end justify-between gap-3">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{activeFolder.label}</h1>
-          {canCreateTask(user.role) ? (
-            <Button asChild className="font-semibold">
-              <Link href="/gorevler/yeni">
-                <Plus />
-                Görev ver
-              </Link>
-            </Button>
-          ) : null}
         </div>
 
         <div className="flex flex-wrap gap-2">

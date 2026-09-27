@@ -131,7 +131,7 @@ export function AppShell({
         <div className="flex-1 px-3 py-4">
           <NavLinks canAssign={lawyer} canManage={manager} />
           {lawyer ? (
-            <Button asChild className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 font-bold text-white hover:from-orange-600 hover:to-amber-600">
+            <Button asChild className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 font-semibold text-white hover:from-orange-600 hover:to-amber-600">
               <Link href="/gorevler/yeni">
                 <Plus />
                 Görev olarak ata
@@ -175,20 +175,22 @@ export function AppShell({
                 <div className="mt-4">
                   <NavLinks inSheet canAssign={lawyer} canManage={manager} />
                 </div>
+                {lawyer ? (
+                  <SheetClose asChild>
+                    <Button asChild className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 font-semibold text-white hover:from-orange-600 hover:to-amber-600">
+                      <Link href="/gorevler/yeni">
+                        <Plus />
+                        Görev olarak ata
+                      </Link>
+                    </Button>
+                  </SheetClose>
+                ) : null}
               </div>
             </SheetContent>
           </Sheet>
           <p className="min-w-0 truncate text-sm font-semibold md:hidden">{BRAND.shortName}</p>
           <div className="flex-1" />
           <ThemeToggle />
-          {lawyer ? (
-            <Button asChild size="sm" className="hidden bg-gradient-to-r from-orange-500 to-amber-500 font-bold text-white sm:inline-flex">
-              <Link href="/gorevler/yeni">
-                <Plus />
-                Görev olarak ata
-              </Link>
-            </Button>
-          ) : null}
           <NotificationBell items={notifications} />
         </header>
         <main id="icerik" className="px-3 py-5 pb-24 sm:px-4 md:px-8 md:py-8 md:pb-8">
