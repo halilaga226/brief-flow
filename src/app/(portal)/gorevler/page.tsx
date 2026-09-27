@@ -21,6 +21,8 @@ import {
   ClipboardList,
   FolderOpen,
   Inbox,
+  LayoutGrid,
+  List,
   Phone,
   Search,
   Send,
@@ -124,8 +126,34 @@ export default async function TasksPage({
       </aside>
 
       <div className="grid min-w-0 gap-4">
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{activeFolder.label}</h1>
+          <div className="flex items-center gap-1 rounded-xl bg-muted/60 p-1 ring-1 ring-border">
+            <Link
+              href={hrefFor({ q: query, filtre: filter, gorunum: "liste", sure })}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                view === "liste"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <List className="size-4" />
+              Liste
+            </Link>
+            <Link
+              href={hrefFor({ q: query, filtre: filter, gorunum: "pano", sure })}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                view === "pano"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <LayoutGrid className="size-4" />
+              Pano
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
