@@ -34,8 +34,7 @@ const zones = [
     href: "/gorevler?filtre=atandi",
     icon: Inbox,
     valueKey: "assigned" as const,
-    tone: "from-[#007aff] to-[#5ac8fa]",
-    chip: "text-[#007aff]",
+    box: "bg-[#007aff] text-white shadow-blue-500/30",
   },
   {
     key: "review",
@@ -43,8 +42,7 @@ const zones = [
     href: "/gorevler?filtre=inceleme",
     icon: ShieldCheck,
     valueKey: "inReview" as const,
-    tone: "from-[#ff9f0a] to-[#ffb340]",
-    chip: "text-[#ff9f0a]",
+    box: "bg-[#ff9f0a] text-white shadow-orange-500/30",
   },
   {
     key: "send",
@@ -52,8 +50,7 @@ const zones = [
     href: "/gorevler?filtre=gonderilecek",
     icon: Send,
     valueKey: "toSend" as const,
-    tone: "from-[#ff2d55] to-[#ff6b8a]",
-    chip: "text-[#ff2d55]",
+    box: "bg-[#ff2d55] text-white shadow-pink-500/30",
   },
   {
     key: "done",
@@ -61,8 +58,7 @@ const zones = [
     href: "/gorevler?filtre=tamam",
     icon: CheckCircle2,
     valueKey: "completed" as const,
-    tone: "from-[#34c759] to-[#30d158]",
-    chip: "text-[#34c759]",
+    box: "bg-[#34c759] text-white shadow-green-500/30",
   },
 ] as const
 
@@ -82,32 +78,30 @@ export function HomeDashboard({
 }) {
   return (
     <div className="mx-auto grid max-w-6xl gap-5">
-      <section className="glass rounded-[1.5rem] p-6 md:p-7">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{greeting}</h1>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="secondary" className="font-bold">
-              <Link href="/is-listesi">
-                <ClipboardList />
-                İş listesi
+      <section className="flex flex-wrap items-end justify-between gap-4">
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{greeting}</h1>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="secondary" className="font-bold">
+            <Link href="/is-listesi">
+              <ClipboardList />
+              İş listesi
+            </Link>
+          </Button>
+          {canAssign ? (
+            <Button asChild className="font-bold">
+              <Link href="/gorevler/yeni">
+                <Plus />
+                Görev olarak ata
               </Link>
             </Button>
-            {canAssign ? (
-              <Button asChild className="font-bold">
-                <Link href="/gorevler/yeni">
-                  <Plus />
-                  Görev olarak ata
-                </Link>
-              </Button>
-            ) : (
-              <Button asChild className="font-bold">
-                <Link href="/gorevler">
-                  <FolderOpen />
-                  Görevler
-                </Link>
-              </Button>
-            )}
-          </div>
+          ) : (
+            <Button asChild className="font-bold">
+              <Link href="/gorevler">
+                <FolderOpen />
+                Görevler
+              </Link>
+            </Button>
+          )}
         </div>
       </section>
 
@@ -119,19 +113,19 @@ export function HomeDashboard({
             <Link
               key={zone.key}
               href={zone.href}
-              className="glass block rounded-2xl p-4 transition hover:-translate-y-0.5"
+              className={cn(
+                "block rounded-2xl p-4 shadow-lg transition hover:-translate-y-0.5 hover:brightness-105",
+                zone.box,
+              )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className={cn("text-sm font-bold", zone.chip)}>{zone.label}</p>
-                  <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums">{value}</p>
+                  <p className="text-sm font-bold text-white/95">{zone.label}</p>
+                  <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-white">
+                    {value}
+                  </p>
                 </div>
-                <span
-                  className={cn(
-                    "flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md",
-                    zone.tone,
-                  )}
-                >
+                <span className="flex size-10 items-center justify-center rounded-2xl bg-white/20 text-white">
                   <Icon className="size-4" />
                 </span>
               </div>
@@ -140,23 +134,23 @@ export function HomeDashboard({
         })}
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="glass overflow-hidden rounded-2xl">
-          <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
+      <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+        <div>
+          <div className="mb-2 flex items-center justify-between">
             <h2 className="text-xl font-bold">Sıradaki</h2>
             <Button asChild variant="ghost" size="sm" className="font-semibold">
               <Link href="/gorevler?filtre=bekleyen">Tümü</Link>
             </Button>
           </div>
           {awaiting.length === 0 ? (
-            <p className="px-4 py-10 text-center text-base text-muted-foreground">—</p>
+            <p className="py-8 text-base text-muted-foreground">—</p>
           ) : (
-            <ul className="divide-y divide-border/60">
+            <ul className="divide-y divide-border/50 border-y border-border/50">
               {awaiting.map((task) => (
                 <li key={task.id}>
                   <Link
                     href={`/gorevler/${task.id}`}
-                    className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-muted/30"
+                    className="flex flex-wrap items-center justify-between gap-3 py-3 transition hover:bg-muted/25"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-base font-bold">{task.title}</p>
@@ -172,22 +166,23 @@ export function HomeDashboard({
           )}
         </div>
 
-        <div className="glass overflow-hidden rounded-2xl">
-          <div className="border-b border-border/70 px-4 py-3">
-            <h2 className="text-xl font-bold">Hareket</h2>
-          </div>
+        <div>
+          <h2 className="mb-2 text-xl font-bold">Hareket</h2>
           {activity.length === 0 ? (
-            <p className="px-4 py-10 text-center text-base text-muted-foreground">—</p>
+            <p className="py-8 text-base text-muted-foreground">—</p>
           ) : (
-            <ul className="divide-y divide-border/60">
+            <ul className="divide-y divide-border/50 border-y border-border/50">
               {activity.map((item) => (
-                <li key={item.id} className="px-4 py-3">
+                <li key={item.id} className="py-3">
                   <p className="text-sm font-bold">{item.label}</p>
                   <p className="mt-0.5 text-xs font-medium text-muted-foreground">
                     {item.actorName} · {item.when}
                   </p>
                   {item.taskTitle ? (
-                    <Link href={`/gorevler/${item.taskId}`} className="mt-1 block text-sm font-semibold text-primary">
+                    <Link
+                      href={`/gorevler/${item.taskId}`}
+                      className="mt-1 block text-sm font-semibold text-primary"
+                    >
                       {item.taskTitle}
                     </Link>
                   ) : null}

@@ -4,49 +4,62 @@ import { setTaskColorAction } from "@/actions/tasks"
 import { useActionResult } from "@/components/portal/use-action-result"
 import { StatusBadge } from "@/components/portal/status-badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import type { TaskCardDTO } from "@/lib/dto"
 import { cn } from "@/lib/utils"
+import {
+  matchesDueWindow,
+  matchesQuery,
+  type DueWindow,
+} from "@/lib/workflow"
 import { UserPlus } from "lucide-react"
 import Link from "next/link"
-import { useActionState } from "react"
+import { useMemo, useState, useActionState } from "react"
 
 const COLORS = [
-  { id: "auto", label: "Otomatik", swatch: "bg-gradient-to-r from-blue-400 via-orange-400 to-red-400" },
-  { id: "blue", label: "Mavi", swatch: "bg-[#007aff]" },
-  { id: "orange", label: "Turuncu", swatch: "bg-[#ff9f0a]" },
-  { id: "red", label: "Kırmızı", swatch: "bg-[#ff3b30]" },
-  { id: "green", label: "Yeşil", swatch: "bg-[#34c759]" },
-  { id: "pink", label: "Pembe", swatch: "bg-[#ff2d55]" },
+  { id: "auto", label: "Oto" },
+  { id: "blue", label: "Mavi" },
+  { id: "orange", label: "Turuncu" },
+  { id: "red", label: "Kırmızı" },
+  { id: "green", label: "Yeşil" },
+  { id: "pink", label: "Pembe" },
 ] as const
 
-function rowTone(task: TaskCardDTO) {
-  if (task.listColor === "red") return "border-l-[#ff3b30] bg-[#ff3b30]/10"
-  if (task.listColor === "orange") return "border-l-[#ff9f0a] bg-[#ff9f0a]/10"
-  if (task.listColor === "green") return "border-l-[#34c759] bg-[#34c759]/10"
-  if (task.listColor === "blue") return "border-l-[#007aff] bg-[#007aff]/10"
-  if (task.listColor === "pink") return "border-l-[#ff2d55] bg-[#ff2d55]/12"
-  if (task.status === "TAMAMLANDI" || task.dueTone === "done") {
-    return "border-l-[#34c759] bg-[#34c759]/10"
-  }
-  if (task.dueTone === "overdue") return "border-l-[#ff3b30] bg-[#ff3b30]/10"
-  if (task.dueTone === "today" || task.dueTone === "soon") {
-    return "border-l-[#ff9f0a] bg-[#ff9f0a]/10"
-  }
-  return "border-l-[#007aff]/70 bg-white/40 dark:bg-white/5"
+const DUE_CHIPS: { id: DueWindow | "all" | "gecikmis"; label: string }[] = [
+  { id: "all", label: "Tümü" },
+  { id: "gecikmis", label: "Gecikmiş" },
+  { id: "1g", label: "1 gün" },
+  { id: "3g", label: "3 gün" },
+  { id: "1h", label: "1 hafta" },
+  { id: "1ay", label: "1 ay" },
+]
+
+type Scope = "all" | "mine" | "given"
+
+function rowFill(task: TaskCardDTO) {
+  if (task.listColor === "red") return "bg-[#ff3b30]/22"
+  if (task.listColor === "orange") return "bg-[#ff9f0a]/22"
+  if (task.listColor === "green") return "bg-[#34c759]/22"
+  if (task.listColor === "blue") return "bg-[#007aff]/20"
+  if (task.listColor === "pink") return "bg-[#ff2d55]/22"
+  if (task.status === "TAMAMLANDI" || task.dueTone === "done") return "bg-[#34c759]/18"
+  if (task.dueTone === "overdue") return "bg-[#ff3b30]/22"
+  if (task.dueTone === "today" || task.dueTone === "soon") return "bg-[#ff9f0a]/20"
+  return "bg-transparent"
 }
 
 function ColorPicker({ taskId, value }: { taskId: string; value: string | null }) {
   const [state, action, pending] = useActionState(setTaskColorAction, null)
   useActionResult(state)
   return (
-    <form action={action} className="flex items-center gap-1">
+    <form action={action}>
       <input type="hidden" name="taskId" value={taskId} />
       <select
         name="listColor"
         defaultValue={value ?? "auto"}
         disabled={pending}
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
-        className="h-8 rounded-lg border border-border bg-white/50 px-2 text-xs backdrop-blur dark:bg-black/30"
+        className="h-7 max-w-[5.5rem] rounded border border-border/70 bg-background/80 px-1.5 text-[11px] font-medium"
         aria-label="Renk"
       >
         {COLORS.map((color) => (
@@ -62,75 +75,210 @@ function ColorPicker({ taskId, value }: { taskId: string; value: string | null }
 export function TaskWorkList({
   tasks,
   canAssign,
+  userId,
 }: {
   tasks: TaskCardDTO[]
   canAssign: boolean
+  userId: string
 }) {
-  return (
-    <section className="glass overflow-hidden rounded-[1.4rem]">
-      <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
-        <h2 className="text-xl font-bold tracking-tight">İş listesi</h2>
-        <p className="text-sm font-semibold text-muted-foreground">{tasks.length}</p>
-      </div>
+  const [query, setQuery] = useState("")
+  const [due, setDue] = useState<(typeof DUE_CHIPS)[number]["id"]>("all")
+  const [scope, setScope] = useState<Scope>("all")
+  const [hideDone, setHideDone] = useState(true)
 
-      {tasks.length === 0 ? (
-        <p className="px-4 py-14 text-center text-base text-muted-foreground">Kayıt yok</p>
-      ) : (
-        <ul className="divide-y divide-border/60">
-          {tasks.map((task) => (
-            <li
-              key={task.id}
+  const workload = useMemo(() => {
+    const map = new Map<string, { name: string; open: number; overdue: number }>()
+    for (const task of tasks) {
+      if (task.status === "TAMAMLANDI") continue
+      const key = task.assigneeId
+      const row = map.get(key) ?? { name: task.assigneeName, open: 0, overdue: 0 }
+      row.open += 1
+      if (task.dueTone === "overdue") row.overdue += 1
+      map.set(key, row)
+    }
+    return [...map.values()].sort((a, b) => b.open - a.open || a.name.localeCompare(b.name, "tr"))
+  }, [tasks])
+
+  const filtered = useMemo(() => {
+    return tasks.filter((task) => {
+      if (hideDone && task.status === "TAMAMLANDI") return false
+      if (scope === "mine" && task.assigneeId !== userId) return false
+      if (scope === "given" && task.assignerId !== userId) return false
+      if (!matchesQuery(task, query)) return false
+      if (due === "all") return true
+      if (due === "gecikmis") return task.dueTone === "overdue" && task.status !== "TAMAMLANDI"
+      return matchesDueWindow(task, due)
+    })
+  }, [tasks, hideDone, scope, userId, query, due])
+
+  return (
+    <div className="grid gap-4">
+      {workload.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2 border-b border-border/50 pb-3">
+          <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
+            İş yükü
+          </span>
+          {workload.map((person) => (
+            <span
+              key={person.name}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold"
+            >
+              <span>{person.name}</span>
+              <span className="tabular-nums text-primary">{person.open}</span>
+              {person.overdue > 0 ? (
+                <span className="tabular-nums text-[#ff3b30]">· {person.overdue} gecikmiş</span>
+              ) : null}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap gap-1.5">
+          {(
+            [
+              { id: "all" as const, label: "Hepsi" },
+              { id: "mine" as const, label: "Bana gelen" },
+              { id: "given" as const, label: "Benim verdiğim" },
+            ] as const
+          ).map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setScope(item.id)}
               className={cn(
-                "grid gap-3 border-l-4 px-4 py-4 transition md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
-                rowTone(task),
+                "px-2.5 py-1 text-xs font-bold transition",
+                scope === item.id
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <div className="min-w-0 space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Link href={`/gorevler/${task.id}`} className="text-lg font-bold tracking-tight hover:underline">
-                    {task.title}
-                  </Link>
-                  <StatusBadge status={task.status} />
-                </div>
-                <p className="text-sm font-semibold text-foreground/85">
-                  {task.clientName}
-                  <span className="mx-1.5 text-muted-foreground">·</span>
-                  <span className="font-mono text-xs">{task.fileNumber}</span>
-                </p>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium text-muted-foreground">
-                  <span>Veren: {task.assignerName}</span>
-                  <span>Yürüten: {task.assigneeName}</span>
-                  <span
+              {item.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setHideDone((value) => !value)}
+            className={cn(
+              "ml-1 px-2.5 py-1 text-xs font-bold transition",
+              hideDone ? "text-muted-foreground hover:text-foreground" : "bg-foreground text-background",
+            )}
+          >
+            {hideDone ? "Tamamlananları göster" : "Tamamlananları gizle"}
+          </button>
+        </div>
+        <Input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Müvekkil, dosya, iş, kişi ara…"
+          className="h-9 max-w-sm border-border/70 bg-transparent"
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {DUE_CHIPS.map((chip) => (
+          <button
+            key={chip.id}
+            type="button"
+            onClick={() => setDue(chip.id)}
+            className={cn(
+              "px-2.5 py-1 text-xs font-bold transition",
+              due === chip.id
+                ? chip.id === "gecikmis"
+                  ? "bg-[#ff3b30] text-white"
+                  : "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {chip.label}
+          </button>
+        ))}
+        <span className="ml-auto self-center text-xs font-semibold text-muted-foreground tabular-nums">
+          {filtered.length} / {tasks.length}
+        </span>
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="border-y border-border/50 py-10 text-center text-base text-muted-foreground">
+          Kayıt yok
+        </p>
+      ) : (
+        <div className="-mx-3 overflow-x-auto sm:-mx-4 md:mx-0">
+          <table className="w-full min-w-[54rem] border-collapse text-left text-sm">
+            <thead className="sticky top-14 z-10 bg-background/95 backdrop-blur-sm">
+              <tr className="border-b border-border text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
+                <th className="px-2 py-2 font-bold">İş</th>
+                <th className="px-2 py-2 font-bold">Müvekkil</th>
+                <th className="px-2 py-2 font-bold">Dosya</th>
+                <th className="px-2 py-2 font-bold">Veren</th>
+                <th className="px-2 py-2 font-bold">Yürüten</th>
+                <th className="px-2 py-2 font-bold">Son gün</th>
+                <th className="px-2 py-2 font-bold">Durum</th>
+                <th className="px-2 py-2 font-bold">Renk</th>
+                <th className="px-2 py-2 font-bold" />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((task) => (
+                <tr
+                  key={task.id}
+                  className={cn(
+                    "border-b border-border/40 transition hover:brightness-95",
+                    rowFill(task),
+                  )}
+                >
+                  <td className="max-w-[14rem] px-2 py-2.5 align-middle">
+                    <Link
+                      href={`/gorevler/${task.id}`}
+                      className="line-clamp-2 font-bold leading-snug hover:underline"
+                    >
+                      {task.title}
+                    </Link>
+                  </td>
+                  <td className="max-w-[9rem] truncate px-2 py-2.5 font-semibold">{task.clientName}</td>
+                  <td className="px-2 py-2.5 font-mono text-xs font-medium">{task.fileNumber}</td>
+                  <td className="max-w-[8rem] truncate px-2 py-2.5 font-medium text-muted-foreground">
+                    {task.assignerName}
+                  </td>
+                  <td className="max-w-[8rem] truncate px-2 py-2.5 font-medium text-muted-foreground">
+                    {task.assigneeName}
+                  </td>
+                  <td
                     className={cn(
-                      "font-bold",
+                      "whitespace-nowrap px-2 py-2.5 font-bold",
                       task.dueTone === "overdue" && "text-[#ff3b30]",
-                      (task.dueTone === "soon" || task.dueTone === "today") && "text-[#ff9f0a]",
-                      (task.dueTone === "done" || task.status === "TAMAMLANDI") && "text-[#34c759]",
+                      (task.dueTone === "soon" || task.dueTone === "today") && "text-[#9a3412]",
+                      (task.dueTone === "done" || task.status === "TAMAMLANDI") && "text-[#15803d]",
                     )}
                   >
-                    Son gün: {task.dueLabel}
-                  </span>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 md:justify-end">
-                <ColorPicker taskId={task.id} value={task.listColor} />
-                {canAssign ? (
-                  <Button asChild size="sm" className="font-bold">
-                    <Link href={`/gorevler/yeni?from=${task.id}`}>
-                      <UserPlus />
-                      Görev olarak ata
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button asChild size="sm" variant="secondary" className="font-bold">
-                    <Link href={`/gorevler/${task.id}`}>Aç</Link>
-                  </Button>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+                    {task.dueLabel}
+                  </td>
+                  <td className="px-2 py-2.5">
+                    <StatusBadge status={task.status} />
+                  </td>
+                  <td className="px-2 py-2.5">
+                    <ColorPicker taskId={task.id} value={task.listColor} />
+                  </td>
+                  <td className="px-2 py-2.5 text-right">
+                    {canAssign ? (
+                      <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-bold">
+                        <Link href={`/gorevler/yeni?from=${task.id}`}>
+                          <UserPlus className="size-3.5" />
+                          Ata
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-bold">
+                        <Link href={`/gorevler/${task.id}`}>Aç</Link>
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-    </section>
+    </div>
   )
 }

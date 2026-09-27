@@ -15,7 +15,7 @@ export default async function WorkListPage() {
   const tasks = await listTasksCached(user.id, user.role)
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-5">
+    <div className="mx-auto grid max-w-[72rem] gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">İş listesi</h1>
         {canAssign ? (
@@ -27,7 +27,7 @@ export default async function WorkListPage() {
           </Button>
         ) : null}
       </div>
-      <TaskWorkList tasks={tasks} canAssign={canAssign} />
+      <TaskWorkList tasks={tasks} canAssign={canAssign} userId={user.id} />
     </div>
   )
 }
