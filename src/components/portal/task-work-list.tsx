@@ -77,15 +77,19 @@ export function TaskWorkList({
   tasks,
   canAssign,
   userId,
+  mode = "all",
 }: {
   tasks: TaskCardDTO[]
   canAssign: boolean
   userId: string
+  /** given: only assigned-by-me list — hide scope chips that empty the table */
+  mode?: "all" | "given"
 }) {
   const [query, setQuery] = useState("")
   const [due, setDue] = useState<(typeof DUE_CHIPS)[number]["id"]>("all")
-  const [scope, setScope] = useState<Scope>("all")
+  const [scope, setScope] = useState<Scope>(mode === "given" ? "given" : "all")
   const [hideDone, setHideDone] = useState(true)
+  const lockedGiven = mode === "given"
 
   const workload = useMemo(() => {
     const map = new Map<string, { name: string; open: number; overdue: number }>()
@@ -103,14 +107,16 @@ export function TaskWorkList({
   const filtered = useMemo(() => {
     return tasks.filter((task) => {
       if (hideDone && task.status === "TAMAMLANDI") return false
-      if (scope === "mine" && task.assigneeId !== userId) return false
-      if (scope === "given" && task.assignerId !== userId) return false
+      if (!lockedGiven) {
+        if (scope === "mine" && task.assigneeId !== userId) return false
+        if (scope === "given" && task.assignerId !== userId) return false
+      }
       if (!matchesQuery(task, query)) return false
       if (due === "all") return true
       if (due === "gecikmis") return task.dueTone === "overdue" && task.status !== "TAMAMLANDI"
       return matchesDueWindow(task, due)
     })
-  }, [tasks, hideDone, scope, userId, query, due])
+  }, [tasks, hideDone, lockedGiven, scope, userId, query, due])
 
   return (
     <div className="grid gap-4">
@@ -136,32 +142,35 @@ export function TaskWorkList({
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-1.5">
-          {(
-            [
-              { id: "all" as const, label: "Hepsi" },
-              { id: "mine" as const, label: "Bana gelen" },
-              { id: "given" as const, label: "Benim verdiğim" },
-            ] as const
-          ).map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setScope(item.id)}
-              className={cn(
-                "px-2.5 py-1 text-xs font-bold transition",
-                scope === item.id
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
+          {!lockedGiven
+            ? (
+                [
+                  { id: "all" as const, label: "Hepsi" },
+                  { id: "mine" as const, label: "Bana gelen" },
+                  { id: "given" as const, label: "Benim verdiğim" },
+                ] as const
+              ).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setScope(item.id)}
+                  className={cn(
+                    "px-2.5 py-1 text-xs font-bold transition",
+                    scope === item.id
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))
+            : null}
           <button
             type="button"
             onClick={() => setHideDone((value) => !value)}
             className={cn(
-              "ml-1 px-2.5 py-1 text-xs font-bold transition",
+              "px-2.5 py-1 text-xs font-bold transition",
+              !lockedGiven && "ml-1",
               hideDone ? "text-muted-foreground hover:text-foreground" : "bg-foreground text-background",
             )}
           >
@@ -201,7 +210,11 @@ export function TaskWorkList({
 
       {filtered.length === 0 ? (
         <p className="border-y border-border/50 py-10 text-center text-base text-muted-foreground">
-          Kayıt yok
+          {tasks.length === 0
+            ? lockedGiven
+              ? "Henüz verdiğiniz görev yok. Soldan «Görev olarak ata» ile ekleyin."
+              : "Kayıt yok"
+            : "Filtreye uyan kayıt yok"}
         </p>
       ) : (
         <div className="-mx-3 overflow-x-auto sm:-mx-4 md:mx-0">
