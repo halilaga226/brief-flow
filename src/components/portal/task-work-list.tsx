@@ -37,15 +37,15 @@ const DUE_CHIPS: { id: DueWindow | "all" | "gecikmis"; label: string }[] = [
 type Scope = "all" | "mine" | "given"
 
 function rowFill(task: TaskCardDTO) {
-  if (task.listColor === "red") return "bg-[#ff3b30]/22"
-  if (task.listColor === "orange") return "bg-[#ff9f0a]/22"
-  if (task.listColor === "green") return "bg-[#34c759]/22"
-  if (task.listColor === "blue") return "bg-[#007aff]/20"
-  if (task.listColor === "pink") return "bg-[#ff2d55]/22"
-  if (task.status === "TAMAMLANDI" || task.dueTone === "done") return "bg-[#34c759]/18"
-  if (task.dueTone === "overdue") return "bg-[#ff3b30]/22"
-  if (task.dueTone === "today" || task.dueTone === "soon") return "bg-[#ff9f0a]/20"
-  return "bg-transparent"
+  if (task.listColor === "red") return "bg-[#ff3b30]/28"
+  if (task.listColor === "orange") return "bg-[#ff9f0a]/28"
+  if (task.listColor === "green") return "bg-[#34c759]/28"
+  if (task.listColor === "blue") return "bg-[#007aff]/25"
+  if (task.listColor === "pink") return "bg-[#ff2d55]/28"
+  if (task.status === "TAMAMLANDI" || task.dueTone === "done") return "bg-[#34c759]/22"
+  if (task.dueTone === "overdue") return "bg-[#ff3b30]/28"
+  if (task.dueTone === "today" || task.dueTone === "soon") return "bg-[#ff9f0a]/25"
+  return "odd:bg-black/[0.02] dark:odd:bg-white/[0.03]"
 }
 
 function ColorPicker({ taskId, value }: { taskId: string; value: string | null }) {
@@ -205,47 +205,44 @@ export function TaskWorkList({
       ) : (
         <div className="-mx-3 overflow-x-auto sm:-mx-4 md:mx-0">
           <table className="w-full min-w-[54rem] border-collapse text-left text-sm">
-            <thead className="sticky top-14 z-10 bg-background/95 backdrop-blur-sm">
-              <tr className="border-b border-border text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
-                <th className="px-2 py-2 font-bold">İş</th>
-                <th className="px-2 py-2 font-bold">Müvekkil</th>
-                <th className="px-2 py-2 font-bold">Dosya</th>
-                <th className="px-2 py-2 font-bold">Veren</th>
-                <th className="px-2 py-2 font-bold">Yürüten</th>
-                <th className="px-2 py-2 font-bold">Son gün</th>
-                <th className="px-2 py-2 font-bold">Durum</th>
-                <th className="px-2 py-2 font-bold">Renk</th>
-                <th className="px-2 py-2 font-bold" />
+            <thead className="sticky top-14 z-10 bg-background">
+              <tr className="border-y border-border text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
+                <th className="px-2 py-1.5 font-bold">İş</th>
+                <th className="px-2 py-1.5 font-bold">Müvekkil</th>
+                <th className="px-2 py-1.5 font-bold">Dosya</th>
+                <th className="px-2 py-1.5 font-bold">Veren</th>
+                <th className="px-2 py-1.5 font-bold">Yürüten</th>
+                <th className="px-2 py-1.5 font-bold">Son gün</th>
+                <th className="px-2 py-1.5 font-bold">Durum</th>
+                <th className="px-2 py-1.5 font-bold">Renk</th>
+                <th className="px-2 py-1.5 font-bold" />
               </tr>
             </thead>
             <tbody>
               {filtered.map((task) => (
                 <tr
                   key={task.id}
-                  className={cn(
-                    "border-b border-border/40 transition hover:brightness-95",
-                    rowFill(task),
-                  )}
+                  className={cn("border-b border-border/35", rowFill(task))}
                 >
-                  <td className="max-w-[14rem] px-2 py-2.5 align-middle">
+                  <td className="max-w-[14rem] px-2 py-1.5 align-middle">
                     <Link
                       href={`/gorevler/${task.id}`}
-                      className="line-clamp-2 font-bold leading-snug hover:underline"
+                      className="line-clamp-1 font-bold leading-snug hover:underline"
                     >
                       {task.title}
                     </Link>
                   </td>
-                  <td className="max-w-[9rem] truncate px-2 py-2.5 font-semibold">{task.clientName}</td>
-                  <td className="px-2 py-2.5 font-mono text-xs font-medium">{task.fileNumber}</td>
-                  <td className="max-w-[8rem] truncate px-2 py-2.5 font-medium text-muted-foreground">
+                  <td className="max-w-[9rem] truncate px-2 py-1.5 font-semibold">{task.clientName}</td>
+                  <td className="px-2 py-1.5 font-mono text-xs font-medium">{task.fileNumber}</td>
+                  <td className="max-w-[8rem] truncate px-2 py-1.5 font-medium text-muted-foreground">
                     {task.assignerName}
                   </td>
-                  <td className="max-w-[8rem] truncate px-2 py-2.5 font-medium text-muted-foreground">
+                  <td className="max-w-[8rem] truncate px-2 py-1.5 font-medium text-muted-foreground">
                     {task.assigneeName}
                   </td>
                   <td
                     className={cn(
-                      "whitespace-nowrap px-2 py-2.5 font-bold",
+                      "whitespace-nowrap px-2 py-1.5 font-bold",
                       task.dueTone === "overdue" && "text-[#ff3b30]",
                       (task.dueTone === "soon" || task.dueTone === "today") && "text-[#9a3412]",
                       (task.dueTone === "done" || task.status === "TAMAMLANDI") && "text-[#15803d]",
@@ -253,13 +250,13 @@ export function TaskWorkList({
                   >
                     {task.dueLabel}
                   </td>
-                  <td className="px-2 py-2.5">
+                  <td className="px-2 py-1.5">
                     <StatusBadge status={task.status} />
                   </td>
-                  <td className="px-2 py-2.5">
+                  <td className="px-2 py-1.5">
                     <ColorPicker taskId={task.id} value={task.listColor} />
                   </td>
-                  <td className="px-2 py-2.5 text-right">
+                  <td className="px-2 py-1.5 text-right">
                     {canAssign ? (
                       <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-bold">
                         <Link href={`/gorevler/yeni?from=${task.id}`}>
