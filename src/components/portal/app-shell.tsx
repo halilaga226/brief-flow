@@ -161,7 +161,7 @@ export function AppShell({
       </aside>
 
       <div className="min-w-0 md:pl-60">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-md sm:px-4 md:px-8">
+        <header className="relative z-20 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background px-3 sm:px-4 md:px-8">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden" aria-label="Menüyü aç">
@@ -198,7 +198,7 @@ export function AppShell({
         </main>
 
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-card/80 px-1 py-1 backdrop-blur-md md:hidden"
+          className="fixed inset-x-0 bottom-0 z-20 grid border-t border-border bg-background px-1 py-1 md:hidden"
           style={{ gridTemplateColumns: `repeat(${mobileLinks.length}, minmax(0, 1fr))` }}
         >
           {mobileLinks.map((link) => {
