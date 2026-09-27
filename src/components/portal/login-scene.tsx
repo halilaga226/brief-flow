@@ -47,7 +47,7 @@ export function LoginScene({ showDemo = false }: { showDemo?: boolean }) {
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-5 py-12">
-        <h1 className="mb-8 text-center font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-white sm:text-4xl">
+        <h1 className="mb-8 text-center font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight text-white sm:text-4xl">
           {BRAND.portalName}
         </h1>
         <div className="w-full rounded-[1.6rem] border border-white/15 bg-white/12 p-5 shadow-2xl backdrop-blur-xl sm:p-6">

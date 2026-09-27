@@ -82,6 +82,9 @@ export function TaskDetailView({
             canManageOps={task.canManageOps}
             canQueueSend={task.canQueueSend}
             canComplete={task.canComplete}
+            canAccept={task.canAccept}
+            canDelete={task.canDelete}
+            status={task.status}
             expensePaid={task.expensePaid}
             clientCallStatus={task.clientCallStatus}
             drive={drive}

@@ -9,6 +9,7 @@ import {
   setClientCallAction,
   uploadDraftAction,
 } from "@/actions/tasks"
+import { AcceptTaskButton, DeleteTaskButton } from "@/components/portal/task-lifecycle-buttons"
 import { useActionResult } from "@/components/portal/use-action-result"
 import { Button } from "@/components/ui/button"
 import {
@@ -263,6 +264,9 @@ export function TaskActions({
   canManageOps,
   canQueueSend,
   canComplete,
+  canAccept,
+  canDelete,
+  status,
   expensePaid,
   clientCallStatus,
   drive,
@@ -278,6 +282,9 @@ export function TaskActions({
   canManageOps: boolean
   canQueueSend: boolean
   canComplete: boolean
+  canAccept: boolean
+  canDelete: boolean
+  status: string
   expensePaid: boolean
   clientCallStatus: ClientCallStatus
   drive: { mode: "google" | "mock"; reason: string | null }
@@ -289,11 +296,16 @@ export function TaskActions({
     <section
       className={cn(
         "rounded-xl border p-4",
-        myTurn ? "border-[var(--brand-accent)]/40 bg-accent" : "border-border bg-card",
+        myTurn || canAccept ? "border-[var(--brand-accent)]/40 bg-accent" : "border-border bg-card",
       )}
     >
-      <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">Sıradaki adım</p>
-      <p className="mt-1 text-sm font-semibold leading-relaxed text-foreground">{nextStep}</p>
+      <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Sıradaki adım</p>
+      <p className="mt-1 text-sm font-medium leading-relaxed text-foreground">{nextStep}</p>
+      {canAccept ? (
+        <div className="mt-3">
+          <AcceptTaskButton taskId={taskId} />
+        </div>
+      ) : null}
       {latestDraft && canReview ? (
         <p className="mt-3 text-sm font-medium">
           Son taslak:{" "}
@@ -302,7 +314,7 @@ export function TaskActions({
               href={latestDraft.href}
               target={latestDraft.external ? "_blank" : undefined}
               rel={latestDraft.external ? "noreferrer" : undefined}
-              className="font-bold underline underline-offset-4"
+              className="font-semibold underline underline-offset-4"
             >
               {latestDraft.name}
             </a>
@@ -329,9 +341,9 @@ export function TaskActions({
       {canComplete ? <CompleteDialog taskId={taskId} /> : null}
       {trackingCode ? (
         <div className="mt-3 rounded-lg border border-yellow-300 bg-yellow-100 p-3">
-          <p className="text-xs font-bold tracking-wide text-yellow-950 uppercase">Evrak takip kodu</p>
+          <p className="text-xs font-semibold tracking-wide text-yellow-950 uppercase">Evrak takip kodu</p>
           <div className="mt-1 flex items-center justify-between gap-2">
-            <p className="font-mono text-base font-bold break-all">{trackingCode}</p>
+            <p className="font-mono text-base font-semibold break-all">{trackingCode}</p>
             <Button
               type="button"
               variant="outline"
@@ -348,6 +360,11 @@ export function TaskActions({
           {completedLabel ? (
             <p className="mt-1 text-xs font-medium text-muted-foreground">{completedLabel}</p>
           ) : null}
+        </div>
+      ) : null}
+      {canDelete ? (
+        <div className="mt-4 border-t border-border/60 pt-3">
+          <DeleteTaskButton taskId={taskId} completed={status === "TAMAMLANDI"} />
         </div>
       ) : null}
     </section>

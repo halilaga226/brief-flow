@@ -161,10 +161,11 @@
     @apply font-sans;
   }
   body {
-    @apply bg-background text-foreground antialiased font-medium;
-    line-height: 1.55;
-    font-size: 16.5px;
-    letter-spacing: -0.011em;
+    @apply bg-background text-foreground antialiased font-normal;
+    line-height: 1.6;
+    font-size: 15.5px;
+    letter-spacing: -0.005em;
+    font-feature-settings: "ss01" on, "cv11" on;
     background-image:
       radial-gradient(ellipse 80% 50% at 10% -10%, rgba(0, 122, 255, 0.16), transparent 50%),
       radial-gradient(ellipse 60% 40% at 90% 0%, rgba(255, 159, 10, 0.12), transparent 45%),
@@ -175,7 +176,8 @@
   h2,
   h3 {
     font-family: var(--font-display), var(--font-sans), sans-serif;
-    @apply font-bold tracking-tight;
+    @apply font-semibold tracking-tight;
+    letter-spacing: -0.02em;
   }
   ::selection {
     background: color-mix(in oklab, var(--primary) 32%, transparent);

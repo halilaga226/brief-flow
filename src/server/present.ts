@@ -7,7 +7,9 @@ import {
   istanbulMonthKey,
 } from "@/lib/format"
 import {
+  canAcceptTask,
   canComplete,
+  canDeleteTask,
   canManageOps,
   canQueueSend,
   canReview,
@@ -83,6 +85,7 @@ export function toTaskCard(
   const dueDate = record.dueDate.toISOString()
   const tone = dueTone(dueDate, record.status)
   const needsAction = needsMyAction(record, userId, role)
+  const needsAccept = canAcceptTask(record, userId, role)
   const relationLabel = isAdmin(role)
     ? `${record.assigner.name} → ${record.assignee.name}`
     : record.assigneeId === userId
@@ -112,6 +115,9 @@ export function toTaskCard(
     needsAction,
     trackingCode: record.trackingCode,
     listColor: record.listColor,
+    acceptedAt: record.acceptedAt?.toISOString() ?? null,
+    needsAccept,
+    canDelete: canDeleteTask(record, userId, role),
     expensePaid: record.expensePaid,
     clientCallStatus: record.clientCallStatus as ClientCallStatus,
     updatedAt: record.updatedAt.toISOString(),
@@ -174,12 +180,16 @@ export function toTaskDetail(
     canManageOps: canManageOps(record, userId, role),
     canQueueSend: canQueueSend(record, userId, role),
     canComplete: canComplete(record, userId, role),
-    nextStep: nextStepCopy({
-      status: record.status,
-      myTurn,
-      expensePaid: record.expensePaid,
-      clientCallStatus: record.clientCallStatus as ClientCallStatus,
-    }),
+    canAccept: canAcceptTask(record, userId, role),
+    canDelete: canDeleteTask(record, userId, role),
+    nextStep: canAcceptTask(record, userId, role)
+      ? "İşi kabul edin; ardından iş listesine düşer. Son güne yaklaşınca ana sayfada yeniden görünür."
+      : nextStepCopy({
+          status: record.status,
+          myTurn,
+          expensePaid: record.expensePaid,
+          clientCallStatus: record.clientCallStatus as ClientCallStatus,
+        }),
     latestDraft: latest
       ? { name: latest.name, href: latest.href, external: latest.external }
       : null,

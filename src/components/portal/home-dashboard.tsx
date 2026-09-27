@@ -1,6 +1,7 @@
 "use client"
 
 import { StatusBadge } from "@/components/portal/status-badge"
+import { AcceptTaskButton, DeleteTaskButton } from "@/components/portal/task-lifecycle-buttons"
 import { Button } from "@/components/ui/button"
 import type { ActivityDTO, TaskCardDTO } from "@/lib/dto"
 import { cn } from "@/lib/utils"
@@ -79,7 +80,7 @@ export function HomeDashboard({
   return (
     <div className="mx-auto grid max-w-6xl gap-5">
       <section className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{greeting}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{greeting}</h1>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="secondary" className="font-bold">
             <Link href="/is-listesi">
@@ -137,9 +138,9 @@ export function HomeDashboard({
       <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-xl font-bold">Sıradaki</h2>
-            <Button asChild variant="ghost" size="sm" className="font-semibold">
-              <Link href="/gorevler?filtre=bekleyen">Tümü</Link>
+            <h2 className="text-xl font-semibold tracking-tight">Sıradaki</h2>
+            <Button asChild variant="ghost" size="sm" className="font-medium">
+              <Link href="/is-listesi">İş listesi</Link>
             </Button>
           </div>
           {awaiting.length === 0 ? (
@@ -148,18 +149,23 @@ export function HomeDashboard({
             <ul className="divide-y divide-border/50 border-y border-border/50">
               {awaiting.map((task) => (
                 <li key={task.id}>
-                  <Link
-                    href={`/gorevler/${task.id}`}
-                    className="flex flex-wrap items-center justify-between gap-3 py-3 transition hover:bg-muted/25"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-base font-bold">{task.title}</p>
+                  <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+                    <Link href={`/gorevler/${task.id}`} className="min-w-0 flex-1">
+                      <p className="truncate text-base font-semibold tracking-tight">{task.title}</p>
                       <p className="mt-0.5 text-sm font-medium text-muted-foreground">
                         {task.assignerName} · {task.dueLabel}
+                        {task.needsAccept ? " · Kabul bekliyor" : ""}
+                        {task.status === "TAMAMLANDI" ? " · Tamamlandı" : ""}
                       </p>
+                    </Link>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge status={task.status} />
+                      {task.needsAccept ? <AcceptTaskButton taskId={task.id} /> : null}
+                      {task.canDelete && task.status === "TAMAMLANDI" ? (
+                        <DeleteTaskButton taskId={task.id} completed />
+                      ) : null}
                     </div>
-                    <StatusBadge status={task.status} />
-                  </Link>
+                  </div>
                 </li>
               ))}
             </ul>

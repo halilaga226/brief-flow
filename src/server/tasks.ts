@@ -3,9 +3,11 @@ import { deleteDriveFile, uploadToDrive, type StoredFile } from "@/lib/drive"
 import { prisma } from "@/lib/prisma"
 import {
   WorkflowError,
+  canAcceptTask,
   canComment,
   canComplete,
   canCreateTask,
+  canDeleteTask,
   canManageOps,
   canQueueSend,
   canReview,
@@ -15,6 +17,7 @@ import {
   isAdmin,
   isParticipant,
   safeFileName,
+  showsOnHome,
   validateComment,
   validateDraftFile,
   validateNote,
@@ -52,6 +55,11 @@ export async function listTasks(userId: string, role: SessionUser["role"]) {
   })
   return tasks
     .map((task) => toTaskCard(task, userId, role))
+    .filter((task) => {
+      // Tamamlanan iş stajyer ekranından düşer; avukat/admin silene kadar görür.
+      if (task.status === "TAMAMLANDI" && role === "INTERN") return false
+      return true
+    })
     .sort((a, b) => {
       const aDone = a.status === "TAMAMLANDI" ? 1 : 0
       const bDone = b.status === "TAMAMLANDI" ? 1 : 0
@@ -66,6 +74,7 @@ export async function getTask(userId: string, role: SessionUser["role"], taskId:
     include: taskDetailInclude,
   })
   if (!task || !canViewTask(task, userId, role)) return null
+  if (task.status === "TAMAMLANDI" && role === "INTERN") return null
   return toTaskDetail(task, userId, role)
 }
 
@@ -98,8 +107,25 @@ export async function getDashboard(userId: string, role: SessionUser["role"]) {
     recentActivity(userId, role),
   ])
   const awaiting = tasks
-    .filter((task) => task.needsAction)
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .filter((task) =>
+      showsOnHome(
+        {
+          assigneeId: task.assigneeId,
+          assignerId: task.assignerId,
+          acceptedAt: task.acceptedAt,
+          status: task.status,
+          dueTone: task.dueTone,
+          needsAction: task.needsAction,
+        },
+        userId,
+        role,
+      ),
+    )
+    .sort((a, b) => {
+      // Kabul bekleyenler önce, sonra son güne göre
+      if (a.needsAccept !== b.needsAccept) return a.needsAccept ? -1 : 1
+      return a.dueDate.localeCompare(b.dueDate)
+    })
   return {
     tasks,
     awaiting,
@@ -180,6 +206,8 @@ export async function createTask(
   }
   const assignee = await prisma.user.findUnique({ where: { id: input.assigneeId } })
   if (!assignee) throw new WorkflowError("Atanacak kişi bulunamadı.")
+  // Stajyer işi önce kabul eder; avukat/yöneticiye atamada otomatik kabul.
+  const acceptedAt = assignee.role === "INTERN" ? null : new Date()
 
   let workItemId: string | null = null
   if (input.workItemId) {
@@ -208,6 +236,7 @@ export async function createTask(
         assignerId: actor.id,
         assigneeId: assignee.id,
         workItemId,
+        acceptedAt,
         files: stored
           ? {
               create: {
@@ -546,6 +575,46 @@ export async function setTaskListColor(
     where: { id: taskId },
     data: { listColor: next },
   })
+}
+
+export async function acceptTask(actor: SessionUser, taskId: string) {
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (!canAcceptTask(existing, actor.id, actor.role)) {
+    throw new WorkflowError("Bu işi kabul edemezsiniz.")
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.task.update({
+      where: { id: taskId },
+      data: { acceptedAt: new Date() },
+    })
+    await tx.taskLog.create({
+      data: {
+        taskId,
+        actorId: actor.id,
+        type: "ACCEPTED",
+        fromStatus: existing.status,
+        toStatus: existing.status,
+      },
+    })
+    await tx.notification.create({
+      data: {
+        userId: existing.assignerId,
+        taskId,
+        title: "İş kabul edildi",
+        body: `${actor.name} atanan işi kabul etti: ${existing.title}`,
+      },
+    })
+  })
+}
+
+export async function deleteTask(actor: SessionUser, taskId: string) {
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (!canDeleteTask(existing, actor.id, actor.role)) {
+    throw new WorkflowError("Bu işi silemezsiniz.")
+  }
+  await prisma.task.delete({ where: { id: taskId } })
 }
 
 export async function addComment(actor: SessionUser, taskId: string, rawBody: string) {

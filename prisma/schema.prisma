@@ -36,6 +36,7 @@ enum FileKind {
 
 enum LogType {
   CREATED
+  ACCEPTED
   DRAFT_UPLOADED
   REVISION_REQUESTED
   APPROVED
@@ -43,6 +44,7 @@ enum LogType {
   CLIENT_CALL_UPDATED
   SEND_QUEUED
   COMPLETED
+  DELETED
 }
 
 model User {
@@ -96,6 +98,7 @@ model Task {
   workItemId   String?
   trackingCode String?
   listColor    String?
+  acceptedAt   DateTime?
   completedAt  DateTime?
   expensePaid       Boolean          @default(false)
   expensePaidAt     DateTime?

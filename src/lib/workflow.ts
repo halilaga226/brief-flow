@@ -144,6 +144,8 @@ export function logLabel(type: string) {
   switch (type) {
     case "CREATED":
       return "Görev oluşturuldu"
+    case "ACCEPTED":
+      return "İş kabul edildi"
     case "DRAFT_UPLOADED":
       return "Taslak yüklendi"
     case "REVISION_REQUESTED":
@@ -158,6 +160,8 @@ export function logLabel(type: string) {
       return "Gönderime alındı"
     case "COMPLETED":
       return "Gönderim tamamlandı"
+    case "DELETED":
+      return "İş silindi"
     default:
       return "İşlem"
   }
@@ -213,12 +217,62 @@ export function needsMyAction(
 }
 
 export function canUploadDraft(
-  task: { status: TaskStatus; assigneeId: string },
+  task: { status: TaskStatus; assigneeId: string; acceptedAt?: Date | string | null },
   userId: string,
   role?: Role,
 ) {
   if (!(task.status === "ATANDI" || task.status === "REVIZE_ISTENDI")) return false
+  if (!task.acceptedAt && task.assigneeId === userId && !isAdmin(role ?? "INTERN")) return false
   return isAdmin(role ?? "INTERN") || task.assigneeId === userId
+}
+
+export function canAcceptTask(
+  task: { assigneeId: string; acceptedAt?: Date | string | null; status: TaskStatus },
+  userId: string,
+  role?: Role,
+) {
+  if (task.status === "TAMAMLANDI") return false
+  if (task.acceptedAt) return false
+  return task.assigneeId === userId || isAdmin(role ?? "INTERN")
+}
+
+export function canDeleteTask(
+  task: { assignerId: string; assigneeId: string; status: TaskStatus },
+  userId: string,
+  role: Role,
+) {
+  if (role === "ADMIN") return true
+  if (role !== "LAWYER") return false
+  // Avukat kendi verdiği veya kendine gelen işi silebilir; tamamlanınca da silinebilir.
+  return task.assignerId === userId || task.assigneeId === userId
+}
+
+/** Ana sayfada gösterilecek işler: kabul bekleyen + son günlü (yaklaşan/gecikmiş). */
+export function showsOnHome(
+  task: {
+    assigneeId: string
+    assignerId: string
+    acceptedAt: Date | string | null
+    status: TaskStatus
+    dueTone: DueTone
+    needsAction: boolean
+  },
+  userId: string,
+  role: Role,
+) {
+  if (task.status === "TAMAMLANDI") {
+    // Avukat tamamlananı ana ekranda görsün ki silebilsin
+    return role === "LAWYER" || role === "ADMIN"
+      ? task.assignerId === userId || task.assigneeId === userId || role === "ADMIN"
+      : false
+  }
+  if (task.assigneeId === userId && !task.acceptedAt) return true
+  if (task.dueTone === "overdue" || task.dueTone === "today" || task.dueTone === "soon") {
+    return isParticipant(task, userId) || isAdmin(role)
+  }
+  // Avukat/admin için inceleme-onay gibi aksiyon bekleyenler
+  if ((role === "LAWYER" || role === "ADMIN") && task.needsAction) return true
+  return false
 }
 
 export function canReview(

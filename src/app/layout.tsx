@@ -1,12 +1,12 @@
 import type { Metadata } from "next"
-import { Outfit, Source_Sans_3 } from "next/font/google"
+import { Manrope, Plus_Jakarta_Sans } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { BRAND } from "@/lib/brand"
 import "./globals.css"
 
-const sourceSans = Source_Sans_3({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
@@ -14,10 +14,10 @@ const sourceSans = Source_Sans_3({
   preload: true,
 })
 
-const outfit = Outfit({
+const manrope = Manrope({
   subsets: ["latin", "latin-ext"],
   variable: "--font-display",
-  weight: ["500", "600", "700", "800"],
+  weight: ["500", "600", "700"],
   display: "swap",
   preload: true,
 })
@@ -37,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <body className={`${sourceSans.variable} ${outfit.variable} antialiased`}>
+      <body className={`${jakarta.variable} ${manrope.variable} antialiased`}>
         <ThemeProvider>
           <TooltipProvider>
             {children}

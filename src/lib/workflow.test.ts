@@ -2,8 +2,10 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import { dueTone } from "./format"
 import {
+  canAcceptTask,
   canComplete,
   canCreateTask,
+  canDeleteTask,
   canManageOps,
   canQueueSend,
   canReview,
@@ -14,6 +16,7 @@ import {
   matchesQuery,
   needsMyAction,
   safeFileName,
+  showsOnHome,
   validateDraftFile,
   validateTrackingCode,
 } from "./workflow"
@@ -39,17 +42,133 @@ describe("privacy and roles", () => {
 
 describe("state machine", () => {
   it("asks the assignee for a draft only while assigned or in revision", () => {
-    assert.equal(canUploadDraft({ status: "ATANDI", assigneeId: intern }, intern), true)
     assert.equal(
-      canUploadDraft({ status: "REVIZE_ISTENDI", assigneeId: intern }, intern),
+      canUploadDraft({ status: "ATANDI", assigneeId: intern, acceptedAt: new Date() }, intern),
       true,
     )
     assert.equal(
-      canUploadDraft({ status: "INCELEME_BEKLIYOR", assigneeId: intern }, intern),
+      canUploadDraft({ status: "ATANDI", assigneeId: intern, acceptedAt: null }, intern),
       false,
     )
-    assert.equal(canUploadDraft({ status: "ATANDI", assigneeId: intern }, lawyer), false)
-    assert.equal(canUploadDraft({ status: "ATANDI", assigneeId: intern }, lawyer, "ADMIN"), true)
+    assert.equal(
+      canUploadDraft(
+        { status: "REVIZE_ISTENDI", assigneeId: intern, acceptedAt: new Date() },
+        intern,
+      ),
+      true,
+    )
+    assert.equal(
+      canUploadDraft(
+        { status: "INCELEME_BEKLIYOR", assigneeId: intern, acceptedAt: new Date() },
+        intern,
+      ),
+      false,
+    )
+    assert.equal(
+      canUploadDraft({ status: "ATANDI", assigneeId: intern, acceptedAt: new Date() }, lawyer),
+      false,
+    )
+    assert.equal(
+      canUploadDraft(
+        { status: "ATANDI", assigneeId: intern, acceptedAt: null },
+        lawyer,
+        "ADMIN",
+      ),
+      true,
+    )
+  })
+
+  it("lets an assignee accept once, and lawyers delete their tasks", () => {
+    assert.equal(
+      canAcceptTask({ status: "ATANDI", assigneeId: intern, acceptedAt: null }, intern),
+      true,
+    )
+    assert.equal(
+      canAcceptTask(
+        { status: "ATANDI", assigneeId: intern, acceptedAt: new Date() },
+        intern,
+      ),
+      false,
+    )
+    assert.equal(
+      canDeleteTask(
+        { status: "TAMAMLANDI", assignerId: lawyer, assigneeId: intern },
+        lawyer,
+        "LAWYER",
+      ),
+      true,
+    )
+    assert.equal(
+      canDeleteTask(
+        { status: "TAMAMLANDI", assignerId: lawyer, assigneeId: intern },
+        intern,
+        "INTERN",
+      ),
+      false,
+    )
+  })
+
+  it("keeps home focused on accept + due-soon items", () => {
+    assert.equal(
+      showsOnHome(
+        {
+          assigneeId: intern,
+          assignerId: lawyer,
+          acceptedAt: null,
+          status: "ATANDI",
+          dueTone: "later",
+          needsAction: true,
+        },
+        intern,
+        "INTERN",
+      ),
+      true,
+    )
+    assert.equal(
+      showsOnHome(
+        {
+          assigneeId: intern,
+          assignerId: lawyer,
+          acceptedAt: new Date().toISOString(),
+          status: "ATANDI",
+          dueTone: "later",
+          needsAction: true,
+        },
+        intern,
+        "INTERN",
+      ),
+      false,
+    )
+    assert.equal(
+      showsOnHome(
+        {
+          assigneeId: intern,
+          assignerId: lawyer,
+          acceptedAt: new Date().toISOString(),
+          status: "ATANDI",
+          dueTone: "soon",
+          needsAction: true,
+        },
+        intern,
+        "INTERN",
+      ),
+      true,
+    )
+    assert.equal(
+      showsOnHome(
+        {
+          assigneeId: intern,
+          assignerId: lawyer,
+          acceptedAt: new Date().toISOString(),
+          status: "TAMAMLANDI",
+          dueTone: "done",
+          needsAction: false,
+        },
+        intern,
+        "INTERN",
+      ),
+      false,
+    )
   })
 
   it("lets only the assigning lawyer review a draft", () => {

@@ -2,6 +2,7 @@
 
 import { setTaskColorAction } from "@/actions/tasks"
 import { useActionResult } from "@/components/portal/use-action-result"
+import { DeleteTaskButton } from "@/components/portal/task-lifecycle-buttons"
 import { StatusBadge } from "@/components/portal/status-badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -257,18 +258,26 @@ export function TaskWorkList({
                     <ColorPicker taskId={task.id} value={task.listColor} />
                   </td>
                   <td className="px-2 py-1.5 text-right">
-                    {canAssign ? (
-                      <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-bold">
-                        <Link href={`/gorevler/yeni?from=${task.id}`}>
-                          <UserPlus className="size-3.5" />
-                          Ata
-                        </Link>
-                      </Button>
-                    ) : (
-                      <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-bold">
-                        <Link href={`/gorevler/${task.id}`}>Aç</Link>
-                      </Button>
-                    )}
+                    <div className="flex flex-wrap items-center justify-end gap-1">
+                      {canAssign ? (
+                        <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-semibold">
+                          <Link href={`/gorevler/yeni?from=${task.id}`}>
+                            <UserPlus className="size-3.5" />
+                            Ata
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-semibold">
+                          <Link href={`/gorevler/${task.id}`}>Aç</Link>
+                        </Button>
+                      )}
+                      {task.canDelete ? (
+                        <DeleteTaskButton
+                          taskId={task.id}
+                          completed={task.status === "TAMAMLANDI"}
+                        />
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}

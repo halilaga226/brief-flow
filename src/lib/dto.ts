@@ -44,6 +44,9 @@ export type TaskCardDTO = {
   needsAction: boolean
   trackingCode: string | null
   listColor: string | null
+  acceptedAt: string | null
+  needsAccept: boolean
+  canDelete: boolean
   expensePaid: boolean
   clientCallStatus: ClientCallStatus
   updatedAt: string
@@ -89,6 +92,7 @@ export type TaskDetailDTO = TaskCardDTO & {
   canManageOps: boolean
   canQueueSend: boolean
   canComplete: boolean
+  canAccept: boolean
   nextStep: string
   latestDraft: { name: string; href: string | null; external: boolean } | null
 }

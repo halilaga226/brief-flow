@@ -6,9 +6,11 @@ import { requireUser } from "@/lib/session"
 import { WorkflowError } from "@/lib/workflow"
 import {
   addComment,
+  acceptTask,
   approveTask,
   completeTask,
   createTask,
+  deleteTask,
   markExpensePaid,
   queueForSend,
   requestRevision,
@@ -229,4 +231,37 @@ export async function addCommentAction(
   }
   revalidateTask(taskId)
   return { ok: true, message: "Not iletildi." }
+}
+
+export async function acceptTaskAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    await acceptTask(user, taskId)
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateTask(taskId)
+  redirect("/is-listesi")
+}
+
+export async function deleteTaskAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    await deleteTask(user, taskId)
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidatePath("/ana")
+  revalidatePath("/gorevler")
+  revalidatePath("/is-listesi")
+  revalidatePath("/ayarlar")
+  redirect("/is-listesi")
 }
