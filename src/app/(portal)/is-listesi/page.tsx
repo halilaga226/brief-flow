@@ -21,19 +21,19 @@ export default async function WorkListPage() {
     const given = tasks.filter((task) => task.assignerId === user.id)
 
     return (
-      <div className="mx-auto grid max-w-[72rem] gap-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">İş listesi</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Atadığınız görevler ve mahkeme dosya kayıtları.
-            </p>
-          </div>
+      <div className="mx-auto grid w-full max-w-[72rem] gap-8 md:gap-10">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">
+            İş listesi
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Atadığınız görevler ve mahkeme dosya kayıtları.
+          </p>
         </div>
 
         <section className="grid gap-3">
           <div className="flex items-end justify-between gap-3">
-            <h2 className="text-xl font-semibold tracking-tight">Verdiğim görevler</h2>
+            <h2 className="text-lg font-semibold tracking-tight sm:text-xl">Verdiğim görevler</h2>
             <p className="text-sm font-medium text-muted-foreground tabular-nums">
               {given.length}
             </p>
@@ -48,12 +48,12 @@ export default async function WorkListPage() {
 
         <section className="grid gap-3">
           <div>
-            <h2 className="text-xl font-semibold tracking-tight">Dosya kayıtları</h2>
+            <h2 className="text-lg font-semibold tracking-tight sm:text-xl">Dosya kayıtları</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Mahkeme, dosya no, yapılacaklar ve özel not.
             </p>
           </div>
-          <WorkItemAgenda items={items} canCreate showHeaderAction />
+          <WorkItemAgenda items={items} canCreate />
         </section>
       </div>
     )
@@ -62,8 +62,8 @@ export default async function WorkListPage() {
   const tasks = await listTasksCached(user.id, user.role)
 
   return (
-    <div className="mx-auto grid max-w-[72rem] gap-4">
-      <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">İş listesi</h1>
+    <div className="mx-auto grid w-full max-w-[72rem] gap-4">
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">İş listesi</h1>
       <TaskWorkList tasks={tasks} canAssign={false} userId={user.id} />
     </div>
   )

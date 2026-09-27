@@ -90,9 +90,9 @@ export default async function TasksPage({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-6">
-      <aside className="lg:sticky lg:top-20 lg:self-start">
+      <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
         <div className="glass rounded-2xl p-2">
-          <nav className="grid gap-0.5">
+          <nav className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:mx-0 lg:grid lg:gap-0.5 lg:overflow-visible lg:px-0 lg:pb-0">
             {folders.map((item) => {
               const Icon = item.icon
               const count = tasks.filter(
@@ -107,7 +107,7 @@ export default async function TasksPage({
                   key={item.id}
                   href={hrefFor({ q: query, filtre: item.id, gorunum: view, sure })}
                   className={cn(
-                    "flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm transition",
+                    "flex shrink-0 items-center gap-2 rounded-xl px-2.5 py-2 text-sm transition lg:shrink",
                     active
                       ? "bg-primary font-semibold text-primary-foreground shadow-sm"
                       : "font-medium text-foreground/80 hover:bg-muted",

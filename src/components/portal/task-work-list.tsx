@@ -38,15 +38,15 @@ const DUE_CHIPS: { id: DueWindow | "all" | "gecikmis"; label: string }[] = [
 type Scope = "all" | "mine" | "given"
 
 function rowFill(task: TaskCardDTO) {
-  if (task.listColor === "red") return "bg-[#ff3b30]/28"
-  if (task.listColor === "orange") return "bg-[#ff9f0a]/28"
-  if (task.listColor === "green") return "bg-[#34c759]/28"
-  if (task.listColor === "blue") return "bg-[#007aff]/25"
-  if (task.listColor === "pink") return "bg-[#ff2d55]/28"
-  if (task.status === "TAMAMLANDI" || task.dueTone === "done") return "bg-[#34c759]/22"
-  if (task.dueTone === "overdue") return "bg-[#ff3b30]/28"
-  if (task.dueTone === "today" || task.dueTone === "soon") return "bg-[#ff9f0a]/25"
-  return "odd:bg-black/[0.02] dark:odd:bg-white/[0.03]"
+  if (task.listColor === "red") return "bg-[#ff3b30]/20"
+  if (task.listColor === "orange") return "bg-[#ff9f0a]/20"
+  if (task.listColor === "green") return "bg-[#34c759]/20"
+  if (task.listColor === "blue") return "bg-[#007aff]/18"
+  if (task.listColor === "pink") return "bg-[#ff2d55]/20"
+  if (task.status === "TAMAMLANDI" || task.dueTone === "done") return "bg-[#34c759]/15"
+  if (task.dueTone === "overdue") return "bg-[#ff3b30]/20"
+  if (task.dueTone === "today" || task.dueTone === "soon") return "bg-[#ff9f0a]/18"
+  return "bg-card/60"
 }
 
 function ColorPicker({ taskId, value }: { taskId: string; value: string | null }) {
@@ -60,7 +60,7 @@ function ColorPicker({ taskId, value }: { taskId: string; value: string | null }
         defaultValue={value ?? "auto"}
         disabled={pending}
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
-        className="h-7 max-w-[5.5rem] rounded border border-border/70 bg-background/80 px-1.5 text-[11px] font-medium"
+        className="h-8 rounded-md border border-border/70 bg-background/90 px-2 text-xs font-medium"
         aria-label="Renk"
       >
         {COLORS.map((color) => (
@@ -73,6 +73,106 @@ function ColorPicker({ taskId, value }: { taskId: string; value: string | null }
   )
 }
 
+function TaskActions({
+  task,
+  canAssign,
+}: {
+  task: TaskCardDTO
+  canAssign: boolean
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {canAssign ? (
+        <Button asChild size="sm" variant="outline" className="h-8 px-2.5 font-semibold">
+          <Link href={`/gorevler/yeni?from=${task.id}`}>
+            <UserPlus className="size-3.5" />
+            Ata
+          </Link>
+        </Button>
+      ) : (
+        <Button asChild size="sm" variant="outline" className="h-8 px-2.5 font-semibold">
+          <Link href={`/gorevler/${task.id}`}>Aç</Link>
+        </Button>
+      )}
+      {task.canDelete ? (
+        <DeleteTaskButton
+          taskId={task.id}
+          completed={task.status === "TAMAMLANDI"}
+          compact
+        />
+      ) : null}
+    </div>
+  )
+}
+
+function TaskCard({
+  task,
+  canAssign,
+}: {
+  task: TaskCardDTO
+  canAssign: boolean
+}) {
+  return (
+    <article className={cn("rounded-2xl border border-border/60 p-3.5", rowFill(task))}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <Link
+            href={`/gorevler/${task.id}`}
+            className="block text-base font-bold leading-snug hover:underline"
+          >
+            {task.title}
+          </Link>
+          <p className="mt-1 text-sm font-semibold text-foreground/90">{task.clientName}</p>
+          <p className="mt-0.5 font-mono text-xs text-muted-foreground">{task.fileNumber}</p>
+        </div>
+        <StatusBadge status={task.status} />
+      </div>
+
+      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+        <div>
+          <dt className="text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
+            Veren
+          </dt>
+          <dd className="truncate font-medium">{task.assignerName}</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
+            Yürüten
+          </dt>
+          <dd className="truncate font-medium">{task.assigneeName}</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
+            Son gün
+          </dt>
+          <dd
+            className={cn(
+              "font-bold",
+              task.dueTone === "overdue" && "text-[#ff3b30]",
+              (task.dueTone === "soon" || task.dueTone === "today") && "text-[#c2410c]",
+              (task.dueTone === "done" || task.status === "TAMAMLANDI") && "text-[#15803d]",
+            )}
+          >
+            {task.dueLabel}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
+            Renk
+          </dt>
+          <dd>
+            <ColorPicker taskId={task.id} value={task.listColor} />
+          </dd>
+        </div>
+      </dl>
+
+      <div className="mt-3 flex justify-end border-t border-border/40 pt-3">
+        <TaskActions task={task} canAssign={canAssign} />
+      </div>
+    </article>
+  )
+}
+
 export function TaskWorkList({
   tasks,
   canAssign,
@@ -82,7 +182,6 @@ export function TaskWorkList({
   tasks: TaskCardDTO[]
   canAssign: boolean
   userId: string
-  /** given: only assigned-by-me list — hide scope chips that empty the table */
   mode?: "all" | "given"
 }) {
   const [query, setQuery] = useState("")
@@ -140,7 +239,7 @@ export function TaskWorkList({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="grid gap-3">
         <div className="flex flex-wrap gap-1.5">
           {!lockedGiven
             ? (
@@ -155,10 +254,10 @@ export function TaskWorkList({
                   type="button"
                   onClick={() => setScope(item.id)}
                   className={cn(
-                    "px-2.5 py-1 text-xs font-bold transition",
+                    "rounded-md px-2.5 py-1.5 text-xs font-bold transition",
                     scope === item.id
                       ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:text-foreground",
+                      : "bg-muted/60 text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {item.label}
@@ -169,43 +268,45 @@ export function TaskWorkList({
             type="button"
             onClick={() => setHideDone((value) => !value)}
             className={cn(
-              "px-2.5 py-1 text-xs font-bold transition",
-              !lockedGiven && "ml-1",
-              hideDone ? "text-muted-foreground hover:text-foreground" : "bg-foreground text-background",
+              "rounded-md px-2.5 py-1.5 text-xs font-bold transition",
+              hideDone
+                ? "bg-muted/60 text-muted-foreground hover:text-foreground"
+                : "bg-foreground text-background",
             )}
           >
             {hideDone ? "Tamamlananları göster" : "Tamamlananları gizle"}
           </button>
         </div>
+
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Müvekkil, dosya, iş, kişi ara…"
-          className="h-9 max-w-sm border-border/70 bg-transparent"
+          className="h-10 w-full border-border/70 bg-background/80"
         />
-      </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {DUE_CHIPS.map((chip) => (
-          <button
-            key={chip.id}
-            type="button"
-            onClick={() => setDue(chip.id)}
-            className={cn(
-              "px-2.5 py-1 text-xs font-bold transition",
-              due === chip.id
-                ? chip.id === "gecikmis"
-                  ? "bg-[#ff3b30] text-white"
-                  : "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {chip.label}
-          </button>
-        ))}
-        <span className="ml-auto self-center text-xs font-semibold text-muted-foreground tabular-nums">
-          {filtered.length} / {tasks.length}
-        </span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {DUE_CHIPS.map((chip) => (
+            <button
+              key={chip.id}
+              type="button"
+              onClick={() => setDue(chip.id)}
+              className={cn(
+                "rounded-md px-2.5 py-1.5 text-xs font-bold transition",
+                due === chip.id
+                  ? chip.id === "gecikmis"
+                    ? "bg-[#ff3b30] text-white"
+                    : "bg-foreground text-background"
+                  : "bg-muted/60 text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {chip.label}
+            </button>
+          ))}
+          <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums">
+            {filtered.length} / {tasks.length}
+          </span>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
@@ -217,86 +318,77 @@ export function TaskWorkList({
             : "Filtreye uyan kayıt yok"}
         </p>
       ) : (
-        <div className="-mx-3 overflow-x-auto sm:-mx-4 md:mx-0">
-          <table className="w-full min-w-[54rem] border-collapse text-left text-sm">
-            <thead className="sticky top-14 z-10 bg-background">
-              <tr className="border-y border-border text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
-                <th className="px-2 py-1.5 font-bold">İş</th>
-                <th className="px-2 py-1.5 font-bold">Müvekkil</th>
-                <th className="px-2 py-1.5 font-bold">Dosya</th>
-                <th className="px-2 py-1.5 font-bold">Veren</th>
-                <th className="px-2 py-1.5 font-bold">Yürüten</th>
-                <th className="px-2 py-1.5 font-bold">Son gün</th>
-                <th className="px-2 py-1.5 font-bold">Durum</th>
-                <th className="px-2 py-1.5 font-bold">Renk</th>
-                <th className="px-2 py-1.5 font-bold" />
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((task) => (
-                <tr
-                  key={task.id}
-                  className={cn("border-b border-border/35", rowFill(task))}
-                >
-                  <td className="max-w-[14rem] px-2 py-1.5 align-middle">
-                    <Link
-                      href={`/gorevler/${task.id}`}
-                      className="line-clamp-1 font-bold leading-snug hover:underline"
-                    >
-                      {task.title}
-                    </Link>
-                  </td>
-                  <td className="max-w-[9rem] truncate px-2 py-1.5 font-semibold">{task.clientName}</td>
-                  <td className="px-2 py-1.5 font-mono text-xs font-medium">{task.fileNumber}</td>
-                  <td className="max-w-[8rem] truncate px-2 py-1.5 font-medium text-muted-foreground">
-                    {task.assignerName}
-                  </td>
-                  <td className="max-w-[8rem] truncate px-2 py-1.5 font-medium text-muted-foreground">
-                    {task.assigneeName}
-                  </td>
-                  <td
-                    className={cn(
-                      "whitespace-nowrap px-2 py-1.5 font-bold",
-                      task.dueTone === "overdue" && "text-[#ff3b30]",
-                      (task.dueTone === "soon" || task.dueTone === "today") && "text-[#9a3412]",
-                      (task.dueTone === "done" || task.status === "TAMAMLANDI") && "text-[#15803d]",
-                    )}
-                  >
-                    {task.dueLabel}
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <StatusBadge status={task.status} />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <ColorPicker taskId={task.id} value={task.listColor} />
-                  </td>
-                  <td className="px-2 py-1.5 text-right">
-                    <div className="flex flex-wrap items-center justify-end gap-1">
-                      {canAssign ? (
-                        <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-semibold">
-                          <Link href={`/gorevler/yeni?from=${task.id}`}>
-                            <UserPlus className="size-3.5" />
-                            Ata
-                          </Link>
-                        </Button>
-                      ) : (
-                        <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-semibold">
-                          <Link href={`/gorevler/${task.id}`}>Aç</Link>
-                        </Button>
-                      )}
-                      {task.canDelete ? (
-                        <DeleteTaskButton
-                          taskId={task.id}
-                          completed={task.status === "TAMAMLANDI"}
-                        />
-                      ) : null}
-                    </div>
-                  </td>
+        <>
+          {/* Mobile / tablet: stacked cards — no sticky/table overlap */}
+          <div className="grid gap-3 lg:hidden">
+            {filtered.map((task) => (
+              <TaskCard key={task.id} task={task} canAssign={canAssign} />
+            ))}
+          </div>
+
+          {/* Desktop: plain table, no sticky thead */}
+          <div className="hidden overflow-x-auto rounded-xl border border-border/50 lg:block">
+            <table className="w-full min-w-[52rem] border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/40 text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
+                  <th className="px-3 py-2.5 font-bold">İş</th>
+                  <th className="px-3 py-2.5 font-bold">Müvekkil</th>
+                  <th className="px-3 py-2.5 font-bold">Dosya</th>
+                  <th className="px-3 py-2.5 font-bold">Veren</th>
+                  <th className="px-3 py-2.5 font-bold">Yürüten</th>
+                  <th className="px-3 py-2.5 font-bold">Son gün</th>
+                  <th className="px-3 py-2.5 font-bold">Durum</th>
+                  <th className="px-3 py-2.5 font-bold">Renk</th>
+                  <th className="px-3 py-2.5 font-bold" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtered.map((task) => (
+                  <tr key={task.id} className={cn("border-b border-border/35", rowFill(task))}>
+                    <td className="max-w-[14rem] px-3 py-2.5 align-middle">
+                      <Link
+                        href={`/gorevler/${task.id}`}
+                        className="line-clamp-2 font-bold leading-snug hover:underline"
+                      >
+                        {task.title}
+                      </Link>
+                    </td>
+                    <td className="max-w-[9rem] truncate px-3 py-2.5 font-semibold">
+                      {task.clientName}
+                    </td>
+                    <td className="px-3 py-2.5 font-mono text-xs font-medium">{task.fileNumber}</td>
+                    <td className="max-w-[8rem] truncate px-3 py-2.5 font-medium text-muted-foreground">
+                      {task.assignerName}
+                    </td>
+                    <td className="max-w-[8rem] truncate px-3 py-2.5 font-medium text-muted-foreground">
+                      {task.assigneeName}
+                    </td>
+                    <td
+                      className={cn(
+                        "whitespace-nowrap px-3 py-2.5 font-bold",
+                        task.dueTone === "overdue" && "text-[#ff3b30]",
+                        (task.dueTone === "soon" || task.dueTone === "today") && "text-[#c2410c]",
+                        (task.dueTone === "done" || task.status === "TAMAMLANDI") &&
+                          "text-[#15803d]",
+                      )}
+                    >
+                      {task.dueLabel}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <StatusBadge status={task.status} />
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <ColorPicker taskId={task.id} value={task.listColor} />
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <TaskActions task={task} canAssign={canAssign} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   )

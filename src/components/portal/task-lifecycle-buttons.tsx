@@ -23,12 +23,15 @@ export function AcceptTaskButton({ taskId }: { taskId: string }) {
 export function DeleteTaskButton({
   taskId,
   completed = false,
+  compact = false,
 }: {
   taskId: string
   completed?: boolean
+  compact?: boolean
 }) {
   const [state, action, pending] = useActionState(deleteTaskAction, null)
   useActionResult(state)
+  const label = pending ? "Siliniyor…" : completed ? "Tamamlananı sil" : "İşi sil"
   return (
     <form
       action={action}
@@ -45,10 +48,23 @@ export function DeleteTaskButton({
       }}
     >
       <input type="hidden" name="taskId" value={taskId} />
-      <Button type="submit" disabled={pending} variant="destructive" className="font-semibold">
-        <Trash2 className="size-4" />
-        {pending ? "Siliniyor…" : completed ? "Tamamlananı sil" : "İşi sil"}
-      </Button>
+      {compact ? (
+        <Button
+          type="submit"
+          disabled={pending}
+          variant="ghost"
+          size="icon-sm"
+          aria-label={label}
+          className="text-muted-foreground hover:text-destructive"
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      ) : (
+        <Button type="submit" disabled={pending} variant="destructive" className="font-semibold">
+          <Trash2 className="size-4" />
+          {label}
+        </Button>
+      )}
     </form>
   )
 }

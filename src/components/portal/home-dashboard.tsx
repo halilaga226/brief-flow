@@ -145,7 +145,7 @@ export function HomeDashboard({
                       <StatusBadge status={task.status} />
                       {task.needsAccept ? <AcceptTaskButton taskId={task.id} /> : null}
                       {task.canDelete && task.status === "TAMAMLANDI" ? (
-                        <DeleteTaskButton taskId={task.id} completed />
+                        <DeleteTaskButton taskId={task.id} completed compact />
                       ) : null}
                     </div>
                   </div>

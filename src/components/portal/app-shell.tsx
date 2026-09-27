@@ -160,7 +160,7 @@ export function AppShell({
         </div>
       </aside>
 
-      <div className="md:pl-60">
+      <div className="min-w-0 md:pl-60">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-md sm:px-4 md:px-8">
           <Sheet>
             <SheetTrigger asChild>
@@ -193,7 +193,7 @@ export function AppShell({
           <ThemeToggle />
           <NotificationBell items={notifications} />
         </header>
-        <main id="icerik" className="px-3 py-5 pb-24 sm:px-4 md:px-8 md:py-8 md:pb-8">
+        <main id="icerik" className="min-w-0 px-3 py-5 pb-24 sm:px-4 md:px-8 md:py-8 md:pb-8">
           {children}
         </main>
 

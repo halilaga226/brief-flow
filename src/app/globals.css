@@ -159,9 +159,11 @@
   }
   html {
     @apply font-sans;
+    overflow-x: hidden;
   }
   body {
     @apply bg-background text-foreground antialiased font-normal;
+    overflow-x: hidden;
     font-family: var(--font-body), "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
     line-height: 1.65;
     font-size: 15.5px;

@@ -22,7 +22,11 @@ function CreateWorkItemForm({ open, onClose }: { open: boolean; onClose: () => v
   if (!open) return null
 
   return (
-    <form ref={formRef} action={action} className="grid gap-4 border-y border-border/60 py-4">
+    <form
+      ref={formRef}
+      action={action}
+      className="grid gap-4 rounded-2xl border border-border/60 bg-card/50 p-4"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h3 className="text-lg font-semibold tracking-tight">Yeni iş</h3>
         <div className="flex gap-2">
@@ -103,39 +107,54 @@ function DeleteButton({ id }: { id: string }) {
   )
 }
 
+function ItemActions({ item }: { item: WorkItemDTO }) {
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-1">
+      <Button asChild size="sm" variant="outline" className="h-8 px-2.5 font-semibold">
+        <Link href={`/is-listesi/${item.id}`}>Aç</Link>
+      </Button>
+      <Button asChild size="sm" variant="outline" className="h-8 px-2.5 font-semibold">
+        <Link href={`/is-listesi/${item.id}/gorev`}>
+          <UserPlus className="size-3.5" />
+          Ata
+        </Link>
+      </Button>
+      <DeleteButton id={item.id} />
+    </div>
+  )
+}
+
 export function WorkItemAgenda({
   items,
   canCreate = true,
 }: {
   items: WorkItemDTO[]
   canCreate?: boolean
-  /** @deprecated kept for callers; button always renders when canCreate */
-  showHeaderAction?: boolean
 }) {
   const [formOpen, setFormOpen] = useState(false)
 
-  const addButton = canCreate ? (
-    <Button
-      type="button"
-      onClick={() => setFormOpen(true)}
-      className="font-semibold"
-      disabled={formOpen}
-    >
-      <Plus />
-      İş ekle
-    </Button>
-  ) : null
-
   return (
     <div className="grid gap-4">
-      {canCreate ? <div className="flex justify-end">{addButton}</div> : null}
+      {canCreate ? (
+        <div className="flex justify-stretch sm:justify-end">
+          <Button
+            type="button"
+            onClick={() => setFormOpen(true)}
+            className="w-full font-semibold sm:w-auto"
+            disabled={formOpen}
+          >
+            <Plus />
+            İş ekle
+          </Button>
+        </div>
+      ) : null}
 
       {canCreate ? (
         <CreateWorkItemForm open={formOpen} onClose={() => setFormOpen(false)} />
       ) : null}
 
       {items.length === 0 ? (
-        <div className="border-y border-border/50 py-10 text-center">
+        <div className="rounded-2xl border border-dashed border-border/70 py-10 text-center">
           <p className="text-base text-muted-foreground">Henüz dosya kaydı yok.</p>
           {canCreate && !formOpen ? (
             <Button
@@ -150,56 +169,85 @@ export function WorkItemAgenda({
           ) : null}
         </div>
       ) : (
-        <div className="-mx-3 overflow-x-auto sm:-mx-4 md:mx-0">
-          <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-y border-border bg-background text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
-                <th className="px-2 py-1.5 font-bold">Mahkeme</th>
-                <th className="px-2 py-1.5 font-bold">Dosya no</th>
-                <th className="px-2 py-1.5 font-bold">Yapılacaklar</th>
-                <th className="px-2 py-1.5 font-bold">Özel not</th>
-                <th className="px-2 py-1.5 font-bold">Görev</th>
-                <th className="px-2 py-1.5 font-bold" />
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-border/40 odd:bg-black/[0.02] dark:odd:bg-white/[0.03]"
-                >
-                  <td className="px-2 py-2 align-top">
-                    <Link href={`/is-listesi/${item.id}`} className="font-semibold hover:underline">
+        <>
+          <div className="grid gap-3 lg:hidden">
+            {items.map((item) => (
+              <article
+                key={item.id}
+                className="rounded-2xl border border-border/60 bg-card/60 p-3.5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link
+                      href={`/is-listesi/${item.id}`}
+                      className="block text-base font-bold hover:underline"
+                    >
                       {item.courtName}
                     </Link>
-                  </td>
-                  <td className="px-2 py-2 align-top font-mono text-xs">{item.fileNumber}</td>
-                  <td className="max-w-[16rem] px-2 py-2 align-top font-medium">{item.workToDo}</td>
-                  <td className="max-w-[12rem] px-2 py-2 align-top text-muted-foreground">
-                    {item.notes || "—"}
-                  </td>
-                  <td className="px-2 py-2 align-top tabular-nums text-muted-foreground">
-                    {item.taskCount}
-                  </td>
-                  <td className="px-2 py-2 align-top">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-semibold">
-                        <Link href={`/is-listesi/${item.id}`}>Aç</Link>
-                      </Button>
-                      <Button asChild size="sm" variant="ghost" className="h-7 px-2 font-semibold">
-                        <Link href={`/is-listesi/${item.id}/gorev`}>
-                          <UserPlus className="size-3.5" />
-                          Ata
-                        </Link>
-                      </Button>
-                      <DeleteButton id={item.id} />
-                    </div>
-                  </td>
+                    <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                      {item.fileNumber}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground tabular-nums">
+                    {item.taskCount} görev
+                  </span>
+                </div>
+                <p className="mt-3 text-sm font-medium leading-relaxed">{item.workToDo}</p>
+                {item.notes ? (
+                  <p className="mt-2 text-sm text-muted-foreground">{item.notes}</p>
+                ) : null}
+                <div className="mt-3 border-t border-border/40 pt-3">
+                  <ItemActions item={item} />
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-xl border border-border/50 lg:block">
+            <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/40 text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
+                  <th className="px-3 py-2.5 font-bold">Mahkeme</th>
+                  <th className="px-3 py-2.5 font-bold">Dosya no</th>
+                  <th className="px-3 py-2.5 font-bold">Yapılacaklar</th>
+                  <th className="px-3 py-2.5 font-bold">Özel not</th>
+                  <th className="px-3 py-2.5 font-bold">Görev</th>
+                  <th className="px-3 py-2.5 font-bold" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {items.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-b border-border/40 odd:bg-black/[0.02] dark:odd:bg-white/[0.03]"
+                  >
+                    <td className="px-3 py-2.5 align-top">
+                      <Link
+                        href={`/is-listesi/${item.id}`}
+                        className="font-semibold hover:underline"
+                      >
+                        {item.courtName}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2.5 align-top font-mono text-xs">{item.fileNumber}</td>
+                    <td className="max-w-[16rem] px-3 py-2.5 align-top font-medium">
+                      {item.workToDo}
+                    </td>
+                    <td className="max-w-[12rem] px-3 py-2.5 align-top text-muted-foreground">
+                      {item.notes || "—"}
+                    </td>
+                    <td className="px-3 py-2.5 align-top tabular-nums text-muted-foreground">
+                      {item.taskCount}
+                    </td>
+                    <td className="px-3 py-2.5 align-top">
+                      <ItemActions item={item} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   )
