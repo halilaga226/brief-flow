@@ -15,7 +15,7 @@ import {
   type TaskFilter,
   type TaskView,
 } from "@/lib/workflow"
-import { listTasks } from "@/server/tasks"
+import { listTasksCached } from "@/server/cached"
 import {
   CheckCircle2,
   ClipboardList,
@@ -80,7 +80,7 @@ export default async function TasksPage({
   const filter = parseFilter(params.filtre)
   const view = parseView(params.gorunum)
   const sure = parseDueWindow(params.sure)
-  const tasks = await listTasks(user.id, user.role)
+  const tasks = await listTasksCached(user.id, user.role)
   const visible = tasks.filter(
     (task) =>
       matchesFilter(task, filter, user.id) &&

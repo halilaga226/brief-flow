@@ -10,12 +10,16 @@ const sourceSans = Source_Sans_3({
   subsets: ["latin", "latin-ext"],
   variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: true,
 })
 
 const outfit = Outfit({
   subsets: ["latin", "latin-ext"],
   variable: "--font-display",
   weight: ["500", "600", "700", "800"],
+  display: "swap",
+  preload: true,
 })
 
 export const metadata: Metadata = {

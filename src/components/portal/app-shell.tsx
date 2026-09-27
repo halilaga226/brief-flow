@@ -21,7 +21,6 @@ import {
   Settings,
   Users,
 } from "lucide-react"
-import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
@@ -115,7 +114,7 @@ export function AppShell({
       >
         İçeriğe geç
       </a>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar/90 text-sidebar-foreground backdrop-blur-2xl md:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar/92 text-sidebar-foreground backdrop-blur-md md:flex">
         <div className="border-b border-sidebar-border px-4 py-4">
           <Link href="/ana" className="flex items-center gap-2.5">
             <span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30">
@@ -162,7 +161,7 @@ export function AppShell({
       </aside>
 
       <div className="md:pl-60">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-card/70 px-3 backdrop-blur-2xl sm:px-4 md:px-8">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-md sm:px-4 md:px-8">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden" aria-label="Menüyü aç">
@@ -192,18 +191,12 @@ export function AppShell({
           ) : null}
           <NotificationBell items={notifications} />
         </header>
-        <motion.main
-          id="icerik"
-          key={pathname}
-          className="px-3 py-5 pb-24 sm:px-4 md:px-8 md:py-8 md:pb-8"
-          initial={false}
-          animate={{ opacity: 1 }}
-        >
+        <main id="icerik" className="px-3 py-5 pb-24 sm:px-4 md:px-8 md:py-8 md:pb-8">
           {children}
-        </motion.main>
+        </main>
 
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-card/80 px-1 py-1 backdrop-blur-xl md:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-card/80 px-1 py-1 backdrop-blur-md md:hidden"
           style={{ gridTemplateColumns: `repeat(${mobileLinks.length}, minmax(0, 1fr))` }}
         >
           {mobileLinks.map((link) => {

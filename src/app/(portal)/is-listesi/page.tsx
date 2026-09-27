@@ -2,7 +2,7 @@ import { TaskWorkList } from "@/components/portal/task-work-list"
 import { Button } from "@/components/ui/button"
 import { requireUser } from "@/lib/session"
 import { canAssignTask } from "@/lib/workflow"
-import { listTasks } from "@/server/tasks"
+import { listTasksCached } from "@/server/cached"
 import { Plus } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "İş listesi" }
 export default async function WorkListPage() {
   const user = await requireUser()
   const canAssign = canAssignTask(user.role)
-  const tasks = await listTasks(user.id, user.role)
+  const tasks = await listTasksCached(user.id, user.role)
 
   return (
     <div className="mx-auto grid max-w-6xl gap-5">

@@ -6,14 +6,17 @@ import { Label } from "@/components/ui/label"
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts"
 import { roleLabel } from "@/lib/workflow"
 import { signIn } from "next-auth/react"
-import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useState, useTransition } from "react"
 import { markWelcomePending } from "@/components/portal/welcome-splash"
 
 export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
+  const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [navigating, startTransition] = useTransition()
 
   async function enter(nextUsername: string, nextPassword: string) {
     setPending(true)
@@ -29,8 +32,13 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
       return
     }
     markWelcomePending()
-    window.location.assign("/ana")
+    startTransition(() => {
+      router.replace("/ana")
+      router.refresh()
+    })
   }
+
+  const busy = pending || navigating
 
   return (
     <div className="grid gap-6">
@@ -71,12 +79,8 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
             {error}
           </p>
         ) : null}
-        <Button
-          type="submit"
-          disabled={pending}
-          className="h-11 font-semibold"
-        >
-          {pending ? "Giriş yapılıyor…" : "Giriş yap"}
+        <Button type="submit" disabled={busy} className="h-11 font-semibold">
+          {busy ? "Giriş yapılıyor…" : "Giriş yap"}
         </Button>
       </form>
 
@@ -91,7 +95,7 @@ export function LoginForm({ showDemo = false }: { showDemo?: boolean }) {
               <button
                 key={account.id}
                 type="button"
-                disabled={pending}
+                disabled={busy}
                 onClick={() => {
                   setUsername(account.username)
                   setPassword(DEMO_PASSWORD)

@@ -1,12 +1,13 @@
 import { auth } from "@/auth"
 import type { SessionUser } from "@/lib/dto"
 import { redirect } from "next/navigation"
+import { cache } from "react"
 
-export async function requireUser(): Promise<SessionUser> {
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const session = await auth()
   const user = session?.user
   if (!user?.id || (user.role !== "LAWYER" && user.role !== "INTERN" && user.role !== "ADMIN")) {
-    redirect("/giris")
+    return null
   }
   return {
     id: user.id,
@@ -15,4 +16,10 @@ export async function requireUser(): Promise<SessionUser> {
     role: user.role,
     title: user.title ?? "",
   }
+})
+
+export async function requireUser(): Promise<SessionUser> {
+  const user = await getSessionUser()
+  if (!user) redirect("/giris")
+  return user
 }
