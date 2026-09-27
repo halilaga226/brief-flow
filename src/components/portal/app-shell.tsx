@@ -131,7 +131,7 @@ export function AppShell({
         <div className="flex-1 px-3 py-4">
           <NavLinks canAssign={lawyer} canManage={manager} />
           {lawyer ? (
-            <Button asChild className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 font-semibold text-white hover:from-orange-600 hover:to-amber-600">
+            <Button asChild className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 font-semibold text-white">
               <Link href="/gorevler/yeni">
                 <Plus />
                 Görev olarak ata

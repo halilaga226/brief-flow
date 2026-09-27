@@ -60,6 +60,7 @@ model User {
   assignedTasks Task[]         @relation("Assignee")
   createdTasks  Task[]         @relation("Assigner")
   workItems     WorkItem[]
+  workItemEntries WorkItemEntry[]
   comments      TaskComment[]
   logs          TaskLog[]
   files         TaskFile[]
@@ -79,10 +80,24 @@ model WorkItem {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  owner User   @relation(fields: [ownerId], references: [id])
-  tasks Task[]
+  owner   User            @relation(fields: [ownerId], references: [id])
+  tasks   Task[]
+  entries WorkItemEntry[]
 
   @@index([ownerId])
+}
+
+model WorkItemEntry {
+  id          String   @id @default(cuid())
+  workItemId  String
+  content     String
+  createdById String
+  createdAt   DateTime @default(now())
+
+  workItem  WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  createdBy User     @relation(fields: [createdById], references: [id])
+
+  @@index([workItemId])
 }
 
 model Task {
