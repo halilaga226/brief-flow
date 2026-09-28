@@ -36,8 +36,24 @@ import {
 } from "@/server/present"
 
 async function visibleTask(taskId: string, actor: SessionUser) {
-  const task = await prisma.task.findUnique({ where: { id: taskId } })
-  if (!task || !canViewTask(task, actor.id, actor.role)) return null
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    include: { assignee: { select: { role: true } } },
+  })
+  if (
+    !task ||
+    !canViewTask(
+      {
+        assignerId: task.assignerId,
+        assigneeId: task.assigneeId,
+        assigneeRole: task.assignee.role,
+      },
+      actor.id,
+      actor.role,
+    )
+  ) {
+    return null
+  }
   return task
 }
 
@@ -49,7 +65,15 @@ export async function listTasks(userId: string, role: SessionUser["role"]) {
   const tasks = await prisma.task.findMany({
     where: isAdmin(role)
       ? undefined
-      : { OR: [{ assignerId: userId }, { assigneeId: userId }] },
+      : role === "LAWYER"
+        ? {
+            OR: [
+              { assignerId: userId },
+              { assigneeId: userId },
+              { assignee: { role: "INTERN" } },
+            ],
+          }
+        : { OR: [{ assignerId: userId }, { assigneeId: userId }] },
     include: taskCardInclude,
     orderBy: [{ dueDate: "asc" }, { updatedAt: "desc" }],
   })
@@ -73,7 +97,16 @@ export async function getTask(userId: string, role: SessionUser["role"], taskId:
     where: { id: taskId },
     include: taskDetailInclude,
   })
-  if (!task || !canViewTask(task, userId, role)) return null
+  if (
+    !task ||
+    !canViewTask(
+      { assignerId: task.assignerId, assigneeId: task.assigneeId, assigneeRole: task.assignee.role },
+      userId,
+      role,
+    )
+  ) {
+    return null
+  }
   if (task.status === "TAMAMLANDI" && role === "INTERN") return null
   return toTaskDetail(task, userId, role)
 }
@@ -329,6 +362,45 @@ export async function uploadDraft(actor: SessionUser, taskId: string, file: File
     await deleteDriveFile(stored)
     throw error
   }
+}
+
+/** Stajyer taslağı WhatsApp ile gönderdikten sonra aşamayı ilerletir; site/Drive yüklemesi yok. */
+export async function markDraftSent(actor: SessionUser, taskId: string) {
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (!canUploadDraft(existing, actor.id, actor.role)) {
+    throw new WorkflowError("Bu aşamada taslak gönderildi işaretlenemez.")
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const task = await tx.task.findUnique({ where: { id: taskId } })
+    if (!task || !canUploadDraft(task, actor.id, actor.role)) {
+      throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
+    }
+    await tx.task.update({
+      where: { id: taskId },
+      data: { status: "INCELEME_BEKLIYOR" },
+    })
+    await tx.taskLog.create({
+      data: {
+        taskId,
+        actorId: actor.id,
+        type: "DRAFT_UPLOADED",
+        fromStatus: task.status,
+        toStatus: "INCELEME_BEKLIYOR",
+        note: "WhatsApp ile gönderildi",
+        meta: JSON.stringify({ channel: "whatsapp" }),
+      },
+    })
+    await tx.notification.create({
+      data: {
+        userId: task.assignerId,
+        taskId,
+        title: "Taslak incelemenizi bekliyor",
+        body: `${actor.name} taslağı WhatsApp ile gönderdi: ${task.title}`,
+      },
+    })
+  })
 }
 
 export async function requestRevision(actor: SessionUser, taskId: string, rawNote: string) {

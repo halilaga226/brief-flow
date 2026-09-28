@@ -1,6 +1,6 @@
 import { WorkItemDetail } from "@/components/portal/work-item-detail"
 import { requireUser } from "@/lib/session"
-import { canCreateTask } from "@/lib/workflow"
+import { canAssignTask, canManageWorkItems } from "@/lib/workflow"
 import { getWorkItemDetail } from "@/server/work-items"
 import type { Metadata } from "next"
 import Link from "next/link"
@@ -16,7 +16,7 @@ export default async function WorkItemDetailPage({
   const user = await requireUser()
   const { id } = await params
 
-  if (!canCreateTask(user.role)) {
+  if (!canManageWorkItems(user.role)) {
     return (
       <div className="mx-auto max-w-lg px-6 py-12 text-center">
         <h1 className="text-2xl font-semibold">Yetki yok</h1>
@@ -28,5 +28,5 @@ export default async function WorkItemDetailPage({
   }
 
   const item = await getWorkItemDetail(user, id)
-  return <WorkItemDetail item={item} />
+  return <WorkItemDetail item={item} canAssign={canAssignTask(user.role)} />
 }

@@ -10,7 +10,7 @@ export default async function PortalLayout({ children }: { children: React.React
   const notifications = await getNotificationsCached(user.id)
   return (
     <AppShell user={user} notifications={notifications}>
-      <PortalOverlays name={user.name} />
+      <PortalOverlays name={user.name} notifications={notifications} />
       {children}
     </AppShell>
   )

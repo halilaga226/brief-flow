@@ -67,7 +67,7 @@ export const STATUS_META: Record<
   },
   INCELEME_BEKLIYOR: {
     label: "İnceleme bekliyor",
-    hint: "Taslak yüklendi, avukat incelemesi bekleniyor.",
+    hint: "Taslak WhatsApp ile gönderildi, avukat incelemesi bekleniyor.",
   },
   REVIZE_ISTENDI: {
     label: "Revize istendi",
@@ -147,7 +147,7 @@ export function logLabel(type: string) {
     case "ACCEPTED":
       return "İş kabul edildi"
     case "DRAFT_UPLOADED":
-      return "Taslak yüklendi"
+      return "Taslak gönderildi (WhatsApp)"
     case "REVISION_REQUESTED":
       return "Revizyon istendi"
     case "APPROVED":
@@ -175,15 +175,27 @@ export function isParticipant(
 }
 
 export function canViewTask(
-  task: { assignerId: string; assigneeId: string },
+  task: {
+    assignerId: string
+    assigneeId: string
+    /** Avukat, stajyere atanmış tüm işleri görebilir. */
+    assigneeRole?: Role
+  },
   userId: string,
   role: Role,
 ) {
-  return isAdmin(role) || isParticipant(task, userId)
+  if (isAdmin(role) || isParticipant(task, userId)) return true
+  if (role === "LAWYER" && task.assigneeRole === "INTERN") return true
+  return false
 }
 
 export function canCreateTask(role: Role) {
   return role === "LAWYER" || role === "ADMIN"
+}
+
+/** Dosya kaydı (iş ekle) — stajyer dahil herkes. */
+export function canManageWorkItems(_role: Role) {
+  return true
 }
 
 export function canAccessWorkList(_role: Role) {
@@ -372,16 +384,16 @@ export function nextStepCopy(input: {
   }
   if (input.myTurn) {
     if (input.status === "ATANDI") {
-      return "Talimatı uygulayıp dilekçe veya belge taslağını yükleyin."
+      return "Taslağı WhatsApp’tan avukata gönderin; ardından burada «Taslak gönderildi»yi işaretleyin."
     }
     if (input.status === "REVIZE_ISTENDI") {
-      return "Avukatın revizyon notuna göre taslağı güncelleyip yeniden yükleyin."
+      return "Revizyon notuna göre taslağı güncelleyip WhatsApp’tan yeniden gönderin; sonra «Taslak gönderildi»yi işaretleyin."
     }
     if (input.status === "GONDERIM_BEKLIYOR") {
       return "Onaylı evrakı UYAP, PTT veya ilgili merciye iletin. Barkod ya da evrak kodu olmadan iş kapanmaz."
     }
     if (input.status === "INCELEME_BEKLIYOR") {
-      return "Taslağı bağlantısından inceleyin. Onaylayın veya not düşerek revize isteyin."
+      return "WhatsApp’tan gelen taslağı inceleyin. Onaylayın veya not düşerek revize isteyin."
     }
   }
   if (input.status === "ATANDI" || input.status === "REVIZE_ISTENDI") {

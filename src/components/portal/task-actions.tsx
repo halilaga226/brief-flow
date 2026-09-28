@@ -3,11 +3,11 @@
 import {
   approveTaskAction,
   completeTaskAction,
+  markDraftSentAction,
   markExpenseAction,
   queueSendAction,
   requestRevisionAction,
   setClientCallAction,
-  uploadDraftAction,
 } from "@/actions/tasks"
 import { AcceptTaskButton, DeleteTaskButton } from "@/components/portal/task-lifecycle-buttons"
 import { useActionResult } from "@/components/portal/use-action-result"
@@ -25,45 +25,25 @@ import { Textarea } from "@/components/ui/textarea"
 import type { ClientCallStatus } from "@/lib/workflow"
 import { CLIENT_CALL_META } from "@/lib/workflow"
 import { cn } from "@/lib/utils"
-import { Banknote, Check, Copy, Phone, PhoneOff, RotateCcw, Send } from "lucide-react"
+import { Banknote, Check, Copy, MessageCircle, Phone, PhoneOff, RotateCcw, Send } from "lucide-react"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 
-function DriveNote({ drive }: { drive: { mode: "google" | "mock"; reason: string | null } }) {
-  return (
-    <p className="text-xs font-medium leading-relaxed text-muted-foreground">
-      {drive.mode === "google"
-        ? "Dosya büronun Google Drive klasörüne gider. Sunucuda kopya tutulmaz."
-        : drive.reason}
-    </p>
-  )
-}
-
-function UploadForm({
-  taskId,
-  drive,
-}: {
-  taskId: string
-  drive: { mode: "google" | "mock"; reason: string | null }
-}) {
-  const [state, action, pending] = useActionState(uploadDraftAction, null)
+function DraftSentForm({ taskId }: { taskId: string }) {
+  const [state, action, pending] = useActionState(markDraftSentAction, null)
   useActionResult(state)
   return (
     <form action={action} className="mt-3 grid gap-3">
       <input type="hidden" name="taskId" value={taskId} />
-      <Input
-        name="file"
-        type="file"
-        required
-        accept=".pdf,.doc,.docx,.odt,.jpg,.jpeg,.png,.tif,.tiff,.udf"
-        aria-label="Taslak dosyası"
-        className="h-11"
-      />
-      <DriveNote drive={drive} />
+      <p className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm leading-relaxed text-muted-foreground">
+        Taslağı siteye veya Drive’a yüklemeyin. Dosyayı{" "}
+        <span className="font-semibold text-foreground">WhatsApp</span> ile avukata gönderin; ardından
+        aşağıdaki düğmeyle bir sonraki aşamaya geçin.
+      </p>
       {state?.error ? <p className="text-sm font-medium text-destructive">{state.error}</p> : null}
       <Button type="submit" disabled={pending} className="bg-primary font-semibold">
-        <Send />
-        {pending ? "Yükleniyor…" : "Taslağı incelemeye gönder"}
+        <MessageCircle />
+        {pending ? "İşleniyor…" : "Taslak gönderildi"}
       </Button>
     </form>
   )
@@ -269,7 +249,6 @@ export function TaskActions({
   status,
   expensePaid,
   clientCallStatus,
-  drive,
   latestDraft,
   trackingCode,
   completedLabel,
@@ -287,7 +266,7 @@ export function TaskActions({
   status: string
   expensePaid: boolean
   clientCallStatus: ClientCallStatus
-  drive: { mode: "google" | "mock"; reason: string | null }
+  drive?: { mode: "google" | "mock"; reason: string | null }
   latestDraft: { name: string; href: string | null; external: boolean } | null
   trackingCode: string | null
   completedLabel: string | null
@@ -323,7 +302,7 @@ export function TaskActions({
           )}
         </p>
       ) : null}
-      {canUpload ? <UploadForm taskId={taskId} drive={drive} /> : null}
+      {canUpload ? <DraftSentForm taskId={taskId} /> : null}
       {canReview ? (
         <div className="mt-3 flex flex-wrap gap-2">
           <RevisionDialog taskId={taskId} />

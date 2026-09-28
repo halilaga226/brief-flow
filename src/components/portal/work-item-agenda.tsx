@@ -91,9 +91,11 @@ const COL =
 export function WorkItemAgenda({
   items,
   canCreate = true,
+  canAssign = false,
 }: {
   items: WorkItemDTO[]
   canCreate?: boolean
+  canAssign?: boolean
 }) {
   const [formOpen, setFormOpen] = useState(false)
 
@@ -157,6 +159,11 @@ export function WorkItemAgenda({
                   <Link href={`/is-listesi/${item.id}`} className="text-sm font-bold hover:underline">
                     {item.courtName}
                   </Link>
+                  {item.ownerRole === "INTERN" ? (
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      Stajyer · {item.ownerName}
+                    </p>
+                  ) : null}
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
@@ -186,12 +193,14 @@ export function WorkItemAgenda({
                   <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
                     <Link href={`/is-listesi/${item.id}`}>Aç</Link>
                   </Button>
-                  <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
-                    <Link href={`/is-listesi/${item.id}/gorev`}>
-                      <UserPlus className="size-3.5" />
-                      Ata
-                    </Link>
-                  </Button>
+                  {canAssign ? (
+                    <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
+                      <Link href={`/is-listesi/${item.id}/gorev`}>
+                        <UserPlus className="size-3.5" />
+                        Ata
+                      </Link>
+                    </Button>
+                  ) : null}
                   <DeleteButton id={item.id} />
                 </div>
               </li>

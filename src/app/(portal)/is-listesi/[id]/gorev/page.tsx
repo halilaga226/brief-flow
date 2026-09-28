@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { getDriveStatus } from "@/lib/drive"
 import { addDaysKey, istanbulDayKey } from "@/lib/format"
 import { requireUser } from "@/lib/session"
-import { canCreateTask } from "@/lib/workflow"
+import { canAssignTask } from "@/lib/workflow"
 import { listAssignees } from "@/server/tasks"
 import { getWorkItem } from "@/server/work-items"
 import type { Metadata } from "next"
@@ -18,7 +18,7 @@ export default async function AssignFromWorkItemPage({
 }) {
   const user = await requireUser()
   const { id } = await params
-  if (!canCreateTask(user.role)) {
+  if (!canAssignTask(user.role)) {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-border bg-card px-6 py-12 text-center">
         <h1 className="text-2xl font-semibold">Yetki yok</h1>

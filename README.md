@@ -4,26 +4,28 @@ Görev, taslak inceleme ve evrak gönderim portalı. Avukatlar için iş listesi
 
 ## Roller
 
-- **Avukat** iş listesine kayıt ekler, satırdan veya Görev ver ile atama yapar; taslağı onaylar veya revize ister. Onaydan sonra masraf, müvekkil araması ve gönderime alma kararını verir.
-- **Stajyer** yalnızca kendisine atanan işleri görür. Görev atayamaz. Gönderime alınan işte evrak kodunu girerek işi kapatır.
+- **Avukat** iş listesine kayıt ekler, satırdan görev atar; taslağı onaylar veya revize ister. Onaydan sonra masraf, müvekkil araması ve gönderime alma kararını verir. Stajyerlerin dosya kayıtlarının tamamını görür.
+- **Stajyer** kendisine atanan işleri görür; iş listesine kendi dosya kaydını ekleyebilir. Görev atayamaz. Taslağı WhatsApp ile gönderir ve «Taslak gönderildi» ile aşamayı ilerletir. Gönderime alınan işte evrak kodunu girerek işi kapatır.
 - **Yönetici (ADMIN)** tüm işleri görür, kullanıcı ekler/düzenler ve Ayarlar’dan örnek veriyi sıfırlar.
 
 Üçüncü kişiler kaydı göremez.
 
-## İş listesi (avukat ajandası)
+## İş listesi
 
-`/is-listesi` sayfasında müvekkil, karşı taraf, mahkeme, dosya no, yapılacak iş ve notlar tutulur. Her satırdaki **İş ata** ile doğrudan görev verilir.
+`/is-listesi` sayfasında mahkeme, dosya no, yapılacak iş ve notlar tutulur. Avukat satırdaki **Ata** ile görev verir. Stajyer de **İş ekle** ile kayıt açabilir; avukatlar bu kayıtlara erişir.
 
 ## Görev döngüsü
 
 1. `ATANDI` — avukat başlık, müvekkil, dosya no, son teslim, talimat ve isteğe bağlı ek ile işi atar.
-2. `INCELEME_BEKLIYOR` — yürüten kişi taslağı yükler.
+2. `INCELEME_BEKLIYOR` — yürüten kişi taslağı WhatsApp ile gönderir ve «Taslak gönderildi»yi işaretler (site/Drive yüklemesi yok).
 3. `REVIZE_ISTENDI` — avukat not düşerek işi geri gönderir.
 4. `ONAYLANDI` — atayan avukat onaylar; masraf yatırma, arama yapılacak / yapıldı ve gönderime alma kararlarını burada verir.
 5. `GONDERIM_BEKLIYOR` — atayan avukat gönderime alır.
 6. `TAMAMLANDI` — yürüten kişi UYAP, PTT veya merci kodunu girer. Kod yoksa iş kapanmaz.
 
 Görevler varsayılan olarak **liste** görünümündedir. Pano isteğe bağlıdır; sürükle-bırak yoktur.
+
+Google Drive isteğe bağlıdır (avukat talimat eki). Diğer avukatlar için zorunlu değildir.
 
 ## Örnek veriyi kaldırma (sıfırdan başlama)
 

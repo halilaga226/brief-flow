@@ -42,7 +42,13 @@ function AddEntryForm({ workItemId }: { workItemId: string }) {
   )
 }
 
-export function WorkItemDetail({ item }: { item: WorkItemDetailDTO }) {
+export function WorkItemDetail({
+  item,
+  canAssign = false,
+}: {
+  item: WorkItemDetailDTO
+  canAssign?: boolean
+}) {
   return (
     <div className="mx-auto grid max-w-3xl gap-6">
       <div>
@@ -51,6 +57,9 @@ export function WorkItemDetail({ item }: { item: WorkItemDetailDTO }) {
         </Link>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">{item.courtName}</h1>
         <p className="mt-1 font-mono text-sm text-muted-foreground">{item.fileNumber}</p>
+        {item.ownerRole === "INTERN" ? (
+          <p className="mt-1 text-sm text-muted-foreground">Stajyer · {item.ownerName}</p>
+        ) : null}
       </div>
 
       <section className="grid gap-2 border-y border-border/50 py-4">
@@ -64,14 +73,16 @@ export function WorkItemDetail({ item }: { item: WorkItemDetailDTO }) {
             </p>
           </>
         ) : null}
-        <div className="mt-3">
-          <Button asChild className="font-semibold">
-            <Link href={`/is-listesi/${item.id}/gorev`}>
-              <UserPlus />
-              Görev olarak ata
-            </Link>
-          </Button>
-        </div>
+        {canAssign ? (
+          <div className="mt-3">
+            <Button asChild className="font-semibold">
+              <Link href={`/is-listesi/${item.id}/gorev`}>
+                <UserPlus />
+                Görev olarak ata
+              </Link>
+            </Button>
+          </div>
+        ) : null}
       </section>
 
       <section className="grid gap-4">

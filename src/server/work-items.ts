@@ -1,6 +1,12 @@
 import type { SessionUser } from "@/lib/dto"
 import { prisma } from "@/lib/prisma"
-import { canCreateTask, cleanText, isAdmin, WorkflowError } from "@/lib/workflow"
+import {
+  canAssignTask,
+  canManageWorkItems,
+  cleanText,
+  isAdmin,
+  WorkflowError,
+} from "@/lib/workflow"
 
 export type WorkItemDTO = {
   id: string
@@ -12,6 +18,8 @@ export type WorkItemDTO = {
   workToDo: string
   notes: string
   ownerId: string
+  ownerName: string
+  ownerRole: string
   taskCount: number
   entryCount: number
   createdAt: string
@@ -68,14 +76,37 @@ function validateWorkItem(input: {
   }
 }
 
+function workItemWhere(actor: SessionUser) {
+  if (isAdmin(actor.role)) return undefined
+  if (actor.role === "LAWYER") {
+    // Kendi kayıtları + tüm stajyer kayıtları
+    return {
+      OR: [{ ownerId: actor.id }, { owner: { role: "INTERN" as const } }],
+    }
+  }
+  // Stajyer: yalnızca kendi kayıtları
+  return { ownerId: actor.id }
+}
+
+function assertWorkItemAccess(
+  actor: SessionUser,
+  row: { ownerId: string; owner?: { role: string } | null },
+) {
+  if (isAdmin(actor.role)) return
+  if (row.ownerId === actor.id) return
+  if (actor.role === "LAWYER" && row.owner?.role === "INTERN") return
+  throw new WorkflowError("Bu iş kaydına erişemezsiniz.")
+}
+
 export async function listWorkItems(actor: SessionUser): Promise<WorkItemDTO[]> {
-  if (!canCreateTask(actor.role)) {
-    throw new WorkflowError("İş listesi yalnızca avukat ve yöneticilere açıktır.")
+  if (!canManageWorkItems(actor.role)) {
+    throw new WorkflowError("İş listesine erişemezsiniz.")
   }
   const rows = await prisma.workItem.findMany({
-    where: isAdmin(actor.role) ? undefined : { ownerId: actor.id },
+    where: workItemWhere(actor),
     orderBy: { updatedAt: "desc" },
     include: {
+      owner: { select: { name: true, role: true } },
       _count: { select: { tasks: true, entries: true } },
     },
   })
@@ -89,6 +120,8 @@ export async function listWorkItems(actor: SessionUser): Promise<WorkItemDTO[]> 
     workToDo: row.workToDo,
     notes: row.notes,
     ownerId: row.ownerId,
+    ownerName: row.owner.name,
+    ownerRole: row.owner.role,
     taskCount: row._count.tasks,
     entryCount: row._count.entries,
     createdAt: row.createdAt.toISOString(),
@@ -96,14 +129,15 @@ export async function listWorkItems(actor: SessionUser): Promise<WorkItemDTO[]> 
 }
 
 export async function getWorkItem(actor: SessionUser, id: string) {
-  if (!canCreateTask(actor.role)) {
-    throw new WorkflowError("İş listesi yalnızca avukat ve yöneticilere açıktır.")
+  if (!canManageWorkItems(actor.role)) {
+    throw new WorkflowError("İş listesine erişemezsiniz.")
   }
-  const row = await prisma.workItem.findUnique({ where: { id } })
+  const row = await prisma.workItem.findUnique({
+    where: { id },
+    include: { owner: { select: { role: true } } },
+  })
   if (!row) throw new WorkflowError("İş kaydı bulunamadı.")
-  if (!isAdmin(actor.role) && row.ownerId !== actor.id) {
-    throw new WorkflowError("Bu iş kaydına erişemezsiniz.")
-  }
+  assertWorkItemAccess(actor, row)
   return row
 }
 
@@ -111,12 +145,13 @@ export async function getWorkItemDetail(
   actor: SessionUser,
   id: string,
 ): Promise<WorkItemDetailDTO> {
-  if (!canCreateTask(actor.role)) {
-    throw new WorkflowError("İş listesi yalnızca avukat ve yöneticilere açıktır.")
+  if (!canManageWorkItems(actor.role)) {
+    throw new WorkflowError("İş listesine erişemezsiniz.")
   }
   const row = await prisma.workItem.findUnique({
     where: { id },
     include: {
+      owner: { select: { name: true, role: true } },
       _count: { select: { tasks: true, entries: true } },
       entries: {
         include: { createdBy: true },
@@ -129,9 +164,7 @@ export async function getWorkItemDetail(
     },
   })
   if (!row) throw new WorkflowError("İş kaydı bulunamadı.")
-  if (!isAdmin(actor.role) && row.ownerId !== actor.id) {
-    throw new WorkflowError("Bu iş kaydına erişemezsiniz.")
-  }
+  assertWorkItemAccess(actor, row)
 
   const { formatDay } = await import("@/lib/format")
 
@@ -145,6 +178,8 @@ export async function getWorkItemDetail(
     workToDo: row.workToDo,
     notes: row.notes,
     ownerId: row.ownerId,
+    ownerName: row.owner.name,
+    ownerRole: row.owner.role,
     taskCount: row._count.tasks,
     entryCount: row._count.entries,
     createdAt: row.createdAt.toISOString(),
@@ -177,8 +212,8 @@ export async function createWorkItem(
     notes: string
   },
 ) {
-  if (!canCreateTask(actor.role)) {
-    throw new WorkflowError("Yalnızca avukat veya yönetici iş listesine kayıt ekleyebilir.")
+  if (!canManageWorkItems(actor.role)) {
+    throw new WorkflowError("İş listesine kayıt ekleyemezsiniz.")
   }
   const checked = validateWorkItem(input)
   if (typeof checked === "string") throw new WorkflowError(checked)
@@ -193,6 +228,13 @@ export async function createWorkItem(
 
 export async function deleteWorkItem(actor: SessionUser, id: string) {
   const row = await getWorkItem(actor, id)
+  // Stajyer yalnızca kendi kaydını silebilir; avukat kendi + stajyer kaydını silebilir
+  if (actor.role === "INTERN" && row.ownerId !== actor.id) {
+    throw new WorkflowError("Bu kaydı silemezsiniz.")
+  }
+  if (actor.role === "LAWYER" && row.ownerId !== actor.id && row.owner.role !== "INTERN") {
+    throw new WorkflowError("Bu kaydı silemezsiniz.")
+  }
   await prisma.workItem.delete({ where: { id: row.id } })
 }
 

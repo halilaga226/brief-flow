@@ -2,7 +2,7 @@ import { TaskWorkList } from "@/components/portal/task-work-list"
 import { WorkItemAgenda } from "@/components/portal/work-item-agenda"
 import { Button } from "@/components/ui/button"
 import { requireUser } from "@/lib/session"
-import { canAssignTask, canCreateTask } from "@/lib/workflow"
+import { canAssignTask, canManageWorkItems } from "@/lib/workflow"
 import { listTasksCached } from "@/server/cached"
 import { listWorkItems } from "@/server/work-items"
 import { Plus } from "lucide-react"
@@ -16,54 +16,61 @@ export const revalidate = 0
 export default async function WorkListPage() {
   const user = await requireUser()
   const canAssign = canAssignTask(user.role)
-  const canManageWork = canCreateTask(user.role)
+  const canManageFiles = canManageWorkItems(user.role)
 
-  if (canManageWork) {
-    const [items, tasks] = await Promise.all([
-      listWorkItems(user),
-      listTasksCached(user.id, user.role),
-    ])
-    const given = tasks.filter((task) => task.assignerId === user.id)
+  const [items, tasks] = await Promise.all([
+    canManageFiles ? listWorkItems(user) : Promise.resolve([]),
+    listTasksCached(user.id, user.role),
+  ])
 
-    return (
-      <div className="mx-auto w-full max-w-[80rem] space-y-8">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">İş listesi</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Verdiğiniz görevler ve dosya kayıtları — satır satır liste.
-            </p>
-          </div>
+  const given = tasks.filter((task) => task.assignerId === user.id)
+  const mine = tasks.filter((task) => task.assigneeId === user.id)
+
+  const showGiven = canAssign
+  const taskSection = showGiven ? given : mine
+
+  return (
+    <div className="mx-auto w-full max-w-[80rem] space-y-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">İş listesi</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {canAssign
+              ? "Verdiğiniz görevler ve dosya kayıtları (stajyer kayıtları dahil)."
+              : "Size gelen görevler ve dosya kayıtlarınız."}
+          </p>
+        </div>
+        {canManageFiles ? (
           <Button asChild className="font-semibold">
             <Link href="#is-ekle">
               <Plus />
               İş ekle
             </Link>
           </Button>
+        ) : null}
+      </div>
+
+      <section className="space-y-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="text-base font-semibold">
+            {showGiven ? "Verdiğim görevler" : "Görevlerim"}
+          </h2>
+          <span className="text-sm text-muted-foreground tabular-nums">{taskSection.length}</span>
         </div>
+        <TaskWorkList
+          tasks={taskSection}
+          canAssign={canAssign}
+          userId={user.id}
+          mode={showGiven ? "given" : "all"}
+        />
+      </section>
 
-        <section className="space-y-3">
-          <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-base font-semibold">Verdiğim görevler</h2>
-            <span className="text-sm text-muted-foreground tabular-nums">{given.length}</span>
-          </div>
-          <TaskWorkList tasks={given} canAssign={canAssign} userId={user.id} mode="given" />
-        </section>
-
+      {canManageFiles ? (
         <section className="space-y-3" id="is-ekle">
           <h2 className="text-base font-semibold">Dosya kayıtları</h2>
-          <WorkItemAgenda items={items} canCreate />
+          <WorkItemAgenda items={items} canCreate canAssign={canAssign} />
         </section>
-      </div>
-    )
-  }
-
-  const tasks = await listTasksCached(user.id, user.role)
-
-  return (
-    <div className="mx-auto w-full max-w-[80rem] space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">İş listesi</h1>
-      <TaskWorkList tasks={tasks} canAssign={false} userId={user.id} />
+      ) : null}
     </div>
   )
 }

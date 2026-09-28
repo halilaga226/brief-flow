@@ -17,6 +17,7 @@ import {
   setClientCallStatus,
   setTaskListColor,
   uploadDraft,
+  markDraftSent,
 } from "@/server/tasks"
 import { clearDemoData } from "@/server/admin"
 import type { ClientCallStatus } from "@/lib/workflow"
@@ -87,6 +88,21 @@ export async function uploadDraftAction(
   }
   revalidateTask(taskId)
   return { ok: true, message: "Taslak incelemeye gönderildi." }
+}
+
+export async function markDraftSentAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    await markDraftSent(user, taskId)
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateTask(taskId)
+  return { ok: true, message: "Taslak gönderildi olarak işaretlendi. Avukat incelemesine geçildi." }
 }
 
 export async function requestRevisionAction(

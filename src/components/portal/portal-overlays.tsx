@@ -1,5 +1,7 @@
 "use client"
 
+import { AssignmentToasts } from "@/components/portal/assignment-toasts"
+import type { NotificationDTO } from "@/lib/dto"
 import dynamic from "next/dynamic"
 
 const WelcomeSplash = dynamic(
@@ -12,11 +14,18 @@ const IntroTour = dynamic(
   { ssr: false },
 )
 
-export function PortalOverlays({ name }: { name: string }) {
+export function PortalOverlays({
+  name,
+  notifications,
+}: {
+  name: string
+  notifications: NotificationDTO[]
+}) {
   return (
     <>
       <WelcomeSplash name={name} />
       <IntroTour />
+      <AssignmentToasts items={notifications} />
     </>
   )
 }
