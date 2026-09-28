@@ -82,11 +82,14 @@ export function TaskWorkList({
   canAssign,
   userId,
   mode = "all",
+  /** true: renk/sil/ata yalnızca kendi atadığın satırlarda */
+  actOnlyOwnAssignments = false,
 }: {
   tasks: TaskCardDTO[]
   canAssign: boolean
   userId: string
   mode?: "all" | "given"
+  actOnlyOwnAssignments?: boolean
 }) {
   const [query, setQuery] = useState("")
   const [due, setDue] = useState<(typeof DUE_CHIPS)[number]["id"]>("all")
@@ -107,6 +110,11 @@ export function TaskWorkList({
       return matchesDueWindow(task, due)
     })
   }, [tasks, hideDone, lockedGiven, scope, userId, query, due])
+
+  function canAct(task: TaskCardDTO) {
+    if (!actOnlyOwnAssignments) return true
+    return task.assignerId === userId
+  }
 
   return (
     <div className="space-y-3">
@@ -263,10 +271,14 @@ export function TaskWorkList({
                   <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
                     Renk
                   </p>
-                  <ColorPicker taskId={task.id} value={task.listColor} />
+                  {canAct(task) ? (
+                    <ColorPicker taskId={task.id} value={task.listColor} />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 md:justify-end">
-                  {canAssign ? (
+                  {canAssign && canAct(task) ? (
                     <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
                       <Link href={`/gorevler/yeni?from=${task.id}`}>
                         <UserPlus className="size-3.5" />
@@ -278,7 +290,7 @@ export function TaskWorkList({
                       <Link href={`/gorevler/${task.id}`}>Aç</Link>
                     </Button>
                   )}
-                  {task.canDelete ? (
+                  {canAct(task) && task.canDelete ? (
                     <DeleteTaskButton
                       taskId={task.id}
                       completed={task.status === "TAMAMLANDI"}

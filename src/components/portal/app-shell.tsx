@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import {
   ClipboardList,
   FolderOpen,
+  GraduationCap,
   Home,
   LogOut,
   Menu,
@@ -33,6 +34,9 @@ function isActive(pathname: string, href: string) {
   if (href === "/is-listesi") {
     return pathname === "/is-listesi" || pathname.startsWith("/is-listesi/")
   }
+  if (href === "/stajyer-isleri") {
+    return pathname === "/stajyer-isleri" || pathname.startsWith("/stajyer-isleri/")
+  }
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
@@ -49,6 +53,9 @@ function NavLinks({
   const links = [
     { href: "/ana", label: "Ana sayfa", icon: Home },
     { href: "/is-listesi", label: "İş listesi", icon: ClipboardList },
+    ...(canAssign
+      ? [{ href: "/stajyer-isleri", label: "Stajyer işleri", icon: GraduationCap }]
+      : []),
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(canManage ? [{ href: "/kullanicilar", label: "Kullanıcılar", icon: Users }] : []),
     { href: "/ayarlar", label: "Ayarlar", icon: Settings },
@@ -101,6 +108,7 @@ export function AppShell({
   const mobileLinks = [
     { href: "/ana", label: "Ana", icon: Home },
     { href: "/is-listesi", label: "İşler", icon: ClipboardList },
+    ...(lawyer ? [{ href: "/stajyer-isleri", label: "Stajyer", icon: GraduationCap }] : []),
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(manager && !lawyer ? [{ href: "/kullanicilar", label: "Kullanıcı", icon: Users }] : []),
     { href: "/ayarlar", label: "Ayarlar", icon: Settings },

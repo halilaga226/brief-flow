@@ -76,15 +76,19 @@ function validateWorkItem(input: {
   }
 }
 
-function workItemWhere(actor: SessionUser) {
-  if (isAdmin(actor.role)) return undefined
+function workItemWhere(actor: SessionUser, scope: "all" | "own" | "intern" = "all") {
+  if (isAdmin(actor.role)) {
+    if (scope === "own") return { ownerId: actor.id }
+    if (scope === "intern") return { owner: { role: "INTERN" as const } }
+    return undefined
+  }
   if (actor.role === "LAWYER") {
-    // Kendi kayıtları + tüm stajyer kayıtları
+    if (scope === "own") return { ownerId: actor.id }
+    if (scope === "intern") return { owner: { role: "INTERN" as const } }
     return {
       OR: [{ ownerId: actor.id }, { owner: { role: "INTERN" as const } }],
     }
   }
-  // Stajyer: yalnızca kendi kayıtları
   return { ownerId: actor.id }
 }
 
@@ -98,12 +102,18 @@ function assertWorkItemAccess(
   throw new WorkflowError("Bu iş kaydına erişemezsiniz.")
 }
 
-export async function listWorkItems(actor: SessionUser): Promise<WorkItemDTO[]> {
+export async function listWorkItems(
+  actor: SessionUser,
+  scope: "all" | "own" | "intern" = "all",
+): Promise<WorkItemDTO[]> {
   if (!canManageWorkItems(actor.role)) {
     throw new WorkflowError("İş listesine erişemezsiniz.")
   }
+  if (scope === "intern" && actor.role === "INTERN") {
+    throw new WorkflowError("Bu görünüme erişemezsiniz.")
+  }
   const rows = await prisma.workItem.findMany({
-    where: workItemWhere(actor),
+    where: workItemWhere(actor, scope),
     orderBy: { updatedAt: "desc" },
     include: {
       owner: { select: { name: true, role: true } },
@@ -228,12 +238,9 @@ export async function createWorkItem(
 
 export async function deleteWorkItem(actor: SessionUser, id: string) {
   const row = await getWorkItem(actor, id)
-  // Stajyer yalnızca kendi kaydını silebilir; avukat kendi + stajyer kaydını silebilir
-  if (actor.role === "INTERN" && row.ownerId !== actor.id) {
-    throw new WorkflowError("Bu kaydı silemezsiniz.")
-  }
-  if (actor.role === "LAWYER" && row.ownerId !== actor.id && row.owner.role !== "INTERN") {
-    throw new WorkflowError("Bu kaydı silemezsiniz.")
+  // Yalnızca kendi kaydını silebilir (admin hariç)
+  if (!isAdmin(actor.role) && row.ownerId !== actor.id) {
+    throw new WorkflowError("Yalnızca kendi dosya kaydınızı silebilirsiniz.")
   }
   await prisma.workItem.delete({ where: { id: row.id } })
 }

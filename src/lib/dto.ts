@@ -40,6 +40,7 @@ export type TaskCardDTO = {
   assigneeId: string
   assignerName: string
   assigneeName: string
+  assigneeRole: Role
   relationLabel: string
   needsAction: boolean
   trackingCode: string | null

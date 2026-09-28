@@ -640,6 +640,9 @@ export async function setTaskListColor(
 ) {
   const existing = await visibleTask(taskId, actor)
   if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (actor.role === "LAWYER" && existing.assignerId !== actor.id) {
+    throw new WorkflowError("Yalnızca kendi atadığınız işte değişiklik yapabilirsiniz.")
+  }
   const allowed = new Set(["", "red", "orange", "green", "blue", "pink", "auto"])
   const next = !color || color === "auto" ? null : color
   if (next && !allowed.has(next)) throw new WorkflowError("Geçersiz renk.")

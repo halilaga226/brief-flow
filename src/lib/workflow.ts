@@ -255,8 +255,18 @@ export function canDeleteTask(
 ) {
   if (role === "ADMIN") return true
   if (role !== "LAWYER") return false
-  // Avukat kendi verdiği veya kendine gelen işi silebilir; tamamlanınca da silinebilir.
-  return task.assignerId === userId || task.assigneeId === userId
+  // Avukat yalnızca kendi atadığı işe müdahale eder / silebilir.
+  return task.assignerId === userId
+}
+
+/** Avukat yalnızca kendi verdiği işte renk/aksiyon değiştirebilir. */
+export function canMutateAssignedTask(
+  task: { assignerId: string },
+  userId: string,
+  role: Role,
+) {
+  if (isAdmin(role)) return true
+  return role === "LAWYER" && task.assignerId === userId
 }
 
 /** Ana sayfada gösterilecek işler: kabul bekleyen + son günlü (yaklaşan/gecikmiş). */

@@ -92,10 +92,13 @@ export function WorkItemAgenda({
   items,
   canCreate = true,
   canAssign = false,
+  currentUserId,
 }: {
   items: WorkItemDTO[]
   canCreate?: boolean
   canAssign?: boolean
+  /** Verilirse silme yalnızca kendi kayıtlarında görünür */
+  currentUserId?: string
 }) {
   const [formOpen, setFormOpen] = useState(false)
 
@@ -201,7 +204,9 @@ export function WorkItemAgenda({
                       </Link>
                     </Button>
                   ) : null}
-                  <DeleteButton id={item.id} />
+                  {!currentUserId || item.ownerId === currentUserId ? (
+                    <DeleteButton id={item.id} />
+                  ) : null}
                 </div>
               </li>
             ))}

@@ -90,7 +90,9 @@ export function toTaskCard(
     ? `${record.assigner.name} → ${record.assignee.name}`
     : record.assigneeId === userId
       ? "Size atandı"
-      : "Siz atadınız"
+      : record.assignerId === userId
+        ? "Siz atadınız"
+        : `${record.assigner.name} → ${record.assignee.name}`
   return {
     id: record.id,
     title: record.title,
@@ -111,6 +113,7 @@ export function toTaskCard(
     assigneeId: record.assigneeId,
     assignerName: record.assigner.name,
     assigneeName: record.assignee.name,
+    assigneeRole: record.assignee.role,
     relationLabel,
     needsAction,
     trackingCode: record.trackingCode,

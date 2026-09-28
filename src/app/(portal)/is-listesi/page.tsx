@@ -17,15 +17,17 @@ export default async function WorkListPage() {
   const user = await requireUser()
   const canAssign = canAssignTask(user.role)
   const canManageFiles = canManageWorkItems(user.role)
+  const isLawyerView = canAssign
 
   const [items, tasks] = await Promise.all([
-    canManageFiles ? listWorkItems(user) : Promise.resolve([]),
+    canManageFiles
+      ? listWorkItems(user, isLawyerView ? "own" : "all")
+      : Promise.resolve([]),
     listTasksCached(user.id, user.role),
   ])
 
   const given = tasks.filter((task) => task.assignerId === user.id)
   const mine = tasks.filter((task) => task.assigneeId === user.id)
-
   const showGiven = canAssign
   const taskSection = showGiven ? given : mine
 
@@ -36,18 +38,25 @@ export default async function WorkListPage() {
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">İş listesi</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {canAssign
-              ? "Verdiğiniz görevler ve dosya kayıtları (stajyer kayıtları dahil)."
+              ? "Sizin verdiğiniz görevler ve kendi dosya kayıtlarınız. Stajyer kayıtları için Stajyer işleri sekmesine bakın."
               : "Size gelen görevler ve dosya kayıtlarınız."}
           </p>
         </div>
-        {canManageFiles ? (
-          <Button asChild className="font-semibold">
-            <Link href="#is-ekle">
-              <Plus />
-              İş ekle
-            </Link>
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          {canAssign ? (
+            <Button asChild variant="outline" className="font-semibold">
+              <Link href="/stajyer-isleri">Stajyer işleri</Link>
+            </Button>
+          ) : null}
+          {canManageFiles ? (
+            <Button asChild className="font-semibold">
+              <Link href="#is-ekle">
+                <Plus />
+                İş ekle
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <section className="space-y-3">
@@ -68,7 +77,12 @@ export default async function WorkListPage() {
       {canManageFiles ? (
         <section className="space-y-3" id="is-ekle">
           <h2 className="text-base font-semibold">Dosya kayıtları</h2>
-          <WorkItemAgenda items={items} canCreate canAssign={canAssign} />
+          <WorkItemAgenda
+            items={items}
+            canCreate
+            canAssign={canAssign}
+            currentUserId={user.id}
+          />
         </section>
       ) : null}
     </div>
