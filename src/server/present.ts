@@ -37,14 +37,16 @@ import type {
 const cardInclude = {
   assigner: true,
   assignee: true,
+  // Liste performans: timeline yalnızca detayda
+} satisfies Prisma.TaskInclude
+
+const detailInclude = {
+  assigner: true,
+  assignee: true,
   logs: {
     include: { actor: true },
     orderBy: { createdAt: "asc" as const },
   },
-} satisfies Prisma.TaskInclude
-
-const detailInclude = {
-  ...cardInclude,
   files: {
     include: { uploadedBy: true },
     orderBy: { createdAt: "asc" as const },
@@ -61,7 +63,7 @@ export type TaskDetailRecord = Prisma.TaskGetPayload<{ include: typeof detailInc
 export const taskCardInclude = cardInclude
 export const taskDetailInclude = detailInclude
 
-function toTimeline(record: TaskCardRecord): TimelineEventDTO[] {
+function toTimeline(record: { logs: TaskDetailRecord["logs"] }): TimelineEventDTO[] {
   return record.logs.map((log) => {
     const meta = parseLogMeta(log.meta)
     return {
@@ -125,7 +127,7 @@ export function toTaskCard(
     clientCallStatus: record.clientCallStatus as ClientCallStatus,
     updatedAt: record.updatedAt.toISOString(),
     completedAt: record.completedAt?.toISOString() ?? null,
-    logs: toTimeline(record),
+    logs: [],
   }
 }
 
@@ -185,9 +187,7 @@ export function toTaskDetail(
     canComplete: canComplete(record, userId, role),
     canAccept: canAcceptTask(record, userId, role),
     canDelete: canDeleteTask(record, userId, role),
-    nextStep: canAcceptTask(record, userId, role)
-      ? "İşi kabul edin; ardından iş listesine düşer. Son güne yaklaşınca ana sayfada yeniden görünür."
-      : nextStepCopy({
+    nextStep: nextStepCopy({
           status: record.status,
           myTurn,
           expensePaid: record.expensePaid,
@@ -196,6 +196,7 @@ export function toTaskDetail(
     latestDraft: latest
       ? { name: latest.name, href: latest.href, external: latest.external }
       : null,
+    logs: toTimeline(record),
   }
 }
 

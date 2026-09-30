@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Görev olarak ata" }
 export default async function NewTaskPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string }>
+  searchParams: Promise<{ from?: string; client?: string; file?: string }>
 }) {
   const user = await requireUser()
   if (!canCreateTask(user.role)) {
@@ -33,6 +33,20 @@ export default async function NewTaskPage({
   const defaultDue = addDaysKey(istanbulDayKey(new Date()), 3)
   const source = params.from ? await getTask(user.id, user.role, params.from) : null
 
+  const prefill = source
+    ? {
+        title: source.title,
+        clientName: source.clientName,
+        fileNumber: source.fileNumber,
+        description: source.description,
+      }
+    : params.client || params.file
+      ? {
+          clientName: params.client ?? "",
+          fileNumber: params.file ?? "",
+        }
+      : undefined
+
   return (
     <div className="mx-auto grid max-w-3xl gap-5">
       <div>
@@ -49,16 +63,7 @@ export default async function NewTaskPage({
             people={people}
             defaultDue={defaultDue}
             drive={drive}
-            prefill={
-              source
-                ? {
-                    title: source.title,
-                    clientName: source.clientName,
-                    fileNumber: source.fileNumber,
-                    description: source.description,
-                  }
-                : undefined
-            }
+            prefill={prefill}
           />
         )}
       </div>

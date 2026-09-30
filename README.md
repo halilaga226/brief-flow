@@ -1,41 +1,54 @@
 # Atlı Karakaya Hukuk Bürosu
 
-Görev, taslak inceleme ve evrak gönderim portalı. Avukatlar için iş listesi (ajanda) ve satırdan görev atama içerir. Açık/koyu tema desteklenir.
+Görev, inceleme ve evrak gönderim portalı. Müvekkil → dosya → iş hiyerarşisi, stajyer/avukat iş listeleri ve isteğe bağlı Google Drive içerir.
 
 ## Roller
 
-- **Avukat** iş listesine kayıt ekler, satırdan görev atar; taslağı onaylar veya revize ister. Onaydan sonra masraf, müvekkil araması ve gönderime alma kararını verir. Stajyerlerin dosya kayıtlarının tamamını görür.
-- **Stajyer** kendisine atanan işleri görür; iş listesine kendi dosya kaydını ekleyebilir. Görev atayamaz. Taslağı WhatsApp ile gönderir ve «Taslak gönderildi» ile aşamayı ilerletir. Gönderime alınan işte evrak kodunu girerek işi kapatır.
-- **Yönetici (ADMIN)** tüm işleri görür, kullanıcı ekler/düzenler ve Ayarlar’dan örnek veriyi sıfırlar.
-
-Üçüncü kişiler kaydı göremez.
+- **Avukat** müvekkil/dosya yönetir, görev atar, gelen işi inceler. Stajyer işlerini ayrı sekmeden görür; yalnızca kendi atadığı işlere müdahale eder. Ayarlar’dan kendi Drive klasörünü bağlayabilir.
+- **Stajyer** atanan işi doğrudan listesinde görür (kabul yok). Bitince **Avukata gönder** + not yazar; iş listesinden düşer, atayan avukata gider.
+- **Yönetici** tüm işleri görür, kullanıcı ekler, örnek veriyi sıfırlar.
 
 ## İş listesi
 
-`/is-listesi` sayfasında mahkeme, dosya no, yapılacak iş ve notlar tutulur. Avukat satırdaki **Ata** ile görev verir. Stajyer de **İş ekle** ile kayıt açabilir; avukatlar bu kayıtlara erişir.
+- **Bana gelen** — size atanan aktif işler (avukat↔avukat dahil).
+- **Verdiğim** — sizin atadıklarınız; inceleme bekleyenler burada.
+- Avukata gönderilince iş atananın listesinden kalkar.
+
+## Müvekkiller
+
+Sol menü **Müvekkiller**: müvekkil → dosya → o dosyadaki tüm işler. Görev atarken:
+
+1. Müvekkil yoksa oluşturulur.
+2. Aynı dosya no varsa iş o dosyaya bağlanır; yoksa yeni dosya açılır.
 
 ## Görev döngüsü
 
-1. `ATANDI` — avukat başlık, müvekkil, dosya no, son teslim, talimat ve isteğe bağlı ek ile işi atar.
-2. `INCELEME_BEKLIYOR` — yürüten kişi taslağı WhatsApp ile gönderir ve «Taslak gönderildi»yi işaretler (site/Drive yüklemesi yok).
-3. `REVIZE_ISTENDI` — avukat not düşerek işi geri gönderir.
-4. `ONAYLANDI` — atayan avukat onaylar; masraf yatırma, arama yapılacak / yapıldı ve gönderime alma kararlarını burada verir.
-5. `GONDERIM_BEKLIYOR` — atayan avukat gönderime alır.
-6. `TAMAMLANDI` — yürüten kişi UYAP, PTT veya merci kodunu girer. Kod yoksa iş kapanmaz.
+1. `ATANDI` — atama; iş hemen atananın listesine düşer.
+2. `INCELEME_BEKLIYOR` — yürüten **Avukata gönder** + yapılanlar notu.
+3. `REVIZE_ISTENDI` — avukat notla geri yollar.
+4. `ONAYLANDI` — masraf / arama / gönderime alma.
+5. `GONDERIM_BEKLIYOR` — gönderime alındı.
+6. `TAMAMLANDI` — evrak takip kodu.
 
-Görevler varsayılan olarak **liste** görünümündedir. Pano isteğe bağlıdır; sürükle-bırak yoktur.
+## Google Drive (isteğe bağlı)
 
-Google Drive isteğe bağlıdır (avukat talimat eki). Diğer avukatlar için zorunlu değildir.
+- Büro geneli: `GOOGLE_SERVICE_ACCOUNT_JSON` + `GOOGLE_DRIVE_FOLDER_ID` (`.env` / Vercel).
+- Avukat başına: **Ayarlar → Drive klasör kimliği** (klasörü servis hesabıyla Düzenleyici paylaşın). Zorunlu değil.
 
-## Örnek veriyi kaldırma (sıfırdan başlama)
+## Performans
 
-1. Yönetici hesabıyla giriş yapın (kullanıcı adı: `halil` veya oluşturduğunuz ADMIN).
-2. Sol menüden **Ayarlar** açın.
-3. **Örnek işleri ve hesapları sil** → onaylayın.
-4. Tüm görevler ve `@vekalet.local` deneme hesapları silinir. Kendi yönetici hesabınız kalır.
-5. **Kullanıcılar** sayfasından gerçek avukat/stajyer ekleyip iş listesinden veya Görev ver ile yeni iş atayın.
+Yapılanlar: liste kartlarında timeline yükü kaldırıldı; sayfalar daha hafif.
 
-Örnek hesapla girişliyken temizleme yapılamaz; önce kendi yönetici hesabınızla girin.
+İleride: Vercel Edge cache / `unstable_cache`, bildirim polling yerine SSE, görsellerin lazy load’u.
+
+## Masaüstü sürümü
+
+Ayrı Electron/Tauri uygulaması şart değil. Kısa vadede:
+
+1. **PWA** — “Ana ekrana ekle” / tarayıcıda uygulama gibi (en düşük maliyet).
+2. **Tauri / Electron** — aynı Next.js’i sarmalar; dağıtım ve güncelleme maliyeti yüksek.
+
+Öneri: önce PWA; ihtiyaç olursa Tauri.
 
 ## Kurulum
 
@@ -46,13 +59,11 @@ npm run setup
 npm run dev
 ```
 
-Uygulama [http://127.0.0.1:4317](http://127.0.0.1:4317) adresinde açılır. `AUTH_SECRET` için `openssl rand -base64 32` kullanın.
-
-Veritabanı PostgreSQL / Supabase pooler ile çalışır (`DATABASE_URL`, `DIRECT_URL`).
+[http://127.0.0.1:4317](http://127.0.0.1:4317) — `AUTH_SECRET` için `openssl rand -base64 32`.
 
 ## Deneme hesapları
 
-`DEMO_LOGIN=true` iken giriş ekranında görünür. Ortak parola: `Vekalet2026!`
+`DEMO_LOGIN=true` — parola `Vekalet2026!`
 
 | Kişi | Rol | Kullanıcı adı |
 | --- | --- | --- |
@@ -60,24 +71,6 @@ Veritabanı PostgreSQL / Supabase pooler ile çalışır (`DATABASE_URL`, `DIREC
 | Mehmet Kaya | Avukat | mehmet.kaya |
 | Elif Yılmaz | Stajyer | elif.yilmaz |
 | Can Öztürk | Stajyer | can.ozturk |
-
-Ayarlar’dan örnek veri silinene kadar kullanılabilir.
-
-## Google Drive
-
-Kimlik yokken mod `mock`tur. Yüklenen baytlar diske veya veritabanına yazılmaz.
-
-Gerçek yükleme için (yönetim / ops özellikleri oturduktan sonra):
-
-1. Google Cloud'da Drive API'yi açın ve bir servis hesabı oluşturun.
-2. JSON anahtarını tek satır `GOOGLE_SERVICE_ACCOUNT_JSON` olarak yazın.
-3. Dosyaların duracağı klasörü kendi Drive'ınızda oluşturun.
-4. Klasörü servis hesabının e-postasıyla **Düzenleyici** olarak paylaşın.
-5. Klasör kimliğini `GOOGLE_DRIVE_FOLDER_ID` alanına yazın.
-6. `DRIVE_SHARE_MODE=private` kalsın.
-7. Sunucuyu yeniden başlatın.
-
-Modül `src/lib/drive.ts` içindedir.
 
 ## Komutlar
 

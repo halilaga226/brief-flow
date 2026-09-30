@@ -67,7 +67,7 @@ export const STATUS_META: Record<
   },
   INCELEME_BEKLIYOR: {
     label: "İnceleme bekliyor",
-    hint: "Taslak WhatsApp ile gönderildi, avukat incelemesi bekleniyor.",
+    hint: "İş avukata gönderildi, inceleme bekleniyor.",
   },
   REVIZE_ISTENDI: {
     label: "Revize istendi",
@@ -147,7 +147,9 @@ export function logLabel(type: string) {
     case "ACCEPTED":
       return "İş kabul edildi"
     case "DRAFT_UPLOADED":
-      return "Taslak gönderildi (WhatsApp)"
+      return "Taslak gönderildi"
+    case "SENT_TO_LAWYER":
+      return "Avukata gönderildi"
     case "REVISION_REQUESTED":
       return "Revizyon istendi"
     case "APPROVED":
@@ -234,18 +236,19 @@ export function canUploadDraft(
   role?: Role,
 ) {
   if (!(task.status === "ATANDI" || task.status === "REVIZE_ISTENDI")) return false
-  if (!task.acceptedAt && task.assigneeId === userId && !isAdmin(role ?? "INTERN")) return false
   return isAdmin(role ?? "INTERN") || task.assigneeId === userId
 }
 
+/** @deprecated use canUploadDraft — aynı kapı, «Avukata gönder» için */
+export const canSendToLawyer = canUploadDraft
+
 export function canAcceptTask(
-  task: { assigneeId: string; acceptedAt?: Date | string | null; status: TaskStatus },
-  userId: string,
-  role?: Role,
+  _task: { assigneeId: string; acceptedAt?: Date | string | null; status: TaskStatus },
+  _userId: string,
+  _role?: Role,
 ) {
-  if (task.status === "TAMAMLANDI") return false
-  if (task.acceptedAt) return false
-  return task.assigneeId === userId || isAdmin(role ?? "INTERN")
+  // Kabul adımı kaldırıldı; iş doğrudan listeye düşer.
+  return false
 }
 
 export function canDeleteTask(
@@ -255,7 +258,6 @@ export function canDeleteTask(
 ) {
   if (role === "ADMIN") return true
   if (role !== "LAWYER") return false
-  // Avukat yalnızca kendi atadığı işe müdahale eder / silebilir.
   return task.assignerId === userId
 }
 
@@ -269,7 +271,24 @@ export function canMutateAssignedTask(
   return role === "LAWYER" && task.assignerId === userId
 }
 
-/** Ana sayfada gösterilecek işler: kabul bekleyen + son günlü (yaklaşan/gecikmiş). */
+/** Atanan kişinin aktif iş listesinde kalan durumlar (avukata gönderilince düşer). */
+export function isOnAssigneeWorkList(status: TaskStatus) {
+  return status === "ATANDI" || status === "REVIZE_ISTENDI" || status === "GONDERIM_BEKLIYOR"
+}
+
+/** Atayan avukatın iş listesinde öne çıkan durumlar. */
+export function isOnAssignerWorkList(status: TaskStatus) {
+  return (
+    status === "INCELEME_BEKLIYOR" ||
+    status === "ONAYLANDI" ||
+    status === "ATANDI" ||
+    status === "REVIZE_ISTENDI" ||
+    status === "GONDERIM_BEKLIYOR" ||
+    status === "TAMAMLANDI"
+  )
+}
+
+/** Ana sayfada gösterilecek işler: aktif iş + son günlü (yaklaşan/gecikmiş). */
 export function showsOnHome(
   task: {
     assigneeId: string
@@ -283,16 +302,14 @@ export function showsOnHome(
   role: Role,
 ) {
   if (task.status === "TAMAMLANDI") {
-    // Avukat tamamlananı ana ekranda görsün ki silebilsin
     return role === "LAWYER" || role === "ADMIN"
       ? task.assignerId === userId || task.assigneeId === userId || role === "ADMIN"
       : false
   }
-  if (task.assigneeId === userId && !task.acceptedAt) return true
+  if (task.assigneeId === userId && isOnAssigneeWorkList(task.status)) return true
   if (task.dueTone === "overdue" || task.dueTone === "today" || task.dueTone === "soon") {
     return isParticipant(task, userId) || isAdmin(role)
   }
-  // Avukat/admin için inceleme-onay gibi aksiyon bekleyenler
   if ((role === "LAWYER" || role === "ADMIN") && task.needsAction) return true
   return false
 }
@@ -394,20 +411,20 @@ export function nextStepCopy(input: {
   }
   if (input.myTurn) {
     if (input.status === "ATANDI") {
-      return "Taslağı WhatsApp’tan avukata gönderin; ardından burada «Taslak gönderildi»yi işaretleyin."
+      return "İşi tamamlayın; ardından «Avukata gönder» ile yaptıklarınızı yazıp iletin."
     }
     if (input.status === "REVIZE_ISTENDI") {
-      return "Revizyon notuna göre taslağı güncelleyip WhatsApp’tan yeniden gönderin; sonra «Taslak gönderildi»yi işaretleyin."
+      return "Revizyon notuna göre düzeltin; sonra «Avukata gönder» ile yeniden iletin."
     }
     if (input.status === "GONDERIM_BEKLIYOR") {
       return "Onaylı evrakı UYAP, PTT veya ilgili merciye iletin. Barkod ya da evrak kodu olmadan iş kapanmaz."
     }
     if (input.status === "INCELEME_BEKLIYOR") {
-      return "WhatsApp’tan gelen taslağı inceleyin. Onaylayın veya not düşerek revize isteyin."
+      return "Gönderilen işi ve notu inceleyin. Onaylayın veya not düşerek revize isteyin."
     }
   }
   if (input.status === "ATANDI" || input.status === "REVIZE_ISTENDI") {
-    return "Taslak karşı taraftan bekleniyor."
+    return "İş karşı taraftan bekleniyor."
   }
   if (input.status === "INCELEME_BEKLIYOR") {
     return "Atayan avukatın incelemesi bekleniyor."

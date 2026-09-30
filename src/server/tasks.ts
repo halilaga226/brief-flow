@@ -206,13 +206,22 @@ export async function listAssignees(actor: SessionUser) {
     })
 }
 
-async function storeUpload(file: File) {
+async function storeUpload(file: File, actorId?: string) {
   const check = validateDraftFile({ name: file.name, size: file.size })
   if (!check.ok) throw new WorkflowError(check.error)
+  let folderId: string | null = null
+  if (actorId) {
+    const user = await prisma.user.findUnique({
+      where: { id: actorId },
+      select: { driveFolderId: true },
+    })
+    folderId = user?.driveFolderId ?? null
+  }
   return uploadToDrive({
     buffer: Buffer.from(await file.arrayBuffer()),
     name: safeFileName(file.name),
     mimeType: file.type || "application/octet-stream",
+    folderId,
   })
 }
 
@@ -239,8 +248,15 @@ export async function createTask(
   }
   const assignee = await prisma.user.findUnique({ where: { id: input.assigneeId } })
   if (!assignee) throw new WorkflowError("Atanacak kişi bulunamadı.")
-  // Stajyer işi önce kabul eder; avukat/yöneticiye atamada otomatik kabul.
-  const acceptedAt = assignee.role === "INTERN" ? null : new Date()
+  // Kabul yok — iş doğrudan atananın listesine düşer.
+  const acceptedAt = new Date()
+
+  const { resolveClientAndCaseFile } = await import("@/server/clients")
+  const resolved = await resolveClientAndCaseFile(
+    actor.id,
+    input.clientName,
+    input.fileNumber,
+  )
 
   let workItemId: string | null = null
   if (input.workItemId) {
@@ -254,21 +270,22 @@ export async function createTask(
 
   let stored: StoredFile | null = null
   if (file && file.size > 0) {
-    stored = await storeUpload(file)
+    stored = await storeUpload(file, actor.id)
   }
 
   try {
     const task = await prisma.task.create({
       data: {
         title: cleanText(input.title),
-        clientName: cleanText(input.clientName),
-        fileNumber: cleanText(input.fileNumber),
+        clientName: resolved.clientName,
+        fileNumber: resolved.fileNumber,
         description: cleanText(input.description),
         dueDate: input.dueDate!,
         status: "ATANDI",
         assignerId: actor.id,
         assigneeId: assignee.id,
         workItemId,
+        caseFileId: resolved.caseFileId,
         acceptedAt,
         files: stored
           ? {
@@ -364,12 +381,15 @@ export async function uploadDraft(actor: SessionUser, taskId: string, file: File
   }
 }
 
-/** Stajyer taslağı WhatsApp ile gönderdikten sonra aşamayı ilerletir; site/Drive yüklemesi yok. */
-export async function markDraftSent(actor: SessionUser, taskId: string) {
+/** Stajyer/avukat işi bitirince not yazıp atayan avukata gönderir; kendi listesinden düşer. */
+export async function sendToLawyer(actor: SessionUser, taskId: string, rawNote: string) {
+  const noteResult = validateNote(rawNote, "Yapılanlar notu")
+  if (!noteResult.ok) throw new WorkflowError(noteResult.error)
+
   const existing = await visibleTask(taskId, actor)
   if (!existing) throw new WorkflowError("Görev bulunamadı.")
   if (!canUploadDraft(existing, actor.id, actor.role)) {
-    throw new WorkflowError("Bu aşamada taslak gönderildi işaretlenemez.")
+    throw new WorkflowError("Bu aşamada avukata gönderilemez.")
   }
 
   await prisma.$transaction(async (tx) => {
@@ -385,22 +405,26 @@ export async function markDraftSent(actor: SessionUser, taskId: string) {
       data: {
         taskId,
         actorId: actor.id,
-        type: "DRAFT_UPLOADED",
+        type: "SENT_TO_LAWYER",
         fromStatus: task.status,
         toStatus: "INCELEME_BEKLIYOR",
-        note: "WhatsApp ile gönderildi",
-        meta: JSON.stringify({ channel: "whatsapp" }),
+        note: noteResult.note,
       },
     })
     await tx.notification.create({
       data: {
         userId: task.assignerId,
         taskId,
-        title: "Taslak incelemenizi bekliyor",
-        body: `${actor.name} taslağı WhatsApp ile gönderdi: ${task.title}`,
+        title: "İş incelemenizi bekliyor",
+        body: `${actor.name} işi size gönderdi: ${task.title}`,
       },
     })
   })
+}
+
+/** @deprecated — sendToLawyer kullanın */
+export async function markDraftSent(actor: SessionUser, taskId: string) {
+  return sendToLawyer(actor, taskId, "WhatsApp / dış kanal ile iletildi.")
 }
 
 export async function requestRevision(actor: SessionUser, taskId: string, rawNote: string) {

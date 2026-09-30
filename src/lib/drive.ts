@@ -82,12 +82,27 @@ export async function uploadToDrive(input: {
   buffer: Buffer
   name: string
   mimeType: string
+  /** Avukatın kendi klasörü (isteğe bağlı) */
+  folderId?: string | null
 }): Promise<StoredFile> {
   const name = safeFileName(input.name)
   const mimeType = input.mimeType || "application/octet-stream"
   const status = getDriveStatus()
+  const folderId = (input.folderId?.trim() || process.env.GOOGLE_DRIVE_FOLDER_ID?.trim()) ?? ""
 
-  if (status.mode === "mock") {
+  if (status.mode === "mock" && !folderId) {
+    const driveFileId = `mock_${crypto.randomUUID()}`
+    return {
+      driveFileId,
+      name,
+      mimeType,
+      size: input.buffer.length,
+      webViewLink: `/onizleme/dosya/${driveFileId}`,
+      storageMode: "mock",
+    }
+  }
+
+  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim() || !folderId) {
     const driveFileId = `mock_${crypto.randomUUID()}`
     return {
       driveFileId,
@@ -101,7 +116,6 @@ export async function uploadToDrive(input: {
 
   try {
     const drive = driveClient()
-    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID!.trim()
     const created = await drive.files.create({
       requestBody: {
         name,

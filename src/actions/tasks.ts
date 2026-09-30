@@ -18,6 +18,7 @@ import {
   setTaskListColor,
   uploadDraft,
   markDraftSent,
+  sendToLawyer,
 } from "@/server/tasks"
 import { clearDemoData } from "@/server/admin"
 import type { ClientCallStatus } from "@/lib/workflow"
@@ -29,6 +30,8 @@ function revalidateTask(taskId: string) {
   revalidatePath("/ana")
   revalidatePath("/gorevler")
   revalidatePath("/is-listesi")
+  revalidatePath("/muvekkiller")
+  revalidatePath("/stajyer-isleri")
   revalidatePath(`/gorevler/${taskId}`)
 }
 
@@ -103,6 +106,22 @@ export async function markDraftSentAction(
   }
   revalidateTask(taskId)
   return { ok: true, message: "Taslak gönderildi olarak işaretlendi. Avukat incelemesine geçildi." }
+}
+
+export async function sendToLawyerAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    await sendToLawyer(user, taskId, readText(formData, "note"))
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateTask(taskId)
+  revalidatePath("/is-listesi")
+  return { ok: true, message: "İş avukata gönderildi." }
 }
 
 export async function requestRevisionAction(

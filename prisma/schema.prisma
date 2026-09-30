@@ -38,6 +38,7 @@ enum LogType {
   CREATED
   ACCEPTED
   DRAFT_UPLOADED
+  SENT_TO_LAWYER
   REVISION_REQUESTED
   APPROVED
   EXPENSE_MARKED
@@ -55,16 +56,53 @@ model User {
   passwordHash String
   role         Role
   title        String
+  /// Avukatın kendi Drive klasörü (isteğe bağlı)
+  driveFolderId String?
+  /// OAuth refresh token (isteğe bağlı; bağlandığında dolar)
+  driveRefreshToken String?
+  driveConnectedAt  DateTime?
   createdAt    DateTime @default(now())
 
   assignedTasks Task[]         @relation("Assignee")
   createdTasks  Task[]         @relation("Assigner")
   workItems     WorkItem[]
   workItemEntries WorkItemEntry[]
+  clients       Client[]
   comments      TaskComment[]
   logs          TaskLog[]
   files         TaskFile[]
   notifications Notification[]
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner     User       @relation(fields: [ownerId], references: [id])
+  caseFiles CaseFile[]
+
+  @@unique([ownerId, name])
+  @@index([ownerId])
+}
+
+model CaseFile {
+  id         String   @id @default(cuid())
+  clientId   String
+  fileNumber String
+  courtName  String   @default("")
+  notes      String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  tasks  Task[]
+
+  @@unique([clientId, fileNumber])
+  @@index([clientId])
+  @@index([fileNumber])
 }
 
 model WorkItem {
@@ -111,6 +149,7 @@ model Task {
   assignerId   String
   assigneeId   String
   workItemId   String?
+  caseFileId   String?
   trackingCode String?
   listColor    String?
   acceptedAt   DateTime?
@@ -124,6 +163,7 @@ model Task {
   assigner      User           @relation("Assigner", fields: [assignerId], references: [id])
   assignee      User           @relation("Assignee", fields: [assigneeId], references: [id])
   workItem      WorkItem?      @relation(fields: [workItemId], references: [id], onDelete: SetNull)
+  caseFile      CaseFile?      @relation(fields: [caseFileId], references: [id], onDelete: SetNull)
   comments      TaskComment[]
   logs          TaskLog[]
   files         TaskFile[]
@@ -133,6 +173,7 @@ model Task {
   @@index([assigneeId])
   @@index([status])
   @@index([workItemId])
+  @@index([caseFileId])
   @@index([dueDate])
 }
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { StatusBadge } from "@/components/portal/status-badge"
-import { AcceptTaskButton, DeleteTaskButton } from "@/components/portal/task-lifecycle-buttons"
+import { DeleteTaskButton } from "@/components/portal/task-lifecycle-buttons"
 import { Button } from "@/components/ui/button"
 import type { ActivityDTO, TaskCardDTO } from "@/lib/dto"
 import { cn } from "@/lib/utils"
@@ -137,13 +137,11 @@ export function HomeDashboard({
                       <p className="truncate text-base font-semibold tracking-tight">{task.title}</p>
                       <p className="mt-0.5 text-sm font-medium text-muted-foreground">
                         {task.assignerName} · {task.dueLabel}
-                        {task.needsAccept ? " · Kabul bekliyor" : ""}
                         {task.status === "TAMAMLANDI" ? " · Tamamlandı" : ""}
                       </p>
                     </Link>
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusBadge status={task.status} />
-                      {task.needsAccept ? <AcceptTaskButton taskId={task.id} /> : null}
                       {task.canDelete && task.status === "TAMAMLANDI" ? (
                         <DeleteTaskButton taskId={task.id} completed compact />
                       ) : null}

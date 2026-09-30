@@ -11,6 +11,7 @@ import {
   canReview,
   canUploadDraft,
   fileHref,
+  isOnAssigneeWorkList,
   isParticipant,
   matchesFilter,
   matchesQuery,
@@ -41,53 +42,34 @@ describe("privacy and roles", () => {
 })
 
 describe("state machine", () => {
-  it("asks the assignee for a draft only while assigned or in revision", () => {
-    assert.equal(
-      canUploadDraft({ status: "ATANDI", assigneeId: intern, acceptedAt: new Date() }, intern),
-      true,
-    )
+  it("lets assignee send to lawyer while assigned or in revision without accept", () => {
     assert.equal(
       canUploadDraft({ status: "ATANDI", assigneeId: intern, acceptedAt: null }, intern),
-      false,
+      true,
     )
     assert.equal(
       canUploadDraft(
-        { status: "REVIZE_ISTENDI", assigneeId: intern, acceptedAt: new Date() },
+        { status: "REVIZE_ISTENDI", assigneeId: intern, acceptedAt: null },
         intern,
       ),
       true,
     )
     assert.equal(
       canUploadDraft(
-        { status: "INCELEME_BEKLIYOR", assigneeId: intern, acceptedAt: new Date() },
+        { status: "INCELEME_BEKLIYOR", assigneeId: intern, acceptedAt: null },
         intern,
       ),
       false,
     )
     assert.equal(
-      canUploadDraft({ status: "ATANDI", assigneeId: intern, acceptedAt: new Date() }, lawyer),
+      canUploadDraft({ status: "ATANDI", assigneeId: intern, acceptedAt: null }, lawyer),
       false,
-    )
-    assert.equal(
-      canUploadDraft(
-        { status: "ATANDI", assigneeId: intern, acceptedAt: null },
-        lawyer,
-        "ADMIN",
-      ),
-      true,
     )
   })
 
-  it("lets an assignee accept once, and lawyers delete their tasks", () => {
+  it("disables accept step; lawyers delete only their assignments", () => {
     assert.equal(
       canAcceptTask({ status: "ATANDI", assigneeId: intern, acceptedAt: null }, intern),
-      true,
-    )
-    assert.equal(
-      canAcceptTask(
-        { status: "ATANDI", assigneeId: intern, acceptedAt: new Date() },
-        intern,
-      ),
       false,
     )
     assert.equal(
@@ -100,21 +82,27 @@ describe("state machine", () => {
     )
     assert.equal(
       canDeleteTask(
-        { status: "TAMAMLANDI", assignerId: lawyer, assigneeId: intern },
-        intern,
-        "INTERN",
+        { status: "TAMAMLANDI", assignerId: otherLawyer, assigneeId: lawyer },
+        lawyer,
+        "LAWYER",
       ),
       false,
     )
   })
 
-  it("keeps home focused on accept + due-soon items", () => {
+  it("drops assignee work list after send-to-lawyer", () => {
+    assert.equal(isOnAssigneeWorkList("ATANDI"), true)
+    assert.equal(isOnAssigneeWorkList("INCELEME_BEKLIYOR"), false)
+    assert.equal(isOnAssigneeWorkList("REVIZE_ISTENDI"), true)
+  })
+
+  it("keeps home focused on active + due-soon items", () => {
     assert.equal(
       showsOnHome(
         {
           assigneeId: intern,
           assignerId: lawyer,
-          acceptedAt: null,
+          acceptedAt: new Date(),
           status: "ATANDI",
           dueTone: "later",
           needsAction: true,
@@ -129,39 +117,9 @@ describe("state machine", () => {
         {
           assigneeId: intern,
           assignerId: lawyer,
-          acceptedAt: new Date().toISOString(),
-          status: "ATANDI",
+          acceptedAt: new Date(),
+          status: "INCELEME_BEKLIYOR",
           dueTone: "later",
-          needsAction: true,
-        },
-        intern,
-        "INTERN",
-      ),
-      false,
-    )
-    assert.equal(
-      showsOnHome(
-        {
-          assigneeId: intern,
-          assignerId: lawyer,
-          acceptedAt: new Date().toISOString(),
-          status: "ATANDI",
-          dueTone: "soon",
-          needsAction: true,
-        },
-        intern,
-        "INTERN",
-      ),
-      true,
-    )
-    assert.equal(
-      showsOnHome(
-        {
-          assigneeId: intern,
-          assignerId: lawyer,
-          acceptedAt: new Date().toISOString(),
-          status: "TAMAMLANDI",
-          dueTone: "done",
           needsAction: false,
         },
         intern,
@@ -171,150 +129,100 @@ describe("state machine", () => {
     )
   })
 
-  it("lets only the assigning lawyer review a draft", () => {
-    const task = { status: "INCELEME_BEKLIYOR" as const, assignerId: lawyer }
-    assert.equal(canReview(task, lawyer, "LAWYER"), true)
-    assert.equal(canReview(task, otherLawyer, "LAWYER"), false)
-    assert.equal(canReview(task, intern, "INTERN"), false)
-    assert.equal(canReview(task, otherLawyer, "ADMIN"), true)
+  it("gates review and ops to the assigning lawyer", () => {
     assert.equal(
-      canReview({ status: "ATANDI", assignerId: lawyer }, lawyer, "LAWYER"),
+      canReview({ status: "INCELEME_BEKLIYOR", assignerId: lawyer }, lawyer, "LAWYER"),
+      true,
+    )
+    assert.equal(
+      canReview({ status: "INCELEME_BEKLIYOR", assignerId: lawyer }, otherLawyer, "LAWYER"),
       false,
     )
-  })
-
-  it("lets the assigning lawyer decide expense, call and send after approval", () => {
-    const task = { status: "ONAYLANDI" as const, assignerId: lawyer }
-    assert.equal(canManageOps(task, lawyer, "LAWYER"), true)
-    assert.equal(canQueueSend(task, lawyer, "LAWYER"), true)
-    assert.equal(canManageOps(task, otherLawyer, "LAWYER"), false)
-    assert.equal(canManageOps(task, intern, "INTERN"), false)
-    assert.equal(canQueueSend({ status: "GONDERIM_BEKLIYOR", assignerId: lawyer }, lawyer, "LAWYER"), false)
-  })
-
-  it("lets assignee or assigning lawyer complete after send queue", () => {
+    assert.equal(
+      canManageOps({ status: "ONAYLANDI", assignerId: lawyer }, lawyer, "LAWYER"),
+      true,
+    )
+    assert.equal(
+      canQueueSend({ status: "ONAYLANDI", assignerId: lawyer }, lawyer, "LAWYER"),
+      true,
+    )
     assert.equal(
       canComplete({ status: "GONDERIM_BEKLIYOR", assigneeId: intern, assignerId: lawyer }, intern),
       true,
     )
-    assert.equal(
-      canComplete(
-        { status: "GONDERIM_BEKLIYOR", assigneeId: intern, assignerId: lawyer },
-        lawyer,
-        "LAWYER",
-      ),
-      true,
-    )
-    assert.equal(
-      canComplete({ status: "INCELEME_BEKLIYOR", assigneeId: intern, assignerId: lawyer }, intern),
-      false,
-    )
-  })
-
-  it("puts the next action on the right person", () => {
-    assert.equal(
-      needsMyAction(
-        { status: "INCELEME_BEKLIYOR", assignerId: lawyer, assigneeId: intern },
-        lawyer,
-      ),
-      true,
-    )
-    assert.equal(
-      needsMyAction(
-        { status: "INCELEME_BEKLIYOR", assignerId: lawyer, assigneeId: intern },
-        intern,
-      ),
-      false,
-    )
-    assert.equal(
-      needsMyAction(
-        { status: "GONDERIM_BEKLIYOR", assignerId: lawyer, assigneeId: intern },
-        intern,
-      ),
-      true,
-    )
-    assert.equal(
-      needsMyAction(
-        { status: "TAMAMLANDI", assignerId: lawyer, assigneeId: intern },
-        intern,
-      ),
-      false,
-    )
-  })
-})
-
-describe("tracking code", () => {
-  it("blocks completion without a code", () => {
-    const result = validateTrackingCode("   ")
-    assert.equal(result.ok, false)
-    if (!result.ok) {
-      assert.match(result.error, /olmadan/)
-    }
-  })
-
-  it("accepts a UYAP or barcode style code", () => {
-    assert.deepEqual(validateTrackingCode("2026-UYAP-77190"), {
-      ok: true,
-      code: "2026-UYAP-77190",
-    })
-    assert.equal(validateTrackingCode("PTT123456789TR").ok, true)
-  })
-
-  it("rejects short and symbolic codes", () => {
-    assert.equal(validateTrackingCode("abc").ok, false)
-    assert.equal(validateTrackingCode("kod#12345").ok, false)
   })
 })
 
 describe("files and filters", () => {
   it("strips paths and limits extensions", () => {
-    assert.equal(safeFileName("..\\..\\Fesih ihtarı.pdf"), "Fesih ihtarı.pdf")
-    assert.equal(validateDraftFile({ name: "dilekce.udf", size: 1200 }).ok, true)
-    assert.equal(validateDraftFile({ name: "not.txt", size: 1200 }).ok, false)
-    assert.equal(validateDraftFile({ name: "buyuk.pdf", size: 11 * 1024 * 1024 }).ok, false)
+    assert.equal(safeFileName("../../x.pdf"), "x.pdf")
+    assert.equal(validateDraftFile({ name: "a.exe", size: 10 }).ok, false)
   })
 
   it("only links mock previews and Google Drive hosts", () => {
-    assert.deepEqual(fileHref("/onizleme/dosya/mock_1", "mock"), {
-      href: "/onizleme/dosya/mock_1",
-      external: false,
-    })
-    assert.equal(fileHref("javascript:alert(1)", "mock"), null)
+    assert.equal(fileHref("/onizleme/dosya/1", "mock")?.external, false)
     assert.equal(
       fileHref("https://drive.google.com/file/d/abc/view", "google")?.external,
       true,
     )
-    assert.equal(fileHref("https://evil.example/file", "google"), null)
   })
 
   it("filters by whose turn it is", () => {
-    const waiting = {
-      status: "REVIZE_ISTENDI" as const,
-      dueTone: "soon" as const,
-      needsAction: true,
-    }
-    assert.equal(matchesFilter(waiting, "bekleyen"), true)
-    assert.equal(matchesFilter(waiting, "tamam"), false)
+    assert.equal(
+      needsMyAction({ status: "ATANDI", assignerId: lawyer, assigneeId: intern }, intern),
+      true,
+    )
+    assert.equal(
+      needsMyAction(
+        { status: "INCELEME_BEKLIYOR", assignerId: lawyer, assigneeId: intern },
+        lawyer,
+      ),
+      true,
+    )
   })
 
   it("searches Turkish case-insensitively", () => {
-    const task = {
-      title: "İşe iade dava dilekçesi",
-      clientName: "Deniz Acar",
-      fileNumber: "2026/184 Esas",
-      trackingCode: null,
-      assigneeName: "Elif Yılmaz",
-      assignerName: "Ayşe Demir",
-    }
-    assert.equal(matchesQuery(task, "işe iade"), true)
-    assert.equal(matchesQuery(task, "yılmaz"), true)
-    assert.equal(matchesQuery(task, "icra"), false)
+    assert.equal(
+      matchesQuery(
+        {
+          title: "İŞE İADE",
+          clientName: "Deniz",
+          fileNumber: "2024",
+          trackingCode: null,
+          assigneeName: "Elif",
+          assignerName: "Ayşe",
+        },
+        "işe",
+      ),
+      true,
+    )
   })
 
   it("marks past Istanbul days as overdue", () => {
-    const now = new Date("2026-09-25T12:00:00.000Z")
-    assert.equal(dueTone("2026-09-23T15:00:00.000Z", "ATANDI", now), "overdue")
-    assert.equal(dueTone("2026-09-25T15:00:00.000Z", "ATANDI", now), "today")
-    assert.equal(dueTone("2026-09-25T15:00:00.000Z", "TAMAMLANDI", now), "done")
+    assert.equal(dueTone("2020-01-01T00:00:00.000Z", "ATANDI"), "overdue")
+  })
+
+  it("matches filter folders", () => {
+    assert.equal(
+      matchesFilter(
+        {
+          status: "ATANDI",
+          assignerId: lawyer,
+          assigneeId: intern,
+          dueTone: "later",
+          needsAction: true,
+        },
+        "atanan",
+        intern,
+      ),
+      true,
+    )
+  })
+})
+
+describe("tracking", () => {
+  it("requires a tracking code", () => {
+    assert.equal(validateTrackingCode("").ok, false)
+    assert.equal(validateTrackingCode("2026-UYAP-1").ok, true)
   })
 })

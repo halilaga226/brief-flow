@@ -21,6 +21,7 @@ import {
   Scale,
   Settings,
   Users,
+  Briefcase,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -36,6 +37,9 @@ function isActive(pathname: string, href: string) {
   }
   if (href === "/stajyer-isleri") {
     return pathname === "/stajyer-isleri" || pathname.startsWith("/stajyer-isleri/")
+  }
+  if (href === "/muvekkiller") {
+    return pathname === "/muvekkiller" || pathname.startsWith("/muvekkiller/")
   }
   return pathname === href || pathname.startsWith(`${href}/`)
 }
@@ -54,7 +58,10 @@ function NavLinks({
     { href: "/ana", label: "Ana sayfa", icon: Home },
     { href: "/is-listesi", label: "İş listesi", icon: ClipboardList },
     ...(canAssign
-      ? [{ href: "/stajyer-isleri", label: "Stajyer işleri", icon: GraduationCap }]
+      ? [
+          { href: "/muvekkiller", label: "Müvekkiller", icon: Briefcase },
+          { href: "/stajyer-isleri", label: "Stajyer işleri", icon: GraduationCap },
+        ]
       : []),
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(canManage ? [{ href: "/kullanicilar", label: "Kullanıcılar", icon: Users }] : []),
@@ -108,6 +115,7 @@ export function AppShell({
   const mobileLinks = [
     { href: "/ana", label: "Ana", icon: Home },
     { href: "/is-listesi", label: "İşler", icon: ClipboardList },
+    ...(lawyer ? [{ href: "/muvekkiller", label: "Müvekkil", icon: Briefcase }] : []),
     ...(lawyer ? [{ href: "/stajyer-isleri", label: "Stajyer", icon: GraduationCap }] : []),
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(manager && !lawyer ? [{ href: "/kullanicilar", label: "Kullanıcı", icon: Users }] : []),

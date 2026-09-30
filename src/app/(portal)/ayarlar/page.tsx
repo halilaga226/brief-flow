@@ -1,11 +1,15 @@
 import { ClearDemoButton } from "@/components/portal/clear-demo-button"
+import { DriveSettingsForm } from "@/components/portal/drive-settings-form"
 import { IntroToggle } from "@/components/portal/intro-tour"
 import { PasswordForm } from "@/components/portal/password-form"
 import { StatusBadge } from "@/components/portal/status-badge"
 import { Button } from "@/components/ui/button"
+import { getDriveStatus } from "@/lib/drive"
 import { formatTodayLabel, greeting } from "@/lib/format"
+import { prisma } from "@/lib/prisma"
 import { requireUser } from "@/lib/session"
 import {
+  canCreateTask,
   canManageUsers,
   CLIENT_CALL_META,
   isAdmin,
@@ -21,13 +25,18 @@ export const metadata: Metadata = { title: "Ayarlar" }
 
 export default async function SettingsPage() {
   const user = await requireUser()
-  const [dashboard, calls, overview] = await Promise.all([
+  const [dashboard, calls, overview, dbUser] = await Promise.all([
     getDashboard(user.id, user.role),
     listClientCalls(user),
     isAdmin(user.role) ? getAdminOverview(user) : Promise.resolve(null),
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { driveFolderId: true },
+    }),
   ])
   const firstName = user.name.split(" ")[0]
   const manageUsers = canManageUsers(user.role)
+  const drive = getDriveStatus()
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6">
@@ -41,6 +50,13 @@ export default async function SettingsPage() {
       </div>
 
       <IntroToggle />
+
+      {canCreateTask(user.role) ? (
+        <DriveSettingsForm
+          folderId={dbUser?.driveFolderId ?? null}
+          orgConnected={drive.mode === "google"}
+        />
+      ) : null}
 
       <section className="grid gap-3 sm:grid-cols-3">
         {[

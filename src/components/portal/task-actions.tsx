@@ -3,10 +3,10 @@
 import {
   approveTaskAction,
   completeTaskAction,
-  markDraftSentAction,
   markExpenseAction,
   queueSendAction,
   requestRevisionAction,
+  sendToLawyerAction,
   setClientCallAction,
 } from "@/actions/tasks"
 import { AcceptTaskButton, DeleteTaskButton } from "@/components/portal/task-lifecycle-buttons"
@@ -25,27 +25,57 @@ import { Textarea } from "@/components/ui/textarea"
 import type { ClientCallStatus } from "@/lib/workflow"
 import { CLIENT_CALL_META } from "@/lib/workflow"
 import { cn } from "@/lib/utils"
-import { Banknote, Check, Copy, MessageCircle, Phone, PhoneOff, RotateCcw, Send } from "lucide-react"
+import { Banknote, Check, Copy, Phone, PhoneOff, RotateCcw, Send } from "lucide-react"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 
-function DraftSentForm({ taskId }: { taskId: string }) {
-  const [state, action, pending] = useActionState(markDraftSentAction, null)
-  useActionResult(state)
+function SendToLawyerForm({ taskId }: { taskId: string }) {
+  const [open, setOpen] = useState(false)
+  const [state, action, pending] = useActionState(sendToLawyerAction, null)
+  useActionResult(state, () => setOpen(false))
   return (
-    <form action={action} className="mt-3 grid gap-3">
-      <input type="hidden" name="taskId" value={taskId} />
+    <div className="mt-3 grid gap-3">
       <p className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm leading-relaxed text-muted-foreground">
-        Taslağı siteye veya Drive’a yüklemeyin. Dosyayı{" "}
-        <span className="font-semibold text-foreground">WhatsApp</span> ile avukata gönderin; ardından
-        aşağıdaki düğmeyle bir sonraki aşamaya geçin.
+        İşi bitirdiğinizde avukata gönderin. Siteye veya Drive’a taslak yüklemeniz gerekmez; yaptığınız
+        işi kısaca yazmanız yeterlidir.
       </p>
-      {state?.error ? <p className="text-sm font-medium text-destructive">{state.error}</p> : null}
-      <Button type="submit" disabled={pending} className="bg-primary font-semibold">
-        <MessageCircle />
-        {pending ? "İşleniyor…" : "Taslak gönderildi"}
+      <Button
+        type="button"
+        className="bg-primary font-semibold"
+        onClick={() => setOpen(true)}
+      >
+        <Send />
+        Avukata gönder
       </Button>
-    </form>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-semibold">Avukata gönder</DialogTitle>
+            <DialogDescription>
+              Yapılanları yazın. Bu not avukata gider; iş sizin listeden kalkıp avukatın listesine düşer.
+            </DialogDescription>
+          </DialogHeader>
+          <form action={action} className="grid gap-3">
+            <input type="hidden" name="taskId" value={taskId} />
+            <Textarea
+              name="note"
+              required
+              minLength={8}
+              rows={5}
+              placeholder="Ne yaptınız? Hangi belge / işlem tamamlandı?"
+            />
+            {state?.error ? (
+              <p className="text-sm font-medium text-destructive">{state.error}</p>
+            ) : null}
+            <DialogFooter>
+              <Button type="submit" disabled={pending} className="font-semibold">
+                {pending ? "Gönderiliyor…" : "Gönder"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
 
@@ -302,7 +332,7 @@ export function TaskActions({
           )}
         </p>
       ) : null}
-      {canUpload ? <DraftSentForm taskId={taskId} /> : null}
+      {canUpload ? <SendToLawyerForm taskId={taskId} /> : null}
       {canReview ? (
         <div className="mt-3 flex flex-wrap gap-2">
           <RevisionDialog taskId={taskId} />
