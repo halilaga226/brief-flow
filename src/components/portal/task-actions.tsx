@@ -2,8 +2,10 @@
 
 import {
   approveTaskAction,
+  completeDirectlyAction,
   completeTaskAction,
   markExpenseAction,
+  moveToCheckFolderAction,
   queueSendAction,
   requestRevisionAction,
   sendToLawyerAction,
@@ -25,7 +27,17 @@ import { Textarea } from "@/components/ui/textarea"
 import type { ClientCallStatus } from "@/lib/workflow"
 import { CLIENT_CALL_META } from "@/lib/workflow"
 import { cn } from "@/lib/utils"
-import { Banknote, Check, Copy, Phone, PhoneOff, RotateCcw, Send } from "lucide-react"
+import {
+  Banknote,
+  Check,
+  CheckCircle2,
+  ClipboardCheck,
+  Copy,
+  Phone,
+  PhoneOff,
+  RotateCcw,
+  Send,
+} from "lucide-react"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 
@@ -142,6 +154,84 @@ function ApproveDialog({ taskId }: { taskId: string }) {
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function TriageControls({
+  taskId,
+  status,
+}: {
+  taskId: string
+  status: string
+}) {
+  const [checkState, checkAction, checkPending] = useActionState(moveToCheckFolderAction, null)
+  const [doneOpen, setDoneOpen] = useState(false)
+  const [doneState, doneAction, donePending] = useActionState(completeDirectlyAction, null)
+  useActionResult(checkState)
+  useActionResult(doneState, () => setDoneOpen(false))
+  const inCheck = status === "KONTROL_EDILECEK"
+
+  return (
+    <div className="mt-3 grid gap-2 rounded-xl border border-border bg-muted/30 p-3">
+      <p className="text-sm font-bold">Gelen işi yönlendir</p>
+      <p className="text-xs text-muted-foreground">
+        Doğrudan tamamlananlara alın veya kontrol edilecek klasörüne koyun. İsterseniz aşağıdan onay /
+        revize de kullanabilirsiniz.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {!inCheck ? (
+          <form action={checkAction}>
+            <input type="hidden" name="taskId" value={taskId} />
+            <Button
+              type="submit"
+              disabled={checkPending}
+              variant="outline"
+              className="font-semibold"
+            >
+              <ClipboardCheck />
+              {checkPending ? "…" : "Kontrol edilecek"}
+            </Button>
+          </form>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-fuchsia-100 px-3 py-1 text-xs font-bold text-fuchsia-900">
+            Kontrol klasöründe
+          </span>
+        )}
+        <Button
+          type="button"
+          className="bg-emerald-600 font-semibold hover:bg-emerald-700"
+          onClick={() => setDoneOpen(true)}
+        >
+          <CheckCircle2 />
+          Tamamlananlara al
+        </Button>
+      </div>
+      {checkState?.error ? (
+        <p className="text-sm font-medium text-destructive">{checkState.error}</p>
+      ) : null}
+      <Dialog open={doneOpen} onOpenChange={setDoneOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-semibold">Tamamlananlara al</DialogTitle>
+            <DialogDescription>
+              İş doğrudan tamamlandı sayılır. İsteğe bağlı kısa bir not bırakabilirsiniz.
+            </DialogDescription>
+          </DialogHeader>
+          <form action={doneAction} className="grid gap-3">
+            <input type="hidden" name="taskId" value={taskId} />
+            <Textarea name="note" rows={3} placeholder="İsteğe bağlı not" />
+            {doneState?.error ? (
+              <p className="text-sm font-medium text-destructive">{doneState.error}</p>
+            ) : null}
+            <DialogFooter>
+              <Button type="submit" disabled={donePending} className="font-semibold">
+                {donePending ? "Kaydediliyor…" : "Tamamla"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
 
@@ -271,6 +361,7 @@ export function TaskActions({
   nextStep,
   canUpload,
   canReview,
+  canTriage,
   canManageOps,
   canQueueSend,
   canComplete,
@@ -288,6 +379,7 @@ export function TaskActions({
   nextStep: string
   canUpload: boolean
   canReview: boolean
+  canTriage: boolean
   canManageOps: boolean
   canQueueSend: boolean
   canComplete: boolean
@@ -333,6 +425,7 @@ export function TaskActions({
         </p>
       ) : null}
       {canUpload ? <SendToLawyerForm taskId={taskId} /> : null}
+      {canTriage ? <TriageControls taskId={taskId} status={status} /> : null}
       {canReview ? (
         <div className="mt-3 flex flex-wrap gap-2">
           <RevisionDialog taskId={taskId} />

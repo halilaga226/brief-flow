@@ -83,14 +83,18 @@ export async function listClients(actor: SessionUser): Promise<ClientListDTO[]> 
   if (!canCreateTask(actor.role) && actor.role !== "INTERN") {
     throw new WorkflowError("Müvekkil listesine erişemezsiniz.")
   }
-  const where = isAdmin(actor.role) ? undefined : { ownerId: actor.id }
-  // Stajyer: atayan avukatların müvekkillerini görmez; kendi oluşturduğu yok.
-  // Avukat yalnızca kendi müvekkilleri.
+  const where =
+    actor.role === "INTERN"
+      ? { ownerId: actor.id, deletedAt: null }
+      : isAdmin(actor.role)
+        ? { deletedAt: null }
+        : { ownerId: actor.id, deletedAt: null }
   const rows = await prisma.client.findMany({
-    where: actor.role === "INTERN" ? { ownerId: actor.id } : where,
+    where,
     orderBy: { name: "asc" },
     include: {
       caseFiles: {
+        where: { deletedAt: null },
         include: { _count: { select: { tasks: true } } },
       },
     },
@@ -109,12 +113,13 @@ export async function getClientWithFiles(actor: SessionUser, clientId: string) {
     where: { id: clientId },
     include: {
       caseFiles: {
+        where: { deletedAt: null },
         orderBy: { updatedAt: "desc" },
         include: { _count: { select: { tasks: true } } },
       },
     },
   })
-  if (!client) throw new WorkflowError("Müvekkil bulunamadı.")
+  if (!client || client.deletedAt) throw new WorkflowError("Müvekkil bulunamadı.")
   if (!isAdmin(actor.role) && client.ownerId !== actor.id) {
     throw new WorkflowError("Bu müvekkile erişemezsiniz.")
   }
@@ -178,19 +183,25 @@ export async function createCaseFile(
   }
 }
 
-export async function getCaseFileDetail(actor: SessionUser, caseFileId: string): Promise<CaseFileDetailDTO> {
+export async function getCaseFileDetail(
+  actor: SessionUser,
+  caseFileId: string,
+): Promise<CaseFileDetailDTO> {
   const { formatDay } = await import("@/lib/format")
   const file = await prisma.caseFile.findUnique({
     where: { id: caseFileId },
     include: {
       client: true,
       tasks: {
+        where: { deletedAt: null },
         include: { assignee: true, assigner: true },
         orderBy: { updatedAt: "desc" },
       },
     },
   })
-  if (!file) throw new WorkflowError("Dosya bulunamadı.")
+  if (!file || file.deletedAt || file.client.deletedAt) {
+    throw new WorkflowError("Dosya bulunamadı.")
+  }
   if (!isAdmin(actor.role) && file.client.ownerId !== actor.id) {
     throw new WorkflowError("Bu dosyaya erişemezsiniz.")
   }
@@ -213,3 +224,194 @@ export async function getCaseFileDetail(actor: SessionUser, caseFileId: string):
     })),
   }
 }
+
+export async function updateClient(actor: SessionUser, clientId: string, name: string) {
+  if (!canCreateTask(actor.role)) {
+    throw new WorkflowError("Yalnızca avukat müvekkil düzenleyebilir.")
+  }
+  const client = await prisma.client.findUnique({ where: { id: clientId } })
+  if (!client || client.deletedAt) throw new WorkflowError("Müvekkil bulunamadı.")
+  if (!isAdmin(actor.role) && client.ownerId !== actor.id) {
+    throw new WorkflowError("Bu müvekkili düzenleyemezsiniz.")
+  }
+  const cleaned = normalizeName(name)
+  if (cleaned.length < 2) throw new WorkflowError("Müvekkil adı en az 2 karakter olmalı.")
+  try {
+    await prisma.client.update({
+      where: { id: clientId },
+      data: { name: cleaned },
+    })
+  } catch {
+    throw new WorkflowError("Bu müvekkil adı zaten kullanılıyor.")
+  }
+}
+
+export async function updateCaseFile(
+  actor: SessionUser,
+  caseFileId: string,
+  input: { fileNumber: string; courtName?: string; notes?: string },
+) {
+  if (!canCreateTask(actor.role)) {
+    throw new WorkflowError("Yalnızca avukat dosya düzenleyebilir.")
+  }
+  const file = await prisma.caseFile.findUnique({
+    where: { id: caseFileId },
+    include: { client: true },
+  })
+  if (!file || file.deletedAt) throw new WorkflowError("Dosya bulunamadı.")
+  if (!isAdmin(actor.role) && file.client.ownerId !== actor.id) {
+    throw new WorkflowError("Bu dosyayı düzenleyemezsiniz.")
+  }
+  const fileNumber = cleanText(input.fileNumber)
+  if (fileNumber.length < 2) throw new WorkflowError("Dosya no gerekli.")
+  try {
+    await prisma.caseFile.update({
+      where: { id: caseFileId },
+      data: {
+        fileNumber,
+        courtName: cleanText(input.courtName ?? ""),
+        notes: cleanText(input.notes ?? ""),
+      },
+    })
+  } catch {
+    throw new WorkflowError("Bu dosya numarası müvekkilde zaten var.")
+  }
+}
+
+export async function softDeleteClient(actor: SessionUser, clientId: string) {
+  if (!canCreateTask(actor.role)) {
+    throw new WorkflowError("Yalnızca avukat müvekkil silebilir.")
+  }
+  const client = await prisma.client.findUnique({ where: { id: clientId } })
+  if (!client || client.deletedAt) throw new WorkflowError("Müvekkil bulunamadı.")
+  if (!isAdmin(actor.role) && client.ownerId !== actor.id) {
+    throw new WorkflowError("Bu müvekkili silemezsiniz.")
+  }
+  const now = new Date()
+  await prisma.$transaction([
+    prisma.client.update({ where: { id: clientId }, data: { deletedAt: now } }),
+    prisma.caseFile.updateMany({
+      where: { clientId, deletedAt: null },
+      data: { deletedAt: now },
+    }),
+  ])
+}
+
+export async function softDeleteCaseFile(actor: SessionUser, caseFileId: string) {
+  if (!canCreateTask(actor.role)) {
+    throw new WorkflowError("Yalnızca avukat dosya silebilir.")
+  }
+  const file = await prisma.caseFile.findUnique({
+    where: { id: caseFileId },
+    include: { client: true },
+  })
+  if (!file || file.deletedAt) throw new WorkflowError("Dosya bulunamadı.")
+  if (!isAdmin(actor.role) && file.client.ownerId !== actor.id) {
+    throw new WorkflowError("Bu dosyayı silemezsiniz.")
+  }
+  await prisma.caseFile.update({
+    where: { id: caseFileId },
+    data: { deletedAt: new Date() },
+  })
+}
+
+export async function listDeletedItems(actor: SessionUser) {
+  if (!canCreateTask(actor.role)) {
+    throw new WorkflowError("Silinenlere erişemezsiniz.")
+  }
+  const ownerFilter = isAdmin(actor.role) ? undefined : actor.id
+  const [clients, files, tasks] = await Promise.all([
+    prisma.client.findMany({
+      where: {
+        deletedAt: { not: null },
+        ...(ownerFilter ? { ownerId: ownerFilter } : {}),
+      },
+      orderBy: { deletedAt: "desc" },
+    }),
+    prisma.caseFile.findMany({
+      where: {
+        deletedAt: { not: null },
+        ...(ownerFilter ? { client: { ownerId: ownerFilter } } : {}),
+      },
+      include: { client: true },
+      orderBy: { deletedAt: "desc" },
+    }),
+    prisma.task.findMany({
+      where: {
+        deletedAt: { not: null },
+        ...(ownerFilter
+          ? { OR: [{ assignerId: ownerFilter }, { assigneeId: ownerFilter }] }
+          : {}),
+      },
+      orderBy: { deletedAt: "desc" },
+      take: 100,
+    }),
+  ])
+  return {
+    clients: clients.map((row) => ({
+      id: row.id,
+      name: row.name,
+      deletedAt: row.deletedAt!.toISOString(),
+    })),
+    files: files.map((row) => ({
+      id: row.id,
+      fileNumber: row.fileNumber,
+      clientId: row.clientId,
+      clientName: row.client.name,
+      deletedAt: row.deletedAt!.toISOString(),
+    })),
+    tasks: tasks.map((row) => ({
+      id: row.id,
+      title: row.title,
+      clientName: row.clientName,
+      fileNumber: row.fileNumber,
+      deletedAt: row.deletedAt!.toISOString(),
+    })),
+  }
+}
+
+export async function restoreClient(actor: SessionUser, clientId: string) {
+  if (!canCreateTask(actor.role)) throw new WorkflowError("Yetki yok.")
+  const client = await prisma.client.findUnique({ where: { id: clientId } })
+  if (!client?.deletedAt) throw new WorkflowError("Kayıt bulunamadı.")
+  if (!isAdmin(actor.role) && client.ownerId !== actor.id) {
+    throw new WorkflowError("Yetki yok.")
+  }
+  await prisma.client.update({ where: { id: clientId }, data: { deletedAt: null } })
+}
+
+export async function restoreCaseFile(actor: SessionUser, caseFileId: string) {
+  if (!canCreateTask(actor.role)) throw new WorkflowError("Yetki yok.")
+  const file = await prisma.caseFile.findUnique({
+    where: { id: caseFileId },
+    include: { client: true },
+  })
+  if (!file?.deletedAt) throw new WorkflowError("Kayıt bulunamadı.")
+  if (!isAdmin(actor.role) && file.client.ownerId !== actor.id) {
+    throw new WorkflowError("Yetki yok.")
+  }
+  if (file.client.deletedAt) {
+    await prisma.client.update({
+      where: { id: file.clientId },
+      data: { deletedAt: null },
+    })
+  }
+  await prisma.caseFile.update({ where: { id: caseFileId }, data: { deletedAt: null } })
+}
+
+export async function restoreTask(actor: SessionUser, taskId: string) {
+  if (!canCreateTask(actor.role) && !isAdmin(actor.role)) {
+    throw new WorkflowError("Yetki yok.")
+  }
+  const task = await prisma.task.findUnique({ where: { id: taskId } })
+  if (!task?.deletedAt) throw new WorkflowError("Kayıt bulunamadı.")
+  if (
+    !isAdmin(actor.role) &&
+    task.assignerId !== actor.id &&
+    task.assigneeId !== actor.id
+  ) {
+    throw new WorkflowError("Yetki yok.")
+  }
+  await prisma.task.update({ where: { id: taskId }, data: { deletedAt: null } })
+}
+

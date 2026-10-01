@@ -31,7 +31,7 @@ export default async function SettingsPage() {
     isAdmin(user.role) ? getAdminOverview(user) : Promise.resolve(null),
     prisma.user.findUnique({
       where: { id: user.id },
-      select: { driveFolderId: true },
+      select: { driveFolderId: true, driveFolderLink: true },
     }),
   ])
   const firstName = user.name.split(" ")[0]
@@ -54,6 +54,7 @@ export default async function SettingsPage() {
       {canCreateTask(user.role) ? (
         <DriveSettingsForm
           folderId={dbUser?.driveFolderId ?? null}
+          folderLink={dbUser?.driveFolderLink ?? null}
           orgConnected={drive.mode === "google"}
         />
       ) : null}

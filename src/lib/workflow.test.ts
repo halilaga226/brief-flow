@@ -135,6 +135,10 @@ describe("state machine", () => {
       true,
     )
     assert.equal(
+      canReview({ status: "KONTROL_EDILECEK", assignerId: lawyer }, lawyer, "LAWYER"),
+      true,
+    )
+    assert.equal(
       canReview({ status: "INCELEME_BEKLIYOR", assignerId: lawyer }, otherLawyer, "LAWYER"),
       false,
     )

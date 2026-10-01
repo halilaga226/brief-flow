@@ -8,10 +8,12 @@ import {
   addComment,
   acceptTask,
   approveTask,
+  completeDirectly,
   completeTask,
   createTask,
   deleteTask,
   markExpensePaid,
+  moveToCheckFolder,
   queueForSend,
   requestRevision,
   setClientCallStatus,
@@ -152,6 +154,36 @@ export async function approveTaskAction(
   }
   revalidateTask(taskId)
   return { ok: true, message: "Taslak onaylandı. Masraf, arama ve gönderim sizin kararınız." }
+}
+
+export async function moveToCheckFolderAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    await moveToCheckFolder(user, taskId)
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateTask(taskId)
+  return { ok: true, message: "İş kontrol edileceklere alındı." }
+}
+
+export async function completeDirectlyAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    await completeDirectly(user, taskId, readText(formData, "note"))
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateTask(taskId)
+  return { ok: true, message: "İş tamamlananlara alındı." }
 }
 
 export async function markExpenseAction(
@@ -298,5 +330,6 @@ export async function deleteTaskAction(
   revalidatePath("/gorevler")
   revalidatePath("/is-listesi")
   revalidatePath("/ayarlar")
+  revalidatePath("/silinenler")
   redirect("/is-listesi")
 }

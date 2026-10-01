@@ -79,6 +79,7 @@ export function TaskDetailView({
             nextStep={task.nextStep}
             canUpload={task.canUpload}
             canReview={task.canReview}
+            canTriage={task.canTriage}
             canManageOps={task.canManageOps}
             canQueueSend={task.canQueueSend}
             canComplete={task.canComplete}
@@ -92,6 +93,25 @@ export function TaskDetailView({
             trackingCode={task.trackingCode}
             completedLabel={task.completedLabel}
           />
+
+          {task.assignerDrive ? (
+            <section className="rounded-xl border border-border bg-card p-4">
+              <h2 className="text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">
+                Avukat Drive klasörü
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {task.assignerName} klasörüne erişiminiz varsa belgeleri oradan açabilirsiniz.
+              </p>
+              <a
+                href={task.assignerDrive.link}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex text-sm font-semibold text-primary underline underline-offset-4"
+              >
+                {task.assignerDrive.name} — Drive klasörünü aç
+              </a>
+            </section>
+          ) : null}
 
           <section className="rounded-xl border border-border bg-card p-4">
             <h2 className="text-xl font-bold">Belgeler</h2>

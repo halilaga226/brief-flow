@@ -1,11 +1,20 @@
 "use server"
 
 import type { ActionState } from "@/lib/dto"
+import { folderLinkFromId, resolveFolderMeta, shareFolderWithEmails } from "@/lib/drive"
+import { prisma } from "@/lib/prisma"
 import { requireUser } from "@/lib/session"
 import { WorkflowError } from "@/lib/workflow"
 import {
   createCaseFile,
   createClient,
+  restoreCaseFile,
+  restoreClient,
+  restoreTask,
+  softDeleteCaseFile,
+  softDeleteClient,
+  updateCaseFile,
+  updateClient,
 } from "@/server/clients"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -36,6 +45,37 @@ export async function createClientAction(
   }
 }
 
+export async function updateClientAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const clientId = readText(formData, "clientId")
+  try {
+    await updateClient(user, clientId, readText(formData, "name"))
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidatePath("/muvekkiller")
+  revalidatePath(`/muvekkiller/${clientId}`)
+  return { ok: true, message: "Müvekkil güncellendi." }
+}
+
+export async function deleteClientAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  try {
+    await softDeleteClient(user, readText(formData, "clientId"))
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidatePath("/muvekkiller")
+  revalidatePath("/silinenler")
+  redirect("/muvekkiller")
+}
+
 export async function createCaseFileAction(
   _prev: ActionState,
   formData: FormData,
@@ -57,6 +97,91 @@ export async function createCaseFileAction(
   }
 }
 
+export async function updateCaseFileAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const clientId = readText(formData, "clientId")
+  const caseFileId = readText(formData, "caseFileId")
+  try {
+    await updateCaseFile(user, caseFileId, {
+      fileNumber: readText(formData, "fileNumber"),
+      courtName: readText(formData, "courtName"),
+      notes: readText(formData, "notes"),
+    })
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidatePath("/muvekkiller")
+  revalidatePath(`/muvekkiller/${clientId}`)
+  revalidatePath(`/muvekkiller/${clientId}/dosya/${caseFileId}`)
+  return { ok: true, message: "Dosya güncellendi." }
+}
+
+export async function deleteCaseFileAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const clientId = readText(formData, "clientId")
+  try {
+    await softDeleteCaseFile(user, readText(formData, "caseFileId"))
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidatePath("/muvekkiller")
+  revalidatePath(`/muvekkiller/${clientId}`)
+  revalidatePath("/silinenler")
+  redirect(`/muvekkiller/${clientId}`)
+}
+
+export async function restoreClientAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  try {
+    await restoreClient(user, readText(formData, "clientId"))
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidatePath("/muvekkiller")
+  revalidatePath("/silinenler")
+  return { ok: true, message: "Müvekkil geri yüklendi." }
+}
+
+export async function restoreCaseFileAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  try {
+    await restoreCaseFile(user, readText(formData, "caseFileId"))
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidatePath("/muvekkiller")
+  revalidatePath("/silinenler")
+  return { ok: true, message: "Dosya geri yüklendi." }
+}
+
+export async function restoreTaskAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  try {
+    await restoreTask(user, readText(formData, "taskId"))
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidatePath("/gorevler")
+  revalidatePath("/is-listesi")
+  revalidatePath("/silinenler")
+  return { ok: true, message: "İş geri yüklendi." }
+}
+
 export async function saveDriveFolderAction(
   _prev: ActionState,
   formData: FormData,
@@ -66,23 +191,51 @@ export async function saveDriveFolderAction(
     return { error: "Yalnızca avukat Drive bağlayabilir." }
   }
   const folderId = readText(formData, "driveFolderId").trim()
+  const shareInterns = readText(formData, "shareInterns") === "1"
+
   try {
-    const { prisma } = await import("@/lib/prisma")
+    if (!folderId) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          driveFolderId: null,
+          driveFolderLink: null,
+          driveConnectedAt: null,
+        },
+      })
+      revalidatePath("/ayarlar")
+      return { ok: true, message: "Drive klasörü kaldırıldı." }
+    }
+
+    const meta = await resolveFolderMeta(folderId)
+    let shareNote = ""
+    if (shareInterns) {
+      const interns = await prisma.user.findMany({
+        where: { role: "INTERN", email: { not: null } },
+        select: { email: true, name: true },
+      })
+      const emails = interns.map((row) => row.email!).filter(Boolean)
+      const result = await shareFolderWithEmails(meta.id, emails)
+      shareNote =
+        result.reason === "Servis hesabı yok"
+          ? " Klasör kaydedildi; otomatik paylaşım için büro Drive API gerekir — bağlantıyı stajyerlere elle iletin."
+          : ` ${result.shared} stajyere yazma erişimi verildi.`
+    }
+
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        driveFolderId: folderId || null,
-        driveConnectedAt: folderId ? new Date() : null,
+        driveFolderId: meta.id,
+        driveFolderLink: meta.link || folderLinkFromId(meta.id),
+        driveConnectedAt: new Date(),
       },
     })
+    revalidatePath("/ayarlar")
+    return {
+      ok: true,
+      message: `Drive klasörü bağlandı (${meta.name}).${shareNote}`,
+    }
   } catch (error) {
     return actionError(error)
-  }
-  revalidatePath("/ayarlar")
-  return {
-    ok: true,
-    message: folderId
-      ? "Drive klasörü kaydedildi. Ortak servis hesabı klasörü Düzenleyici olarak paylaşılmış olmalı."
-      : "Drive klasörü kaldırıldı.",
   }
 }

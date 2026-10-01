@@ -63,17 +63,20 @@ function otherParty(task: { assignerId: string; assigneeId: string }, userId: st
 
 export async function listTasks(userId: string, role: SessionUser["role"]) {
   const tasks = await prisma.task.findMany({
-    where: isAdmin(role)
-      ? undefined
-      : role === "LAWYER"
-        ? {
-            OR: [
-              { assignerId: userId },
-              { assigneeId: userId },
-              { assignee: { role: "INTERN" } },
-            ],
-          }
-        : { OR: [{ assignerId: userId }, { assigneeId: userId }] },
+    where: {
+      deletedAt: null,
+      ...(isAdmin(role)
+        ? {}
+        : role === "LAWYER"
+          ? {
+              OR: [
+                { assignerId: userId },
+                { assigneeId: userId },
+                { assignee: { role: "INTERN" } },
+              ],
+            }
+          : { OR: [{ assignerId: userId }, { assigneeId: userId }] }),
+    },
     include: taskCardInclude,
     orderBy: [{ dueDate: "asc" }, { updatedAt: "desc" }],
   })
@@ -99,6 +102,7 @@ export async function getTask(userId: string, role: SessionUser["role"], taskId:
   })
   if (
     !task ||
+    task.deletedAt ||
     !canViewTask(
       { assignerId: task.assignerId, assigneeId: task.assigneeId, assigneeRole: task.assignee.role },
       userId,
@@ -108,7 +112,14 @@ export async function getTask(userId: string, role: SessionUser["role"], taskId:
     return null
   }
   if (task.status === "TAMAMLANDI" && role === "INTERN") return null
-  return toTaskDetail(task, userId, role)
+  const detail = toTaskDetail(task, userId, role)
+  const assignerDrive = await getAssignerDriveInfo(task.assignerId)
+  return {
+    ...detail,
+    assignerDrive: assignerDrive
+      ? { name: assignerDrive.name, link: assignerDrive.link }
+      : null,
+  }
 }
 
 export async function listNotifications(userId: string) {
@@ -713,7 +724,118 @@ export async function deleteTask(actor: SessionUser, taskId: string) {
   if (!canDeleteTask(existing, actor.id, actor.role)) {
     throw new WorkflowError("Bu işi silemezsiniz.")
   }
-  await prisma.task.delete({ where: { id: taskId } })
+  await prisma.$transaction(async (tx) => {
+    await tx.task.update({
+      where: { id: taskId },
+      data: { deletedAt: new Date() },
+    })
+    await tx.taskLog.create({
+      data: {
+        taskId,
+        actorId: actor.id,
+        type: "SOFT_DELETED",
+        fromStatus: existing.status,
+        toStatus: existing.status,
+        note: "Silinenlere taşındı",
+      },
+    })
+  })
+}
+
+/** Gönderilen işi kontrol edilecek klasörüne alır. */
+export async function moveToCheckFolder(actor: SessionUser, taskId: string) {
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (!canReview(existing, actor.id, actor.role)) {
+    throw new WorkflowError("Bu işi kontrol klasörüne alamazsınız.")
+  }
+  if (existing.status === "KONTROL_EDILECEK") {
+    throw new WorkflowError("İş zaten kontrol klasöründe.")
+  }
+  await prisma.$transaction(async (tx) => {
+    const task = await tx.task.findUnique({ where: { id: taskId } })
+    if (!task || !canReview(task, actor.id, actor.role)) {
+      throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
+    }
+    await tx.task.update({
+      where: { id: taskId },
+      data: { status: "KONTROL_EDILECEK" },
+    })
+    await tx.taskLog.create({
+      data: {
+        taskId,
+        actorId: actor.id,
+        type: "MOVED_TO_CHECK",
+        fromStatus: task.status,
+        toStatus: "KONTROL_EDILECEK",
+      },
+    })
+  })
+}
+
+/** İnceleme/kontroldeki işi doğrudan tamamlananlara alır. */
+export async function completeDirectly(
+  actor: SessionUser,
+  taskId: string,
+  rawNote: string,
+) {
+  const note = cleanText(rawNote)
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (!canReview(existing, actor.id, actor.role)) {
+    throw new WorkflowError("Bu işi tamamlananlara alamazsınız.")
+  }
+  await prisma.$transaction(async (tx) => {
+    const task = await tx.task.findUnique({ where: { id: taskId } })
+    if (!task || !canReview(task, actor.id, actor.role)) {
+      throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
+    }
+    await tx.task.update({
+      where: { id: taskId },
+      data: {
+        status: "TAMAMLANDI",
+        completedAt: new Date(),
+        trackingCode: task.trackingCode || "AVUKAT-ONAY",
+      },
+    })
+    await tx.taskLog.create({
+      data: {
+        taskId,
+        actorId: actor.id,
+        type: "COMPLETED_DIRECT",
+        fromStatus: task.status,
+        toStatus: "TAMAMLANDI",
+        note: note || "Avukat doğrudan tamamlananlara aldı.",
+      },
+    })
+    await tx.notification.create({
+      data: {
+        userId: task.assigneeId,
+        taskId,
+        title: "İş tamamlandı",
+        body: `${actor.name} işi tamamlananlara aldı: ${task.title}`,
+      },
+    })
+  })
+}
+
+export async function getAssignerDriveInfo(assignerId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: assignerId },
+    select: {
+      name: true,
+      driveFolderId: true,
+      driveFolderLink: true,
+    },
+  })
+  if (!user?.driveFolderId) return null
+  return {
+    name: user.name,
+    folderId: user.driveFolderId,
+    link:
+      user.driveFolderLink ||
+      `https://drive.google.com/drive/folders/${user.driveFolderId}`,
+  }
 }
 
 export async function addComment(actor: SessionUser, taskId: string, rawBody: string) {

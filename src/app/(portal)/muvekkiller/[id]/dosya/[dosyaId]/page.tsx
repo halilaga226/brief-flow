@@ -1,3 +1,4 @@
+import { CaseFileEditor } from "@/components/portal/clients-view"
 import { StatusBadge } from "@/components/portal/status-badge"
 import { Button } from "@/components/ui/button"
 import { requireUser } from "@/lib/session"
@@ -60,6 +61,17 @@ export default async function CaseFilePage({
         {file.notes ? (
           <p className="mt-3 text-sm whitespace-pre-wrap text-muted-foreground">{file.notes}</p>
         ) : null}
+        <div className="mt-4">
+          <CaseFileEditor
+            clientId={id}
+            file={{
+              id: file.id,
+              fileNumber: file.fileNumber,
+              courtName: file.courtName,
+              notes: file.notes,
+            }}
+          />
+        </div>
       </div>
 
       <section className="space-y-3">

@@ -13,6 +13,7 @@ import {
   canManageOps,
   canQueueSend,
   canReview,
+  canTriageIncoming,
   canUploadDraft,
   fileHref,
   isAdmin,
@@ -182,6 +183,7 @@ export function toTaskDetail(
     myTurn,
     canUpload: canUploadDraft(record, userId, role),
     canReview: canReview(record, userId, role),
+    canTriage: canTriageIncoming(record, userId, role),
     canManageOps: canManageOps(record, userId, role),
     canQueueSend: canQueueSend(record, userId, role),
     canComplete: canComplete(record, userId, role),
@@ -196,6 +198,7 @@ export function toTaskDetail(
     latestDraft: latest
       ? { name: latest.name, href: latest.href, external: latest.external }
       : null,
+    assignerDrive: null,
     logs: toTimeline(record),
   }
 }

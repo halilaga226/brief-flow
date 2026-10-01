@@ -17,6 +17,7 @@ enum Role {
 enum TaskStatus {
   ATANDI
   INCELEME_BEKLIYOR
+  KONTROL_EDILECEK
   REVIZE_ISTENDI
   ONAYLANDI
   GONDERIM_BEKLIYOR
@@ -39,6 +40,8 @@ enum LogType {
   ACCEPTED
   DRAFT_UPLOADED
   SENT_TO_LAWYER
+  MOVED_TO_CHECK
+  COMPLETED_DIRECT
   REVISION_REQUESTED
   APPROVED
   EXPENSE_MARKED
@@ -46,6 +49,8 @@ enum LogType {
   SEND_QUEUED
   COMPLETED
   DELETED
+  SOFT_DELETED
+  RESTORED
 }
 
 model User {
@@ -58,6 +63,8 @@ model User {
   title        String
   /// Avukatın kendi Drive klasörü (isteğe bağlı)
   driveFolderId String?
+  /// Klasörün tarayıcı bağlantısı (stajyer erişimi için)
+  driveFolderLink String?
   /// OAuth refresh token (isteğe bağlı; bağlandığında dolar)
   driveRefreshToken String?
   driveConnectedAt  DateTime?
@@ -75,27 +82,30 @@ model User {
 }
 
 model Client {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   ownerId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   owner     User       @relation(fields: [ownerId], references: [id])
   caseFiles CaseFile[]
 
   @@unique([ownerId, name])
   @@index([ownerId])
+  @@index([deletedAt])
 }
 
 model CaseFile {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   clientId   String
   fileNumber String
-  courtName  String   @default("")
-  notes      String   @default("")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  courtName  String    @default("")
+  notes      String    @default("")
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
   tasks  Task[]
@@ -103,6 +113,7 @@ model CaseFile {
   @@unique([clientId, fileNumber])
   @@index([clientId])
   @@index([fileNumber])
+  @@index([deletedAt])
 }
 
 model WorkItem {
@@ -154,6 +165,7 @@ model Task {
   listColor    String?
   acceptedAt   DateTime?
   completedAt  DateTime?
+  deletedAt    DateTime?
   expensePaid       Boolean          @default(false)
   expensePaidAt     DateTime?
   clientCallStatus  ClientCallStatus @default(YOK)
@@ -175,6 +187,7 @@ model Task {
   @@index([workItemId])
   @@index([caseFileId])
   @@index([dueDate])
+  @@index([deletedAt])
 }
 
 model TaskComment {

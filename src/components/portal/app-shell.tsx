@@ -20,6 +20,7 @@ import {
   Plus,
   Scale,
   Settings,
+  Trash2,
   Users,
   Briefcase,
 } from "lucide-react"
@@ -41,6 +42,9 @@ function isActive(pathname: string, href: string) {
   if (href === "/muvekkiller") {
     return pathname === "/muvekkiller" || pathname.startsWith("/muvekkiller/")
   }
+  if (href === "/silinenler") {
+    return pathname === "/silinenler" || pathname.startsWith("/silinenler/")
+  }
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
@@ -61,6 +65,7 @@ function NavLinks({
       ? [
           { href: "/muvekkiller", label: "Müvekkiller", icon: Briefcase },
           { href: "/stajyer-isleri", label: "Stajyer işleri", icon: GraduationCap },
+          { href: "/silinenler", label: "Silinenler", icon: Trash2 },
         ]
       : []),
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },

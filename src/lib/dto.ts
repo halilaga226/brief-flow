@@ -90,12 +90,14 @@ export type TaskDetailDTO = TaskCardDTO & {
   myTurn: boolean
   canUpload: boolean
   canReview: boolean
+  canTriage: boolean
   canManageOps: boolean
   canQueueSend: boolean
   canComplete: boolean
   canAccept: boolean
   nextStep: string
   latestDraft: { name: string; href: string | null; external: boolean } | null
+  assignerDrive: { name: string; link: string } | null
 }
 
 export type NotificationDTO = {

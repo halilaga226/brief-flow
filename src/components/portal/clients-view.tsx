@@ -1,13 +1,20 @@
 "use client"
 
-import { createClientAction, createCaseFileAction } from "@/actions/clients"
+import {
+  createCaseFileAction,
+  createClientAction,
+  deleteCaseFileAction,
+  deleteClientAction,
+  updateCaseFileAction,
+  updateClientAction,
+} from "@/actions/clients"
 import { useActionResult } from "@/components/portal/use-action-result"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import type { CaseFileListDTO, ClientListDTO } from "@/server/clients"
-import { Plus } from "lucide-react"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useActionState, useState } from "react"
 
@@ -89,8 +96,13 @@ export function ClientDetailView({
   client: { id: string; name: string; files: CaseFileListDTO[] }
 }) {
   const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [state, action, pending] = useActionState(createCaseFileAction, null)
+  const [editState, editAction, editPending] = useActionState(updateClientAction, null)
+  const [deleteState, deleteAction, deletePending] = useActionState(deleteClientAction, null)
   useActionResult(state)
+  useActionResult(editState, () => setEditing(false))
+  useActionResult(deleteState)
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
@@ -100,12 +112,64 @@ export function ClientDetailView({
         </Link>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{client.name}</h1>
-          <Button type="button" className="font-semibold" onClick={() => setOpen(true)}>
-            <Plus />
-            Dosya ekle
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" className="font-semibold" onClick={() => setEditing(true)}>
+              <Pencil />
+              Düzenle
+            </Button>
+            <Button type="button" className="font-semibold" onClick={() => setOpen(true)}>
+              <Plus />
+              Dosya ekle
+            </Button>
+          </div>
         </div>
       </div>
+
+      {editing ? (
+        <form action={editAction} className="grid gap-3 rounded-lg border border-border bg-card p-4">
+          <input type="hidden" name="clientId" value={client.id} />
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-semibold">Müvekkil düzenle</p>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
+              Vazgeç
+            </Button>
+          </div>
+          {editState?.error ? <p className="text-sm text-destructive">{editState.error}</p> : null}
+          <div className="grid gap-1">
+            <Label htmlFor="edit-name">Ad soyad / ünvan</Label>
+            <Input
+              id="edit-name"
+              name="name"
+              required
+              defaultValue={client.name}
+              className="h-9"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={editPending} className="font-semibold">
+              {editPending ? "…" : "Kaydet"}
+            </Button>
+            <Button
+              type="submit"
+              formAction={deleteAction}
+              disabled={deletePending}
+              variant="destructive"
+              className="font-semibold"
+              onClick={(event) => {
+                if (!window.confirm("Müvekkil ve altındaki dosyalar silinenlere taşınır. Devam?")) {
+                  event.preventDefault()
+                }
+              }}
+            >
+              <Trash2 />
+              {deletePending ? "…" : "Silinenlere taşı"}
+            </Button>
+          </div>
+          {deleteState?.error ? (
+            <p className="text-sm text-destructive">{deleteState.error}</p>
+          ) : null}
+        </form>
+      ) : null}
 
       {open ? (
         <form action={action} className="grid gap-3 rounded-lg border border-border bg-card p-4">
@@ -161,6 +225,95 @@ export function ClientDetailView({
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+export function CaseFileEditor({
+  clientId,
+  file,
+}: {
+  clientId: string
+  file: {
+    id: string
+    fileNumber: string
+    courtName: string
+    notes: string
+  }
+}) {
+  const [open, setOpen] = useState(false)
+  const [state, action, pending] = useActionState(updateCaseFileAction, null)
+  const [deleteState, deleteAction, deletePending] = useActionState(deleteCaseFileAction, null)
+  useActionResult(state, () => setOpen(false))
+  useActionResult(deleteState)
+
+  return (
+    <div className="space-y-3">
+      <Button type="button" variant="outline" className="font-semibold" onClick={() => setOpen(true)}>
+        <Pencil />
+        Dosyayı düzenle
+      </Button>
+      {open ? (
+        <form action={action} className="grid gap-3 rounded-lg border border-border bg-card p-4">
+          <input type="hidden" name="clientId" value={clientId} />
+          <input type="hidden" name="caseFileId" value={file.id} />
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-semibold">Dosya düzenle</p>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
+              Vazgeç
+            </Button>
+          </div>
+          {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-1">
+              <Label htmlFor="edit-fileNumber">Dosya no</Label>
+              <Input
+                id="edit-fileNumber"
+                name="fileNumber"
+                required
+                defaultValue={file.fileNumber}
+                className="h-9"
+              />
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="edit-courtName">Mahkeme</Label>
+              <Input
+                id="edit-courtName"
+                name="courtName"
+                defaultValue={file.courtName}
+                className="h-9"
+              />
+            </div>
+            <div className="grid gap-1 sm:col-span-2">
+              <Label htmlFor="edit-notes">Not</Label>
+              <Textarea id="edit-notes" name="notes" rows={2} defaultValue={file.notes} />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={pending} className="font-semibold">
+              {pending ? "…" : "Kaydet"}
+            </Button>
+            <Button
+              type="submit"
+              formAction={deleteAction}
+              disabled={deletePending}
+              variant="destructive"
+              className="font-semibold"
+              onClick={(event) => {
+                if (!window.confirm("Dosya silinenlere taşınır. Devam?")) {
+                  event.preventDefault()
+                }
+              }}
+            >
+              <Trash2 />
+              {deletePending ? "…" : "Silinenlere taşı"}
+            </Button>
+          </div>
+          {deleteState?.error ? (
+            <p className="text-sm text-destructive">{deleteState.error}</p>
+          ) : null}
+        </form>
+      ) : null}
     </div>
   )
 }

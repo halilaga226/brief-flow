@@ -4,6 +4,7 @@ export type Role = (typeof ROLES)[number]
 export const STATUSES = [
   "ATANDI",
   "INCELEME_BEKLIYOR",
+  "KONTROL_EDILECEK",
   "REVIZE_ISTENDI",
   "ONAYLANDI",
   "GONDERIM_BEKLIYOR",
@@ -69,6 +70,10 @@ export const STATUS_META: Record<
     label: "İnceleme bekliyor",
     hint: "İş avukata gönderildi, inceleme bekleniyor.",
   },
+  KONTROL_EDILECEK: {
+    label: "Kontrol edilecek",
+    hint: "Avukat kontrol klasörüne aldı.",
+  },
   REVIZE_ISTENDI: {
     label: "Revize istendi",
     hint: "Avukat notuyla iş yürütücüye döndü.",
@@ -103,6 +108,11 @@ export const BOARD_COLUMNS: {
     status: "INCELEME_BEKLIYOR",
     title: "İnceleme",
     description: "Avukat bakacak",
+  },
+  {
+    status: "KONTROL_EDILECEK",
+    title: "Kontrol",
+    description: "Kontrol edilecek",
   },
   {
     status: "REVIZE_ISTENDI",
@@ -150,6 +160,14 @@ export function logLabel(type: string) {
       return "Taslak gönderildi"
     case "SENT_TO_LAWYER":
       return "Avukata gönderildi"
+    case "MOVED_TO_CHECK":
+      return "Kontrol edileceklere alındı"
+    case "COMPLETED_DIRECT":
+      return "Doğrudan tamamlandı"
+    case "SOFT_DELETED":
+      return "Silinenlere taşındı"
+    case "RESTORED":
+      return "Geri yüklendi"
     case "REVISION_REQUESTED":
       return "Revizyon istendi"
     case "APPROVED":
@@ -225,7 +243,11 @@ export function needsMyAction(
     return true
   }
   if (task.assignerId === userId) {
-    return task.status === "INCELEME_BEKLIYOR" || task.status === "ONAYLANDI"
+    return (
+      task.status === "INCELEME_BEKLIYOR" ||
+      task.status === "KONTROL_EDILECEK" ||
+      task.status === "ONAYLANDI"
+    )
   }
   return false
 }
@@ -280,6 +302,7 @@ export function isOnAssigneeWorkList(status: TaskStatus) {
 export function isOnAssignerWorkList(status: TaskStatus) {
   return (
     status === "INCELEME_BEKLIYOR" ||
+    status === "KONTROL_EDILECEK" ||
     status === "ONAYLANDI" ||
     status === "ATANDI" ||
     status === "REVIZE_ISTENDI" ||
@@ -319,8 +342,19 @@ export function canReview(
   userId: string,
   role: Role,
 ) {
-  if (task.status !== "INCELEME_BEKLIYOR") return false
+  if (task.status !== "INCELEME_BEKLIYOR" && task.status !== "KONTROL_EDILECEK") {
+    return false
+  }
   return isAdmin(role) || (role === "LAWYER" && task.assignerId === userId)
+}
+
+/** Avukat gönderilen işi kontrol klasörüne veya tamamlananlara alabilir. */
+export function canTriageIncoming(
+  task: { status: TaskStatus; assignerId: string },
+  userId: string,
+  role: Role,
+) {
+  return canReview(task, userId, role)
 }
 
 export function canManageOps(
@@ -420,7 +454,10 @@ export function nextStepCopy(input: {
       return "Onaylı evrakı UYAP, PTT veya ilgili merciye iletin. Barkod ya da evrak kodu olmadan iş kapanmaz."
     }
     if (input.status === "INCELEME_BEKLIYOR") {
-      return "Gönderilen işi ve notu inceleyin. Onaylayın veya not düşerek revize isteyin."
+      return "Gönderilen işi inceleyin: kontrol klasörüne alın, tamamlayın, onaylayın veya revize isteyin."
+    }
+    if (input.status === "KONTROL_EDILECEK") {
+      return "Kontrol klasöründeki işi inceleyin; tamamlayın, onaylayın veya revize isteyin."
     }
   }
   if (input.status === "ATANDI" || input.status === "REVIZE_ISTENDI") {
@@ -428,6 +465,9 @@ export function nextStepCopy(input: {
   }
   if (input.status === "INCELEME_BEKLIYOR") {
     return "Atayan avukatın incelemesi bekleniyor."
+  }
+  if (input.status === "KONTROL_EDILECEK") {
+    return "Atayan avukat kontrol ediyor."
   }
   if (input.status === "ONAYLANDI") {
     return "Atayan avukat masraf, arama ve gönderim kararını veriyor."
@@ -630,7 +670,7 @@ export function matchesFilter(
     case "geciken":
       return task.dueTone === "overdue"
     case "inceleme":
-      return task.status === "INCELEME_BEKLIYOR"
+      return task.status === "INCELEME_BEKLIYOR" || task.status === "KONTROL_EDILECEK"
     case "onay":
       return task.status === "ONAYLANDI"
     case "gonderim":

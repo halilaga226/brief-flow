@@ -174,6 +174,65 @@ export async function createShareLink(fileId: string) {
   return meta.data.webViewLink ?? `https://drive.google.com/file/d/${fileId}/view`
 }
 
+export function folderLinkFromId(folderId: string) {
+  const id = folderId.trim()
+  if (!id) return null
+  return `https://drive.google.com/drive/folders/${id}`
+}
+
+/** Servis hesabı ile klasörü e-postal listesine okuyucu olarak paylaşır. */
+export async function shareFolderWithEmails(folderId: string, emails: string[]) {
+  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim()) {
+    return { shared: 0, skipped: emails.length, reason: "Servis hesabı yok" as const }
+  }
+  const drive = driveClient()
+  let shared = 0
+  for (const email of emails) {
+    const value = email.trim().toLowerCase()
+    if (!value || !value.includes("@")) continue
+    try {
+      await drive.permissions.create({
+        fileId: folderId,
+        requestBody: { role: "writer", type: "user", emailAddress: value },
+        sendNotificationEmail: true,
+        supportsAllDrives: true,
+      })
+      shared += 1
+    } catch (error) {
+      console.error("Drive share with intern failed", value, error)
+    }
+  }
+  return { shared, skipped: emails.length - shared, reason: null }
+}
+
+export async function resolveFolderMeta(folderId: string) {
+  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim()) {
+    return {
+      id: folderId,
+      name: "Drive klasörü",
+      link: folderLinkFromId(folderId)!,
+      verified: false,
+    }
+  }
+  const drive = driveClient()
+  const found = await drive.files.get({
+    fileId: folderId,
+    fields: "id, name, mimeType, webViewLink",
+    supportsAllDrives: true,
+  })
+  if (found.data.mimeType !== "application/vnd.google-apps.folder") {
+    throw new WorkflowError("Girdiğiniz kimlik bir Drive klasörü değil.")
+  }
+  return {
+    id: found.data.id ?? folderId,
+    name: found.data.name ?? "Drive klasörü",
+    link:
+      found.data.webViewLink ??
+      folderLinkFromId(folderId)!,
+    verified: true,
+  }
+}
+
 export async function deleteDriveFile(file: StoredFile) {
   if (file.storageMode !== "google") return
   try {
