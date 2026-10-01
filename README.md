@@ -25,15 +25,24 @@ Sol menü **Müvekkiller**: müvekkil → dosya → o dosyadaki tüm işler. Gö
 
 1. `ATANDI` — atama; iş hemen atananın listesine düşer.
 2. `INCELEME_BEKLIYOR` — yürüten **Avukata gönder** + yapılanlar notu.
-3. `REVIZE_ISTENDI` — avukat notla geri yollar.
-4. `ONAYLANDI` — masraf / arama / gönderime alma.
-5. `GONDERIM_BEKLIYOR` — gönderime alındı.
-6. `TAMAMLANDI` — evrak takip kodu.
+3. `KONTROL_EDILECEK` — avukat gelen işi kontrol klasörüne alır (veya doğrudan tamamlar).
+4. `REVIZE_ISTENDI` — avukat notla geri yollar.
+5. `ONAYLANDI` — masraf / arama / gönderime alma.
+6. `GONDERIM_BEKLIYOR` — gönderime alındı.
+7. `TAMAMLANDI` — evrak takip kodu veya avukatın doğrudan tamamlaması.
+
+Avukat, stajyerden gelen işte **Kontrol edilecek** veya **Tamamlananlara al** seçebilir; klasik onay/revize de durur.
+
+## Müvekkiller ve silinenler
+
+- Müvekkil ve dosya düzenlenebilir; silince **Silinenler** klasörüne düşer, oradan geri yüklenir.
+- Görev silmek de soft-delete ile aynı klasöre gider.
 
 ## Google Drive (isteğe bağlı)
 
 - Büro geneli: `GOOGLE_SERVICE_ACCOUNT_JSON` + `GOOGLE_DRIVE_FOLDER_ID` (`.env` / Vercel).
-- Avukat başına: **Ayarlar → Drive klasör kimliği** (klasörü servis hesabıyla Düzenleyici paylaşın). Zorunlu değil.
+- Avukat başına: **Ayarlar → Drive klasör kimliği** (klasörü servis hesabıyla Düzenleyici paylaşın). Kaydederken stajyerlere yazma erişimi verilebilir. Zorunlu değil.
+- Stajyer görev detayında atayan avukatın Drive klasör bağlantısını görür.
 
 ## Performans
 
