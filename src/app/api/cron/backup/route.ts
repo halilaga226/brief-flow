@@ -1,3 +1,4 @@
+import { isCronAuthorized } from "@/lib/cron-auth"
 import { prisma } from "@/lib/prisma"
 import { createOfficeBackup } from "@/server/backup"
 import { NextResponse } from "next/server"
@@ -7,13 +8,7 @@ export const maxDuration = 60
 
 /** Vercel Cron: günlük otomatik yedek. CRON_SECRET ile korunur. */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET?.trim()
-  const auth = request.headers.get("authorization")
-  const url = new URL(request.url)
-  const token = url.searchParams.get("secret")?.trim()
-  const ok =
-    (secret && auth === `Bearer ${secret}`) || (secret && token === secret)
-  if (!secret || !ok) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
 
