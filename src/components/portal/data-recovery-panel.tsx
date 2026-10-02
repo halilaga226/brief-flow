@@ -2,15 +2,32 @@
 
 import { restoreClientPurgeAction } from "@/actions/clients"
 import {
-  createOfficeBackupAction,
   restoreAllDeletedAction,
   restoreSnapshotAction,
 } from "@/actions/tasks"
 import { useActionResult } from "@/components/portal/use-action-result"
 import { Button } from "@/components/ui/button"
 import { Download, RotateCcw, ShieldCheck, Upload } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useActionState, useRef, useState } from "react"
 import { toast } from "sonner"
+
+function filenameFromDisposition(header: string | null) {
+  if (!header) return null
+  const match = /filename="([^"]+)"/i.exec(header)
+  return match?.[1] ?? null
+}
+
+function triggerBrowserDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(url)
+}
 
 export function DataRecoveryPanel({
   snapshots,
@@ -23,24 +40,79 @@ export function DataRecoveryPanel({
     restoredAt: string | null
   }[]
 }) {
+  const router = useRouter()
   const [allState, allAction, allPending] = useActionState(restoreAllDeletedAction, null)
   const [purgeState, purgeAction, purgePending] = useActionState(restoreClientPurgeAction, null)
   const [snapState, snapAction, snapPending] = useActionState(restoreSnapshotAction, null)
-  const [backupState, backupAction, backupPending] = useActionState(createOfficeBackupAction, null)
+  const [downloading, setDownloading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   useActionResult(allState)
   useActionResult(purgeState)
   useActionResult(snapState)
-  useActionResult(backupState)
+
+  async function downloadFreshBackup() {
+    setDownloading(true)
+    try {
+      const res = await fetch("/api/backups", { method: "GET", cache: "no-store" })
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null
+        toast.error(data?.error || "Yedek indirilemedi.")
+        return
+      }
+      const blob = await res.blob()
+      const filename =
+        filenameFromDisposition(res.headers.get("Content-Disposition")) ||
+        `atli-karakaya-yedek-${new Date().toISOString().slice(0, 10)}.json`
+      triggerBrowserDownload(blob, filename)
+      toast.success(`Yedek indirildi: ${filename}`)
+      router.refresh()
+    } catch {
+      toast.error("İndirme sırasında hata oluştu.")
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  async function downloadSnapshot(snapshotId: string) {
+    try {
+      const res = await fetch(`/api/backups?id=${encodeURIComponent(snapshotId)}`, {
+        method: "GET",
+        cache: "no-store",
+      })
+      if (!res.ok) {
+        toast.error("Bu yedek indirilemedi.")
+        return
+      }
+      const blob = await res.blob()
+      const filename =
+        filenameFromDisposition(res.headers.get("Content-Disposition")) ||
+        `atli-karakaya-yedek-${snapshotId.slice(0, 8)}.json`
+      triggerBrowserDownload(blob, filename)
+      toast.success("Yedek indirildi.")
+    } catch {
+      toast.error("İndirme sırasında hata oluştu.")
+    }
+  }
 
   async function uploadRestore(file: File) {
+    if (
+      !window.confirm(
+        `"${file.name}" yedeği mevcut portal verisinin üzerine yazılabilir. Devam etmek istiyor musunuz?`,
+      )
+    ) {
+      return
+    }
     setUploading(true)
     try {
       const body = new FormData()
       body.set("file", file)
       const res = await fetch("/api/backups", { method: "POST", body })
-      const data = (await res.json()) as { ok?: boolean; error?: string; result?: { tasks: number; clients: number } }
+      const data = (await res.json()) as {
+        ok?: boolean
+        error?: string
+        result?: { tasks: number; clients: number; files?: number }
+      }
       if (!res.ok) {
         toast.error(data.error || "Geri yükleme başarısız.")
         return
@@ -48,7 +120,7 @@ export function DataRecoveryPanel({
       toast.success(
         `Yedek yüklendi: ${data.result?.clients ?? 0} müvekkil, ${data.result?.tasks ?? 0} iş.`,
       )
-      window.location.reload()
+      router.refresh()
     } catch {
       toast.error("Yükleme sırasında hata oluştu.")
     } finally {
@@ -63,52 +135,62 @@ export function DataRecoveryPanel({
         Yedekleme ve geri getirme
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Günlük otomatik yedek + elle yedek/indirme. Ofis bilgisayarında{" "}
-        <code className="rounded bg-muted px-1 py-0.5 text-xs">desktop/</code> Yedek Ajanı ile
-        yedekler diske de yazılır — site + bilgisayar birlikte güvence. Pahalı PITR şart değil.
-      </p>
-      <p className="mt-2 rounded-xl border border-border/80 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-        <span className="font-semibold text-foreground">Masaüstü ajan:</span> bilgisayarda{" "}
-        <code className="text-xs">cd desktop && npm install && npm start</code> — portal URL +
-        Vercel’deki <code className="text-xs">BACKUP_AGENT_TOKEN</code> ile bağlanır; klasöre
-        otomatik JSON kaydeder.
+        Anlık yedek tarayıcıya JSON olarak iner. Aynı dosyayı buradan geri yükleyebilirsiniz.
+        Ofis PC’deki Yedek Ajanı isteğe bağlı ek güvencedir.
       </p>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <form action={backupAction}>
-          <Button type="submit" disabled={backupPending} className="font-semibold">
-            <ShieldCheck />
-            {backupPending ? "Yedekleniyor…" : "Şimdi yedek al"}
-          </Button>
-        </form>
-        <Button asChild variant="outline" className="font-semibold">
-          <a href="/api/backups" download>
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="rounded-xl border border-border bg-background/50 p-3">
+          <p className="text-sm font-semibold">1 · Anlık yedek indir</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Siteden taze yedek alır ve bilgisayarınıza otomatik indirir.
+          </p>
+          <Button
+            type="button"
+            className="mt-3 font-semibold"
+            disabled={downloading}
+            onClick={() => void downloadFreshBackup()}
+          >
             <Download />
-            Yedek indir (JSON)
-          </a>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="font-semibold"
-          disabled={uploading}
-          onClick={() => fileRef.current?.click()}
-        >
-          <Upload />
-          {uploading ? "Yükleniyor…" : "JSON’dan geri yükle"}
-        </Button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json,.json"
-          className="hidden"
-          onChange={(event) => {
-            const file = event.target.files?.[0]
-            event.target.value = ""
-            if (file) void uploadRestore(file)
-          }}
-        />
+            {downloading ? "İndiriliyor…" : "Yedek al ve indir"}
+          </Button>
+        </div>
+
+        <div className="rounded-xl border border-border bg-background/50 p-3">
+          <p className="text-sm font-semibold">2 · Yedekten yükle</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Daha önce indirdiğiniz <code className="text-[11px]">.json</code> dosyasını seçin;
+            portal verisi bu yedekten geri gelir.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-3 font-semibold"
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+          >
+            <Upload />
+            {uploading ? "Yükleniyor…" : "JSON yedek seç ve yükle"}
+          </Button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ""
+              if (file) void uploadRestore(file)
+            }}
+          />
+        </div>
       </div>
+
+      <p className="mt-3 rounded-xl border border-border/80 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+        <span className="font-semibold text-foreground">Masaüstü ajan (opsiyonel):</span>{" "}
+        <code className="text-xs">cd desktop && npm install && npm start</code> — otomatik diske
+        yazar. Anahtar: Vercel <code className="text-xs">BACKUP_AGENT_TOKEN</code>.
+      </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
         <form action={allAction}>
@@ -123,9 +205,9 @@ export function DataRecoveryPanel({
           </Button>
         </form>
       </div>
-      {allState?.error || purgeState?.error || snapState?.error || backupState?.error ? (
+      {allState?.error || purgeState?.error || snapState?.error ? (
         <p className="mt-2 text-sm text-destructive">
-          {allState?.error || purgeState?.error || snapState?.error || backupState?.error}
+          {allState?.error || purgeState?.error || snapState?.error}
         </p>
       ) : null}
 
@@ -146,11 +228,15 @@ export function DataRecoveryPanel({
               <div className="flex flex-wrap gap-2">
                 {snap.kind === "office_backup" ? (
                   <>
-                    <Button asChild size="sm" variant="outline" className="font-semibold">
-                      <a href={`/api/backups?id=${snap.id}`} download>
-                        <Download />
-                        İndir
-                      </a>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="font-semibold"
+                      onClick={() => void downloadSnapshot(snap.id)}
+                    >
+                      <Download />
+                      İndir
                     </Button>
                     <form action={snapAction}>
                       <input type="hidden" name="snapshotId" value={snap.id} />
@@ -211,7 +297,7 @@ export function DataRecoveryPanel({
         </ul>
       ) : (
         <p className="mt-3 text-sm text-muted-foreground">
-          Henüz yedek yok — “Şimdi yedek al” ile ilkini oluşturun.
+          Henüz sunucu yedeği yok — «Yedek al ve indir» ile ilkini oluşturun.
         </p>
       )}
     </section>

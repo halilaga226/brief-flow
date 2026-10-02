@@ -52,7 +52,7 @@ Müvekkil detayında avukat ve stajyer ortak notlar bırakabilir (görüşme, ha
 
 Supabase’te pahalı PITR şart değil. Bu portal kendi yedeğini alır:
 
-1. **Ayarlar → Yedekleme** — «Şimdi yedek al» / «Yedek indir (JSON)» / «JSON’dan geri yükle»
+1. **Ayarlar → Yedekleme** — «Yedek al ve indir» anlık JSON indirir; «JSON yedek seç ve yükle» geri yükler
 2. Son **14** büro yedeği veritabanında tutulur
 3. **Vercel Cron** her gece 02:00 UTC’de `/api/cron/backup` çalışır — Vercel’de `CRON_SECRET` tanımlayın
 4. **Masaüstü Yedek Ajanı** (`desktop/`) — ofis bilgisayarında çalışır, siteyle entegre yedekleri diske yazar

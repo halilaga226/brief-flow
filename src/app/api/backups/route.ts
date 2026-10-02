@@ -22,7 +22,8 @@ export async function GET(request: Request) {
     snapshotId = created.snapshotId
   }
   const snap = await getOfficeBackupPayload(user, snapshotId)
-  const filename = `atli-karakaya-yedek-${snap.createdAt.slice(0, 10)}.json`
+  const stamp = snap.createdAt.replace(/[:.]/g, "-").slice(0, 19)
+  const filename = `atli-karakaya-yedek-${stamp}.json`
   return new NextResponse(snap.payload, {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
