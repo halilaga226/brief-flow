@@ -188,8 +188,14 @@ export function DataRecoveryPanel({
 
       <p className="mt-3 rounded-xl border border-border/80 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
         <span className="font-semibold text-foreground">Masaüstü uygulama (opsiyonel):</span>{" "}
-        <code className="text-xs">desktop/</code> içinde Windows Setup.exe üretilir; kurunca
-        masaüstünde <strong>Atlı Karakaya Yedek</strong> ikonu çıkar. Anahtar:{" "}
+        <a
+          className="font-semibold text-foreground underline underline-offset-2"
+          href="https://github.com/halilaga226/brief-flow/releases/download/yedek-ajani-v1.0.0/Atli-Karakaya-Yedek-Ajani-Windows-Portable.zip"
+        >
+          Windows paketini indir
+        </a>
+        {" "}
+        → zip’i aç → <code className="text-xs">.exe</code> kısayolunu masaüstüne koyun. Anahtar:{" "}
         <code className="text-xs">BACKUP_AGENT_TOKEN</code>.
       </p>
 
