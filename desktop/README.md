@@ -13,6 +13,28 @@ Altında: canlı site (görevler, müvekkiller, ayarlar…)
 3. `Atli Karakaya.exe` → sağ tık → **Gönder → Masaüstü (kısayol)**  
 4. İkona çift tıklayın  
 
+### Microsoft engellerse (Smart App Control / SmartScreen)
+
+Uygulama henüz **kod imzası** taşımıyor; Windows “tanınmayan uygulama” diye kesebilir. Bu sizin büro yazılımınız — şu adımlarla açılır:
+
+**A) SmartScreen (“Windows bilgisayarınızı korudu”)**  
+1. **Ek bilgi** / **More info**  
+2. **Yine de çalıştır** / **Run anyway**
+
+**B) Smart App Control (Windows 11 — “engellendi”, Run anyway yok)**  
+1. **Ayarlar → Gizlilik ve güvenlik → Windows Güvenliği → Uygulama ve tarayıcı denetimi**  
+2. **Akıllı Uygulama Denetimi** → **Kapalı**  
+   *(veya geçici olarak Evaluation; Enforcement’da imzasız yeni uygulamalar kalıcı engellenebilir)*  
+3. Bilgisayarı yeniden başlatıp `Atli Karakaya.exe`’yi tekrar açın  
+
+**C) Dosya engelini kaldır (PowerShell)** — zip’i indirdiğiniz klasörde:
+
+```powershell
+Get-ChildItem -Recurse ".\win-unpacked" | Unblock-File
+```
+
+Kalıcı çözüm: ücretli bir **Code Signing** sertifikası ile `.exe` imzalamak (Smart App Control bunu kabul eder). İsterseniz bir sonraki adımda imzalama ayarını da ekleriz.  
+
 ## İlk ayar
 
 Ayarlar panelinde:
