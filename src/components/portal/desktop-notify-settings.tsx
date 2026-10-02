@@ -1,7 +1,12 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { BellRing } from "lucide-react"
+import {
+  isNotifySoundMuted,
+  playNotificationBell,
+  setNotifySoundMuted,
+} from "@/lib/welcome-sound"
+import { BellRing, Volume2, VolumeX } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -9,6 +14,7 @@ type Permission = NotificationPermission | "unsupported"
 
 export function DesktopNotifySettings() {
   const [permission, setPermission] = useState<Permission>("default")
+  const [soundMuted, setSoundMuted] = useState(false)
 
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) {
@@ -16,6 +22,7 @@ export function DesktopNotifySettings() {
       return
     }
     setPermission(Notification.permission)
+    setSoundMuted(isNotifySoundMuted())
   }, [])
 
   async function enable() {
@@ -39,6 +46,7 @@ export function DesktopNotifySettings() {
       } catch {
         /* ignore */
       }
+      void playNotificationBell()
     } else if (result === "denied") {
       toast.error("Bildirim izni reddedildi.", {
         description: "Tarayıcı ayarlarından tekrar açabilirsiniz.",
@@ -63,9 +71,8 @@ export function DesktopNotifySettings() {
         Canlı bildirimler
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Yeni iş, inceleme, revizyon, onay, gönderim ve dosya güncellemelerinde ekranın sağ üstünde
-        renkli popup açılır. Masaüstü izni verirseniz sekme arkadayken bilgisayar bildirimi de
-        gelir. İzin şart değil — popup her zaman çalışır.
+        Yeni iş ve dosya güncellemelerinde sağ üstte renkli popup + zil sesi çalar. Masaüstü izni
+        verirseniz sekme arkadayken bilgisayar bildirimi de gelir.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button
@@ -85,7 +92,21 @@ export function DesktopNotifySettings() {
             window.dispatchEvent(new Event("brief-flow:demo-alert"))
           }}
         >
-          Test popup
+          Test popup + zil
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="font-semibold"
+          onClick={() => {
+            const next = !soundMuted
+            setNotifySoundMuted(next)
+            setSoundMuted(next)
+            if (!next) void playNotificationBell()
+          }}
+        >
+          {soundMuted ? <VolumeX /> : <Volume2 />}
+          {soundMuted ? "Zil kapalı" : "Zil açık"}
         </Button>
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
       </div>

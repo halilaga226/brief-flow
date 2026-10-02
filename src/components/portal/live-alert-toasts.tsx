@@ -1,6 +1,7 @@
 "use client"
 
 import type { NotificationDTO } from "@/lib/dto"
+import { playNotificationBell } from "@/lib/welcome-sound"
 import { cn } from "@/lib/utils"
 import { Bell, X } from "lucide-react"
 import Link from "next/link"
@@ -153,6 +154,7 @@ export function LiveAlertToasts({ items }: { items: NotificationDTO[] }) {
         showDesktop(item)
       }
       saveSeen(seen)
+      void playNotificationBell()
 
       // En eski önce; ekranda en fazla 5 popup
       const alerts: LiveAlert[] = [...fresh]
