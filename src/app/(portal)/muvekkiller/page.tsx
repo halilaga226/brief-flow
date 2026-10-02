@@ -1,5 +1,7 @@
 import { ClientsView } from "@/components/portal/clients-view"
+import { PartyImportForm } from "@/components/portal/party-import-form"
 import { requireUser } from "@/lib/session"
+import { canResetPasswords } from "@/lib/users"
 import { canCreateTask } from "@/lib/workflow"
 import { listClients } from "@/server/clients"
 import { Button } from "@/components/ui/button"
@@ -22,5 +24,10 @@ export default async function ClientsPage() {
     )
   }
   const clients = await listClients(user)
-  return <ClientsView clients={clients} />
+  return (
+    <div className="mx-auto w-full max-w-3xl space-y-6">
+      {canResetPasswords(user.username) ? <PartyImportForm /> : null}
+      <ClientsView clients={clients} />
+    </div>
+  )
 }

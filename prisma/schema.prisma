@@ -93,9 +93,26 @@ model OfficeConfig {
   updatedById             String?
 }
 
+/// JSON içe aktarım izi — aynı taraf tekrar eklenmez; hash değişince güncellenir
+model ImportFingerprint {
+  id          String   @id @default(cuid())
+  kind        String
+  externalKey String
+  contentHash String
+  clientId    String?
+  meta        String   @default("")
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@unique([kind, externalKey])
+  @@index([kind])
+}
+
 model Client {
   id        String    @id @default(cuid())
   name      String
+  /// Türkçe duyarsız eşleştirme anahtarı (tekrar eklemeyi önler)
+  nameKey   String    @default("")
   ownerId   String
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -106,6 +123,7 @@ model Client {
 
   @@unique([ownerId, name])
   @@index([ownerId])
+  @@index([nameKey])
   @@index([deletedAt])
 }
 
