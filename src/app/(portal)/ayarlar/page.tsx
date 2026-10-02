@@ -1,4 +1,5 @@
 import { ClearDemoButton } from "@/components/portal/clear-demo-button"
+import { DataRecoveryPanel } from "@/components/portal/data-recovery-panel"
 import { DesktopNotifySettings } from "@/components/portal/desktop-notify-settings"
 import { DriveSettingsForm } from "@/components/portal/drive-settings-form"
 import { IntroToggle } from "@/components/portal/intro-tour"
@@ -19,7 +20,7 @@ import {
   isAdmin,
   type TaskStatus,
 } from "@/lib/workflow"
-import { getAdminOverview, listClientCalls } from "@/server/admin"
+import { getAdminOverview, listClientCalls, listDataSnapshots } from "@/server/admin"
 import { getDashboard } from "@/server/tasks"
 import { Briefcase, Phone, Users } from "lucide-react"
 import type { Metadata } from "next"
@@ -30,7 +31,7 @@ export const metadata: Metadata = { title: "Ayarlar" }
 export default async function SettingsPage() {
   const user = await requireUser()
   const isHalil = canResetPasswords(user.username)
-  const [dashboard, calls, overview, dbUser, drive, officeDrive] = await Promise.all([
+  const [dashboard, calls, overview, dbUser, drive, officeDrive, snapshots] = await Promise.all([
     getDashboard(user.id, user.role),
     listClientCalls(user),
     isAdmin(user.role) ? getAdminOverview(user) : Promise.resolve(null),
@@ -40,6 +41,7 @@ export default async function SettingsPage() {
     }),
     getDriveStatus(),
     isHalil ? getOfficeDriveAdminState() : Promise.resolve(null),
+    isAdmin(user.role) ? listDataSnapshots(user) : Promise.resolve([]),
   ])
   const firstName = user.name.split(" ")[0]
   const manageUsers = canManageUsers(user.role)
@@ -58,6 +60,18 @@ export default async function SettingsPage() {
       <IntroToggle />
 
       <DesktopNotifySettings />
+
+      {isAdmin(user.role) ? (
+        <DataRecoveryPanel
+          snapshots={snapshots.map((row) => ({
+            id: row.id,
+            kind: row.kind,
+            label: row.label,
+            createdAt: row.createdAt.toISOString(),
+            restoredAt: row.restoredAt?.toISOString() ?? null,
+          }))}
+        />
+      ) : null}
 
       {officeDrive ? (
         <OfficeDriveAdminForm
@@ -185,6 +199,10 @@ export default async function SettingsPage() {
 
           <div className="mt-5 border-t border-border pt-4">
             <h3 className="font-semibold">Örnek veri</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Gerçek işleri silmez. Yalnızca demo hesaplara bağlı işleri silinenlere taşır;
+              onay için ORNEK SIL yazmanız gerekir.
+            </p>
             <div className="mt-3">
               <ClearDemoButton />
             </div>

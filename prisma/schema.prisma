@@ -301,3 +301,16 @@ model Notification {
 
   @@index([userId, read])
 }
+
+/// Tehlikeli toplu işlem öncesi yedek — geri yükleme için
+model DataSnapshot {
+  id        String   @id @default(cuid())
+  kind      String
+  label     String
+  payload   String
+  createdBy String
+  createdAt DateTime @default(now())
+  restoredAt DateTime?
+
+  @@index([kind, createdAt])
+}

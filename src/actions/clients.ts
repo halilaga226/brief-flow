@@ -13,6 +13,7 @@ import {
   purgeAllClients,
   restoreCaseFile,
   restoreClient,
+  restoreClientPurgeSnapshot,
   restoreTask,
   softDeleteCaseFile,
   softDeleteClient,
@@ -227,7 +228,29 @@ export async function purgeAllClientsAction(
     revalidatePath("/gorevler")
     return {
       ok: true,
-      message: `${result.deletedClients} müvekkil, ${result.deletedFiles} dosya silindi. JSON ile yeniden yükleyebilirsiniz.`,
+      message: `${result.deletedClients} müvekkil, ${result.deletedFiles} dosya silindi (yedek alındı). JSON ile yeniden yükleyebilirsiniz.`,
+    }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function restoreClientPurgeAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  try {
+    const result = await restoreClientPurgeSnapshot(
+      user,
+      readText(formData, "snapshotId") || undefined,
+    )
+    revalidatePath("/muvekkiller")
+    revalidatePath("/silinenler")
+    revalidatePath("/ayarlar")
+    return {
+      ok: true,
+      message: `Yedekten geri yüklendi: ${result.clients} müvekkil, ${result.files} dosya, ${result.notes} not.`,
     }
   } catch (error) {
     return actionError(error)

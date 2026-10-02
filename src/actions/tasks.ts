@@ -22,7 +22,7 @@ import {
   markDraftSent,
   sendToLawyer,
 } from "@/server/tasks"
-import { clearDemoData } from "@/server/admin"
+import { clearDemoData, restoreAllSoftDeleted, restoreDataSnapshot } from "@/server/admin"
 import type { ClientCallStatus } from "@/lib/workflow"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -236,20 +236,64 @@ export async function queueSendAction(
 
 export async function clearDemoAction(
   _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  void _prev
+  const user = await requireUser()
+  const phrase =
+    (typeof formData.get("confirmPhrase") === "string"
+      ? formData.get("confirmPhrase")
+      : formData.get("confirm")) ?? ""
+  try {
+    const result = await clearDemoData(user, String(phrase))
+    revalidatePath("/ayarlar")
+    revalidatePath("/gorevler")
+    revalidatePath("/silinenler")
+    revalidatePath("/kullanicilar")
+    return {
+      ok: true,
+      message: `${result.tasks} örnek iş silinenlere taşındı. Gerçek işlere dokunulmadı.`,
+    }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function restoreAllDeletedAction(
+  _prev: ActionState,
   _formData: FormData,
 ): Promise<ActionState> {
   void _prev
   void _formData
   const user = await requireUser()
   try {
-    const result = await clearDemoData(user)
-    revalidatePath("/ayarlar")
+    const result = await restoreAllSoftDeleted(user)
+    revalidatePath("/silinenler")
     revalidatePath("/gorevler")
-    revalidatePath("/kullanicilar")
+    revalidatePath("/muvekkiller")
+    revalidatePath("/ayarlar")
     return {
       ok: true,
-      message: `${result.tasks} görev ve ${result.users} örnek hesap silindi.`,
+      message: `Geri yüklendi: ${result.tasks} iş, ${result.clients} müvekkil, ${result.files} dosya.`,
     }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
+export async function restoreSnapshotAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  void _prev
+  const user = await requireUser()
+  const snapshotId = readText(formData, "snapshotId")
+  try {
+    const result = await restoreDataSnapshot(user, snapshotId)
+    revalidatePath("/silinenler")
+    revalidatePath("/gorevler")
+    revalidatePath("/ayarlar")
+    return { ok: true, message: `${result.tasks} iş yedekten geri yüklendi.` }
   } catch (error) {
     return actionError(error)
   }

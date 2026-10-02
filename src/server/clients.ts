@@ -547,23 +547,161 @@ export async function deleteClientNote(actor: SessionUser, noteId: string) {
   return note.clientId
 }
 
-/** Tüm müvekkil/dosya kayıtlarını kalıcı siler; JSON yeniden yükleme için izleri temizler. */
+/** Tüm müvekkil/dosya kayıtlarını yedekleyip kalıcı siler; JSON yeniden yükleme için izleri temizler. */
 export async function purgeAllClients(actor: SessionUser) {
   const { canResetPasswords } = await import("@/lib/users")
   if (!canResetPasswords(actor.username) && !isAdmin(actor.role)) {
     throw new WorkflowError("Müvekkilleri toplu silme yalnızca Halil / yönetici içindir.")
   }
-  const [notes, files, clients, fingerprints] = await prisma.$transaction([
+
+  const [clients, files, notes] = await Promise.all([
+    prisma.client.findMany(),
+    prisma.caseFile.findMany(),
+    prisma.clientNote.findMany(),
+  ])
+
+  const snapshot = await prisma.dataSnapshot.create({
+    data: {
+      kind: "purge_clients",
+      label: `Müvekkil yedeği (${clients.length} müvekkil, ${files.length} dosya)`,
+      createdBy: actor.id,
+      payload: JSON.stringify({ clients, files, notes }),
+    },
+  })
+
+  const [deletedNotes, deletedFiles, deletedClients, fingerprints] = await prisma.$transaction([
     prisma.clientNote.deleteMany({}),
     prisma.caseFile.deleteMany({}),
     prisma.client.deleteMany({}),
     prisma.importFingerprint.deleteMany({ where: { kind: "party" } }),
   ])
   return {
-    deletedNotes: notes.count,
-    deletedFiles: files.count,
-    deletedClients: clients.count,
+    deletedNotes: deletedNotes.count,
+    deletedFiles: deletedFiles.count,
+    deletedClients: deletedClients.count,
     clearedImports: fingerprints.count,
+    snapshotId: snapshot.id,
   }
+}
+
+export async function restoreClientPurgeSnapshot(actor: SessionUser, snapshotId?: string) {
+  const { canResetPasswords } = await import("@/lib/users")
+  if (!canResetPasswords(actor.username) && !isAdmin(actor.role)) {
+    throw new WorkflowError("Yetki yok.")
+  }
+  const snap = snapshotId
+    ? await prisma.dataSnapshot.findUnique({ where: { id: snapshotId } })
+    : await prisma.dataSnapshot.findFirst({
+        where: { kind: "purge_clients" },
+        orderBy: { createdAt: "desc" },
+      })
+  if (!snap || snap.kind !== "purge_clients") {
+    throw new WorkflowError("Müvekkil yedeği bulunamadı.")
+  }
+  type Payload = {
+    clients: {
+      id: string
+      name: string
+      nameKey: string
+      ownerId: string
+      deletedAt: string | null
+      createdAt: string
+      updatedAt: string
+    }[]
+    files: {
+      id: string
+      clientId: string
+      fileNumber: string
+      courtName: string
+      notes: string
+      deletedAt: string | null
+      createdAt: string
+      updatedAt: string
+    }[]
+    notes: {
+      id: string
+      clientId: string
+      authorId: string
+      body: string
+      createdAt: string
+      updatedAt: string
+    }[]
+  }
+  let payload: Payload
+  try {
+    payload = JSON.parse(snap.payload) as Payload
+  } catch {
+    throw new WorkflowError("Yedek bozuk.")
+  }
+
+  let clients = 0
+  let files = 0
+  let notes = 0
+  await prisma.$transaction(async (tx) => {
+    for (const row of payload.clients) {
+      await tx.client.upsert({
+        where: { id: row.id },
+        create: {
+          id: row.id,
+          name: row.name,
+          nameKey: row.nameKey ?? "",
+          ownerId: row.ownerId,
+          deletedAt: row.deletedAt ? new Date(row.deletedAt) : null,
+          createdAt: new Date(row.createdAt),
+          updatedAt: new Date(row.updatedAt),
+        },
+        update: {
+          name: row.name,
+          nameKey: row.nameKey ?? "",
+          ownerId: row.ownerId,
+          deletedAt: null,
+        },
+      })
+      clients += 1
+    }
+    for (const row of payload.files) {
+      await tx.caseFile.upsert({
+        where: { id: row.id },
+        create: {
+          id: row.id,
+          clientId: row.clientId,
+          fileNumber: row.fileNumber,
+          courtName: row.courtName ?? "",
+          notes: row.notes ?? "",
+          deletedAt: row.deletedAt ? new Date(row.deletedAt) : null,
+          createdAt: new Date(row.createdAt),
+          updatedAt: new Date(row.updatedAt),
+        },
+        update: {
+          clientId: row.clientId,
+          fileNumber: row.fileNumber,
+          courtName: row.courtName ?? "",
+          notes: row.notes ?? "",
+          deletedAt: null,
+        },
+      })
+      files += 1
+    }
+    for (const row of payload.notes ?? []) {
+      await tx.clientNote.upsert({
+        where: { id: row.id },
+        create: {
+          id: row.id,
+          clientId: row.clientId,
+          authorId: row.authorId,
+          body: row.body,
+          createdAt: new Date(row.createdAt),
+          updatedAt: new Date(row.updatedAt),
+        },
+        update: { body: row.body },
+      })
+      notes += 1
+    }
+  })
+  await prisma.dataSnapshot.update({
+    where: { id: snap.id },
+    data: { restoredAt: new Date() },
+  })
+  return { clients, files, notes, snapshotId: snap.id }
 }
 

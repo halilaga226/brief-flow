@@ -5,6 +5,7 @@ import {
   restoreClientAction,
   restoreTaskAction,
 } from "@/actions/clients"
+import { restoreAllDeletedAction } from "@/actions/tasks"
 import { useActionResult } from "@/components/portal/use-action-result"
 import { Button } from "@/components/ui/button"
 import type { ActionState } from "@/lib/dto"
@@ -66,22 +67,47 @@ function RestoreRow({
   )
 }
 
+function RestoreAllButton() {
+  const [state, action, pending] = useActionState(restoreAllDeletedAction, null)
+  useActionResult(state)
+  return (
+    <form
+      action={action}
+      onSubmit={(event) => {
+        if (!window.confirm("Silinenlerdeki tüm müvekkil, dosya ve işler geri yüklensin mi?")) {
+          event.preventDefault()
+        }
+      }}
+      className="flex flex-wrap items-center gap-2"
+    >
+      <Button type="submit" disabled={pending} className="font-semibold">
+        <RotateCcw />
+        {pending ? "Yükleniyor…" : "Tüm silinenleri geri getir"}
+      </Button>
+      {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
+    </form>
+  )
+}
+
 export function TrashRestoreList({ items }: { items: DeletedBundle }) {
   const empty =
     items.clients.length === 0 && items.files.length === 0 && items.tasks.length === 0
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Silinenler</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Müvekkil, dosya ve işler burada tutulur. Geri yükleyebilirsiniz.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Silinenler</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Müvekkil, dosya ve işler burada tutulur. Tek tek veya toplu geri yükleyebilirsiniz.
+          </p>
+        </div>
+        {!empty ? <RestoreAllButton /> : null}
       </div>
 
       {empty ? (
         <p className="border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-          Silinen kayıt yok.
+          Silinen kayıt yok. Kalıcı silinenler için Ayarlar → veri yedeklerine bakın.
         </p>
       ) : null}
 
