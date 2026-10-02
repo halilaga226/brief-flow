@@ -319,3 +319,30 @@ describe("tracking", () => {
     assert.equal(validateTrackingCode("2026-UYAP-1").ok, true)
   })
 })
+
+describe("recent activity window", () => {
+  it("filters by updatedAt within last N days", async () => {
+    const { matchesRecentWindow } = await import("./workflow")
+    const now = new Date("2026-10-02T12:00:00.000Z")
+    assert.equal(
+      matchesRecentWindow({ updatedAt: "2026-10-02T10:00:00.000Z" }, "1g", now),
+      true,
+    )
+    assert.equal(
+      matchesRecentWindow({ updatedAt: "2026-09-28T12:00:00.000Z" }, "1g", now),
+      false,
+    )
+    assert.equal(
+      matchesRecentWindow({ updatedAt: "2026-09-28T12:00:00.000Z" }, "1h", now),
+      true,
+    )
+    assert.equal(
+      matchesRecentWindow({ updatedAt: "2026-08-01T12:00:00.000Z" }, "1ay", now),
+      false,
+    )
+    assert.equal(
+      matchesRecentWindow({ updatedAt: "2026-08-01T12:00:00.000Z" }, null, now),
+      true,
+    )
+  })
+})

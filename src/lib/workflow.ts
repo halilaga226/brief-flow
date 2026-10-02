@@ -676,6 +676,19 @@ export function matchesDueWindow(
   return due >= today && due <= limit
 }
 
+/** Son aktivite (updatedAt) son N gün içinde mi — görev takibi için. */
+export function matchesRecentWindow(
+  task: { updatedAt: string },
+  window: DueWindow | null,
+  now = new Date(),
+) {
+  if (!window) return true
+  const updated = new Date(task.updatedAt)
+  if (Number.isNaN(updated.getTime())) return false
+  const ms = dueWindowDays(window) * 24 * 60 * 60 * 1000
+  return now.getTime() - updated.getTime() <= ms
+}
+
 function istanbulDayKeySafe(date: Date) {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Istanbul",

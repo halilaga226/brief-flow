@@ -74,6 +74,10 @@ export async function createTaskAction(
   }
   revalidateTask(taskId)
   revalidatePath("/is-listesi")
+  // İş listesinden atamada listeye dön; kayıt orada kalsın.
+  if (readText(formData, "workItemId")) {
+    redirect("/is-listesi")
+  }
   redirect(`/gorevler/${taskId}`)
 }
 

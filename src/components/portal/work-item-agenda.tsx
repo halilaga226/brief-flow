@@ -288,7 +288,7 @@ export function WorkItemAgenda({
                     <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
                       <Link href={`/is-listesi/${item.id}/gorev`}>
                         <UserPlus className="size-3.5" />
-                        Ata
+                        Stajyere ata
                       </Link>
                     </Button>
                   ) : null}

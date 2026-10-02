@@ -9,7 +9,6 @@ import {
   deleteWorkItem,
 } from "@/server/work-items"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 
 function actionError(error: unknown): ActionState {
   if (error instanceof WorkflowError) return { error: error.message }
@@ -38,10 +37,11 @@ export async function createWorkItemAction(
       notes: readText(formData, "notes"),
     })
     revalidatePath("/is-listesi")
-    redirect(`/is-listesi/${id}`)
+    revalidatePath("/stajyer-isleri")
+    revalidatePath(`/is-listesi/${id}`)
+    // Kayıt iş listesinde kalsın; detaya yönlendirme yok.
+    return { ok: true, message: "İş kaydı eklendi." }
   } catch (error) {
-    // redirect throws; rethrow those
-    if (error && typeof error === "object" && "digest" in error) throw error
     return actionError(error)
   }
 }

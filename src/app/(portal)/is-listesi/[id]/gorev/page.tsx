@@ -51,9 +51,9 @@ export default async function AssignFromWorkItemPage({
         <Link href="/is-listesi" className="text-sm text-muted-foreground hover:text-foreground">
           İş listesine dön
         </Link>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Görev ver</h1>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Stajyere görev ata</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {item.clientName} · {item.fileNumber}
+          {item.clientName} · {item.fileNumber} — dosya kaydı iş listesinde kalır.
         </p>
       </div>
       <div className="rounded-2xl border border-border bg-card p-4 md:p-6">

@@ -343,11 +343,11 @@ export async function createTask(
         },
       },
     })
-    // Dosya kaydı da atananın listesine geçsin (stajyer/avukat)
+    // Dosya kaydı iş listesinde kalır; sahiplik stajyere geçmez.
     if (workItemId) {
       await prisma.workItem.update({
         where: { id: workItemId },
-        data: { ownerId: assignee.id, updatedAt: new Date() },
+        data: { updatedAt: new Date() },
       })
     }
     return task.id
@@ -455,7 +455,7 @@ export async function sendToLawyer(actor: SessionUser, taskId: string, rawNote: 
       })
       await tx.workItem.update({
         where: { id: task.workItemId },
-        data: { ownerId: task.assignerId, updatedAt: new Date() },
+        data: { updatedAt: new Date() },
       })
     }
     await tx.taskLog.create({
@@ -505,7 +505,7 @@ export async function requestRevision(actor: SessionUser, taskId: string, rawNot
     if (task.workItemId) {
       await tx.workItem.update({
         where: { id: task.workItemId },
-        data: { ownerId: task.assigneeId, updatedAt: new Date() },
+        data: { updatedAt: new Date() },
       })
     }
     await tx.taskLog.create({

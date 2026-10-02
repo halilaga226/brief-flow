@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import {
   ClipboardList,
   FolderOpen,
+  GraduationCap,
   Home,
   LogOut,
   Menu,
@@ -34,6 +35,9 @@ function isActive(pathname: string, href: string) {
   }
   if (href === "/is-listesi") {
     return pathname === "/is-listesi" || pathname.startsWith("/is-listesi/")
+  }
+  if (href === "/stajyer-isleri") {
+    return pathname === "/stajyer-isleri" || pathname.startsWith("/stajyer-isleri/")
   }
   if (href === "/muvekkiller") {
     return pathname === "/muvekkiller" || pathname.startsWith("/muvekkiller/")
@@ -63,7 +67,10 @@ function NavLinks({
       ? [{ href: "/muvekkiller", label: "Müvekkiller", icon: Briefcase }]
       : []),
     ...(canAssign
-      ? [{ href: "/silinenler", label: "Silinenler", icon: Trash2 }]
+      ? [
+          { href: "/stajyer-isleri", label: "Stajyer işleri", icon: GraduationCap },
+          { href: "/silinenler", label: "Silinenler", icon: Trash2 },
+        ]
       : []),
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(canManage ? [{ href: "/kullanicilar", label: "Kullanıcılar", icon: Users }] : []),
@@ -119,6 +126,7 @@ export function AppShell({
     { href: "/ana", label: "Ana", icon: Home },
     { href: "/is-listesi", label: "İşler", icon: ClipboardList },
     ...(canViewClients ? [{ href: "/muvekkiller", label: "Müvekkil", icon: Briefcase }] : []),
+    ...(lawyer ? [{ href: "/stajyer-isleri", label: "Stajyer", icon: GraduationCap }] : []),
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(manager && !lawyer ? [{ href: "/kullanicilar", label: "Kullanıcı", icon: Users }] : []),
     { href: "/ayarlar", label: "Ayarlar", icon: Settings },
