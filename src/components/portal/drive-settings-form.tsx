@@ -12,25 +12,32 @@ export function DriveSettingsForm({
   folderId,
   folderLink,
   orgConnected,
+  serviceEmail,
 }: {
   folderId: string | null
   folderLink: string | null
   orgConnected: boolean
+  serviceEmail: string | null
 }) {
   const [state, action, pending] = useActionState(saveDriveFolderAction, null)
   useActionResult(state)
 
   return (
     <section className="glass rounded-2xl p-4 md:p-5">
-      <h2 className="text-lg font-semibold">Google Drive hesabı</h2>
+      <h2 className="text-lg font-semibold">Kişisel Google Drive klasörü</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Kendi Drive klasörünüzü bağlayın. Klasörü büro servis hesabıyla{" "}
-        <span className="font-semibold">Düzenleyici</span> olarak paylaşın; klasör kimliğini
-        yapıştırın. İsterseniz stajyerlere otomatik yazma erişimi verin.
+        Kendi klasörünüzü bağlayın. Büro servis hesabına{" "}
+        <span className="font-semibold">Düzenleyici</span> yetkisi verin; klasör kimliğini yapıştırın.
+        İsterseniz stajyerlere yazma erişimi otomatik verilir.
       </p>
       <p className="mt-2 text-xs text-muted-foreground">
-        Ortak Drive API: {orgConnected ? "açık" : "kapalı (mock)"} — klasör kimliği sizin
-        yüklemeleriniz ve stajyer erişimi için kullanılır.
+        Büro Drive API: {orgConnected ? "açık" : "kapalı (mock)"}
+        {serviceEmail ? (
+          <>
+            {" "}
+            · Servis e-postası: <span className="font-mono">{serviceEmail}</span>
+          </>
+        ) : null}
       </p>
       {folderLink ? (
         <p className="mt-3">

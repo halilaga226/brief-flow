@@ -31,7 +31,7 @@ export default async function AssignFromWorkItemPage({
 
   const item = await getWorkItem(user, id)
   const people = await listAssignees(user)
-  const drive = getDriveStatus()
+  const drive = await getDriveStatus()
   const defaultDue = addDaysKey(istanbulDayKey(new Date()), 3)
   const description = [
     `Mahkeme: ${item.courtName}`,

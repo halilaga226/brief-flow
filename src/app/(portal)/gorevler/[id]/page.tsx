@@ -21,5 +21,6 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const user = await requireUser()
   const task = await getTask(user.id, user.role, id)
   if (!task) notFound()
-  return <TaskDetailView task={task} currentUserId={user.id} drive={getDriveStatus()} />
+  const drive = await getDriveStatus()
+  return <TaskDetailView task={task} currentUserId={user.id} drive={drive} />
 }

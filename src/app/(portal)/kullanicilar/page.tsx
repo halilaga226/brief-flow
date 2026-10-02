@@ -1,6 +1,7 @@
 import { UsersManager } from "@/components/portal/users-manager"
 import { Button } from "@/components/ui/button"
 import { requireUser } from "@/lib/session"
+import { canResetPasswords } from "@/lib/users"
 import { canManageUsers } from "@/lib/workflow"
 import { listManagedUsers } from "@/server/users"
 import type { Metadata } from "next"
@@ -36,7 +37,7 @@ export default async function UsersPage() {
           Avukat ve stajyer hesaplarını buradan açın veya silin.
         </p>
       </div>
-      <UsersManager users={users} />
+      <UsersManager users={users} canResetPasswords={canResetPasswords(user.username)} />
     </div>
   )
 }

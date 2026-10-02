@@ -34,8 +34,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             id: user.id,
             name: user.name,
             email: user.email ?? `${user.username}@local`,
+            username: user.username,
             role: user.role,
             title: user.title,
+            passwordUpdatedAt: user.passwordUpdatedAt.toISOString(),
           }
         } catch (error) {
           console.error("Authorize failed", error)

@@ -59,6 +59,8 @@ model User {
   username     String   @unique
   email        String?  @unique
   passwordHash String
+  /// Parola değişince eski oturumlar düşer
+  passwordUpdatedAt DateTime @default(now())
   role         Role
   title        String
   /// Avukatın kendi Drive klasörü (isteğe bağlı)
@@ -79,6 +81,16 @@ model User {
   logs          TaskLog[]
   files         TaskFile[]
   notifications Notification[]
+}
+
+/// Büro geneli ayarlar (Drive servis hesabı vb.) — yalnızca Halil günceller
+model OfficeConfig {
+  id                      String   @id @default("office")
+  driveServiceAccountEnc  String?
+  driveFolderId           String?
+  driveServiceEmail       String?
+  updatedAt               DateTime @updatedAt
+  updatedById             String?
 }
 
 model Client {

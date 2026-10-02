@@ -40,9 +40,14 @@ Avukat, stajyerden gelen işte **Kontrol edilecek** veya **Tamamlananlara al** s
 
 ## Google Drive (isteğe bağlı)
 
-- Büro geneli: `GOOGLE_SERVICE_ACCOUNT_JSON` + `GOOGLE_DRIVE_FOLDER_ID` (`.env` / Vercel).
-- Avukat başına: **Ayarlar → Drive klasör kimliği** (klasörü servis hesabıyla Düzenleyici paylaşın). Kaydederken stajyerlere yazma erişimi verilebilir. Zorunlu değil.
-- Stajyer görev detayında atayan avukatın Drive klasör bağlantısını görür.
+- **Büro (Halil):** Ayarlar → «Büro Google Drive» — servis hesabı JSON + klasör kimliği. Kaydetmeden önce bağlantı test edilir; JSON şifreli saklanır. Alternatif: `GOOGLE_SERVICE_ACCOUNT_JSON` + `GOOGLE_DRIVE_FOLDER_ID` (Vercel env öncelikli).
+- Klasörü servis hesabı e-postasıyla **Düzenleyici** paylaşın.
+- **Avukat:** Ayarlar → kişisel klasör kimliği; isteğe bağlı stajyer yazma erişimi.
+
+## Güvenlik
+
+- Başka kullanıcıların parolasını **yalnızca `halil`** sıfırlayabilir.
+- Silinen veya parolası değişen hesabın açık oturumu geçersiz sayılır.
 
 ## Performans
 

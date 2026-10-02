@@ -1,5 +1,7 @@
 import { google } from "googleapis"
 import { Readable } from "node:stream"
+import { prisma } from "@/lib/prisma"
+import { decryptSecret } from "@/lib/secret-box"
 import { WorkflowError, safeFileName } from "@/lib/workflow"
 
 export type StoredFile = {
@@ -14,39 +16,138 @@ export type StoredFile = {
 export type DriveStatus = {
   mode: "google" | "mock"
   reason: string | null
+  serviceEmail: string | null
+  folderId: string | null
 }
 
-export function getDriveStatus(): DriveStatus {
-  const hasJson = Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim())
-  const hasFolder = Boolean(process.env.GOOGLE_DRIVE_FOLDER_ID?.trim())
-  if (hasJson && hasFolder) return { mode: "google", reason: null }
-  if (!hasJson && !hasFolder) {
+type DriveCredentials = {
+  client_email: string
+  private_key: string
+}
+
+type ResolvedDriveConfig = {
+  credentials: DriveCredentials | null
+  folderId: string | null
+  serviceEmail: string | null
+  source: "env" | "db" | "none"
+}
+
+let configCache: { at: number; value: ResolvedDriveConfig } | null = null
+const CACHE_MS = 15_000
+
+export function invalidateDriveConfigCache() {
+  configCache = null
+}
+
+async function loadDriveConfig(): Promise<ResolvedDriveConfig> {
+  const now = Date.now()
+  if (configCache && now - configCache.at < CACHE_MS) return configCache.value
+
+  const envJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim() || ""
+  const envFolder = process.env.GOOGLE_DRIVE_FOLDER_ID?.trim() || ""
+  if (envJson && envFolder) {
+    try {
+      const credentials = JSON.parse(envJson) as DriveCredentials
+      const value: ResolvedDriveConfig = {
+        credentials,
+        folderId: envFolder,
+        serviceEmail: credentials.client_email ?? null,
+        source: "env",
+      }
+      configCache = { at: now, value }
+      return value
+    } catch {
+      /* fall through to db */
+    }
+  }
+
+  const row = await prisma.officeConfig.findUnique({ where: { id: "office" } })
+  if (row?.driveServiceAccountEnc && row.driveFolderId) {
+    try {
+      const plain = decryptSecret(row.driveServiceAccountEnc)
+      const credentials = JSON.parse(plain) as DriveCredentials
+      const value: ResolvedDriveConfig = {
+        credentials,
+        folderId: row.driveFolderId,
+        serviceEmail: row.driveServiceEmail || credentials.client_email || null,
+        source: "db",
+      }
+      configCache = { at: now, value }
+      return value
+    } catch (error) {
+      console.error("Drive office config decrypt/parse failed", error)
+    }
+  }
+
+  const value: ResolvedDriveConfig = {
+    credentials: null,
+    folderId: row?.driveFolderId ?? (envFolder || null),
+    serviceEmail: row?.driveServiceEmail ?? null,
+    source: "none",
+  }
+  configCache = { at: now, value }
+  return value
+}
+
+export async function getDriveStatus(): Promise<DriveStatus> {
+  const config = await loadDriveConfig()
+  if (config.credentials && config.folderId) {
+    return {
+      mode: "google",
+      reason: null,
+      serviceEmail: config.serviceEmail,
+      folderId: config.folderId,
+    }
+  }
+  if (!config.credentials && !config.folderId) {
     return {
       mode: "mock",
       reason: "Google Drive kimliği tanımlı değil. Dosya içeriği sunucuda tutulmaz.",
+      serviceEmail: null,
+      folderId: null,
     }
   }
-  if (!hasJson) {
-    return { mode: "mock", reason: "GOOGLE_SERVICE_ACCOUNT_JSON eksik." }
+  if (!config.credentials) {
+    return {
+      mode: "mock",
+      reason: "Servis hesabı JSON eksik. Halil Ayarlar’dan büro Drive’ını bağlamalı.",
+      serviceEmail: config.serviceEmail,
+      folderId: config.folderId,
+    }
   }
   return {
     mode: "mock",
-    reason: "GOOGLE_DRIVE_FOLDER_ID eksik. Klasörü servis hesabıyla paylaşın.",
+    reason: "Büro Drive klasör kimliği eksik.",
+    serviceEmail: config.serviceEmail,
+    folderId: null,
   }
 }
 
-function readCredentials() {
-  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
-  if (!raw) throw new WorkflowError("Servis hesabı tanımlı değil.")
-  try {
-    return JSON.parse(raw) as { client_email: string; private_key: string }
-  } catch {
-    throw new WorkflowError("Servis hesabı JSON biçimi okunamadı.")
+export async function getOfficeDriveAdminState() {
+  const envSet = Boolean(
+    process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim() &&
+      process.env.GOOGLE_DRIVE_FOLDER_ID?.trim(),
+  )
+  const row = await prisma.officeConfig.findUnique({ where: { id: "office" } })
+  const status = await getDriveStatus()
+  return {
+    envSet,
+    folderId: row?.driveFolderId ?? process.env.GOOGLE_DRIVE_FOLDER_ID?.trim() ?? null,
+    serviceEmail: status.serviceEmail,
+    connected: status.mode === "google",
+    reason: status.reason,
+    updatedAt: row?.updatedAt?.toISOString() ?? null,
   }
 }
 
-function driveClient() {
-  const credentials = readCredentials()
+async function readCredentials() {
+  const config = await loadDriveConfig()
+  if (!config.credentials) throw new WorkflowError("Servis hesabı tanımlı değil.")
+  return config.credentials
+}
+
+async function driveClient() {
+  const credentials = await readCredentials()
   const auth = new google.auth.JWT({
     email: credentials.client_email,
     key: credentials.private_key,
@@ -56,20 +157,21 @@ function driveClient() {
 }
 
 export async function ensureOfficeFolder() {
-  const status = getDriveStatus()
+  const status = await getDriveStatus()
   if (status.mode === "mock") {
     return { id: "mock-folder", name: "Vekalet Evrak", mode: "mock" as const }
   }
 
-  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID!.trim()
-  const drive = driveClient()
+  const config = await loadDriveConfig()
+  const folderId = config.folderId!
+  const drive = await driveClient()
   const found = await drive.files.get({
     fileId: folderId,
     fields: "id, name, mimeType",
     supportsAllDrives: true,
   })
   if (found.data.mimeType !== "application/vnd.google-apps.folder") {
-    throw new WorkflowError("GOOGLE_DRIVE_FOLDER_ID bir klasörü göstermiyor.")
+    throw new WorkflowError("Büro Drive klasör kimliği bir klasörü göstermiyor.")
   }
   return {
     id: folderId,
@@ -87,22 +189,11 @@ export async function uploadToDrive(input: {
 }): Promise<StoredFile> {
   const name = safeFileName(input.name)
   const mimeType = input.mimeType || "application/octet-stream"
-  const status = getDriveStatus()
-  const folderId = (input.folderId?.trim() || process.env.GOOGLE_DRIVE_FOLDER_ID?.trim()) ?? ""
+  const status = await getDriveStatus()
+  const config = await loadDriveConfig()
+  const folderId = (input.folderId?.trim() || config.folderId || "") ?? ""
 
-  if (status.mode === "mock" && !folderId) {
-    const driveFileId = `mock_${crypto.randomUUID()}`
-    return {
-      driveFileId,
-      name,
-      mimeType,
-      size: input.buffer.length,
-      webViewLink: `/onizleme/dosya/${driveFileId}`,
-      storageMode: "mock",
-    }
-  }
-
-  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim() || !folderId) {
+  if (status.mode === "mock" || !config.credentials || !folderId) {
     const driveFileId = `mock_${crypto.randomUUID()}`
     return {
       driveFileId,
@@ -115,7 +206,7 @@ export async function uploadToDrive(input: {
   }
 
   try {
-    const drive = driveClient()
+    const drive = await driveClient()
     const created = await drive.files.create({
       requestBody: {
         name,
@@ -151,10 +242,10 @@ export async function uploadToDrive(input: {
 }
 
 export async function createShareLink(fileId: string) {
-  const status = getDriveStatus()
+  const status = await getDriveStatus()
   if (status.mode === "mock") return `/onizleme/dosya/${fileId}`
 
-  const drive = driveClient()
+  const drive = await driveClient()
   if (process.env.DRIVE_SHARE_MODE === "anyone") {
     try {
       await drive.permissions.create({
@@ -180,12 +271,13 @@ export function folderLinkFromId(folderId: string) {
   return `https://drive.google.com/drive/folders/${id}`
 }
 
-/** Servis hesabı ile klasörü e-postal listesine okuyucu olarak paylaşır. */
+/** Servis hesabı ile klasörü e-posta listesine yazıcı olarak paylaşır. */
 export async function shareFolderWithEmails(folderId: string, emails: string[]) {
-  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim()) {
+  const config = await loadDriveConfig()
+  if (!config.credentials) {
     return { shared: 0, skipped: emails.length, reason: "Servis hesabı yok" as const }
   }
-  const drive = driveClient()
+  const drive = await driveClient()
   let shared = 0
   for (const email of emails) {
     const value = email.trim().toLowerCase()
@@ -206,7 +298,8 @@ export async function shareFolderWithEmails(folderId: string, emails: string[]) 
 }
 
 export async function resolveFolderMeta(folderId: string) {
-  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim()) {
+  const config = await loadDriveConfig()
+  if (!config.credentials) {
     return {
       id: folderId,
       name: "Drive klasörü",
@@ -214,7 +307,7 @@ export async function resolveFolderMeta(folderId: string) {
       verified: false,
     }
   }
-  const drive = driveClient()
+  const drive = await driveClient()
   const found = await drive.files.get({
     fileId: folderId,
     fields: "id, name, mimeType, webViewLink",
@@ -226,17 +319,46 @@ export async function resolveFolderMeta(folderId: string) {
   return {
     id: found.data.id ?? folderId,
     name: found.data.name ?? "Drive klasörü",
-    link:
-      found.data.webViewLink ??
-      folderLinkFromId(folderId)!,
+    link: found.data.webViewLink ?? folderLinkFromId(folderId)!,
     verified: true,
+  }
+}
+
+export async function testOfficeDriveConnection(folderId: string, serviceAccountJson: string) {
+  let credentials: DriveCredentials
+  try {
+    credentials = JSON.parse(serviceAccountJson) as DriveCredentials
+  } catch {
+    throw new WorkflowError("Servis hesabı JSON biçimi okunamadı.")
+  }
+  if (!credentials.client_email || !credentials.private_key) {
+    throw new WorkflowError("JSON içinde client_email ve private_key olmalı.")
+  }
+  const auth = new google.auth.JWT({
+    email: credentials.client_email,
+    key: credentials.private_key,
+    scopes: ["https://www.googleapis.com/auth/drive"],
+  })
+  const drive = google.drive({ version: "v3", auth })
+  const found = await drive.files.get({
+    fileId: folderId.trim(),
+    fields: "id, name, mimeType",
+    supportsAllDrives: true,
+  })
+  if (found.data.mimeType !== "application/vnd.google-apps.folder") {
+    throw new WorkflowError("Klasör kimliği bir Drive klasörüne ait değil.")
+  }
+  return {
+    folderId: found.data.id ?? folderId.trim(),
+    folderName: found.data.name ?? "Drive klasörü",
+    serviceEmail: credentials.client_email,
   }
 }
 
 export async function deleteDriveFile(file: StoredFile) {
   if (file.storageMode !== "google") return
   try {
-    const drive = driveClient()
+    const drive = await driveClient()
     await drive.files.delete({
       fileId: file.driveFileId,
       supportsAllDrives: true,

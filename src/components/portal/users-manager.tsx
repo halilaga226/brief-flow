@@ -174,14 +174,25 @@ function DeleteUserButton({ user }: { user: ManagedUser }) {
   )
 }
 
-export function UsersManager({ users }: { users: ManagedUser[] }) {
+export function UsersManager({
+  users,
+  canResetPasswords = false,
+}: {
+  users: ManagedUser[]
+  canResetPasswords?: boolean
+}) {
   return (
     <div className="grid gap-5">
       <CreateUserForm />
       <section className="overflow-hidden rounded-2xl border border-border bg-card">
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-xl font-semibold">Büro kullanıcıları</h2>
-          <p className="text-sm text-muted-foreground">Giriş kullanıcı adı ile yapılır.</p>
+          <p className="text-sm text-muted-foreground">
+            Giriş kullanıcı adı ile yapılır.
+            {canResetPasswords
+              ? " Parola sıfırlama yalnızca sizin hesabınıza açık."
+              : " Parola sıfırlama yalnızca Halil hesabına açıktır."}
+          </p>
         </div>
         <ul className="divide-y divide-border">
           {users.map((user) => (
@@ -213,7 +224,7 @@ export function UsersManager({ users }: { users: ManagedUser[] }) {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <ResetPasswordDialog user={user} />
+                {canResetPasswords ? <ResetPasswordDialog user={user} /> : null}
                 <DeleteUserButton user={user} />
               </div>
             </li>

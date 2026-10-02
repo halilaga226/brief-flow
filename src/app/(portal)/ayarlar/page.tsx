@@ -1,13 +1,15 @@
 import { ClearDemoButton } from "@/components/portal/clear-demo-button"
 import { DriveSettingsForm } from "@/components/portal/drive-settings-form"
 import { IntroToggle } from "@/components/portal/intro-tour"
+import { OfficeDriveAdminForm } from "@/components/portal/office-drive-form"
 import { PasswordForm } from "@/components/portal/password-form"
 import { StatusBadge } from "@/components/portal/status-badge"
 import { Button } from "@/components/ui/button"
-import { getDriveStatus } from "@/lib/drive"
+import { getDriveStatus, getOfficeDriveAdminState } from "@/lib/drive"
 import { formatTodayLabel, greeting } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { requireUser } from "@/lib/session"
+import { canResetPasswords } from "@/lib/users"
 import {
   canCreateTask,
   canManageUsers,
@@ -25,7 +27,8 @@ export const metadata: Metadata = { title: "Ayarlar" }
 
 export default async function SettingsPage() {
   const user = await requireUser()
-  const [dashboard, calls, overview, dbUser] = await Promise.all([
+  const isHalil = canResetPasswords(user.username)
+  const [dashboard, calls, overview, dbUser, drive, officeDrive] = await Promise.all([
     getDashboard(user.id, user.role),
     listClientCalls(user),
     isAdmin(user.role) ? getAdminOverview(user) : Promise.resolve(null),
@@ -33,10 +36,11 @@ export default async function SettingsPage() {
       where: { id: user.id },
       select: { driveFolderId: true, driveFolderLink: true },
     }),
+    getDriveStatus(),
+    isHalil ? getOfficeDriveAdminState() : Promise.resolve(null),
   ])
   const firstName = user.name.split(" ")[0]
   const manageUsers = canManageUsers(user.role)
-  const drive = getDriveStatus()
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6">
@@ -51,11 +55,22 @@ export default async function SettingsPage() {
 
       <IntroToggle />
 
+      {officeDrive ? (
+        <OfficeDriveAdminForm
+          connected={officeDrive.connected}
+          folderId={officeDrive.folderId}
+          serviceEmail={officeDrive.serviceEmail}
+          envSet={officeDrive.envSet}
+          reason={officeDrive.reason}
+        />
+      ) : null}
+
       {canCreateTask(user.role) ? (
         <DriveSettingsForm
           folderId={dbUser?.driveFolderId ?? null}
           folderLink={dbUser?.driveFolderLink ?? null}
           orgConnected={drive.mode === "google"}
+          serviceEmail={drive.serviceEmail}
         />
       ) : null}
 

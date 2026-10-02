@@ -14,9 +14,6 @@ export const authConfig = {
       const loggedIn = Boolean(auth?.user)
       if (pathname.startsWith("/api/auth")) return true
       if (pathname === "/giris") {
-        if (loggedIn) {
-          return NextResponse.redirect(new URL("/ana", request.nextUrl))
-        }
         return true
       }
       return loggedIn
@@ -24,13 +21,17 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id ?? ""
+        token.username = user.username
         token.role = user.role
         token.title = user.title
+        token.passwordUpdatedAt = user.passwordUpdatedAt
       }
       return token
     },
     session({ session, token }) {
       session.user.id = typeof token.id === "string" ? token.id : ""
+      session.user.username =
+        typeof token.username === "string" ? token.username : ""
       session.user.role =
         token.role === "ADMIN"
           ? "ADMIN"
@@ -38,6 +39,10 @@ export const authConfig = {
             ? "INTERN"
             : "LAWYER"
       session.user.title = typeof token.title === "string" ? token.title : ""
+      session.user.passwordUpdatedAt =
+        typeof token.passwordUpdatedAt === "string"
+          ? token.passwordUpdatedAt
+          : undefined
       return session
     },
   },

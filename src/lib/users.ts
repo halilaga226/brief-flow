@@ -68,6 +68,19 @@ export function assertLawyer(role: Role) {
   }
 }
 
+/** Parola sıfırlama yalnızca Halil hesabına aittir. */
+export const PASSWORD_ADMIN_USERNAME = "halil"
+
+export function canResetPasswords(username: string) {
+  return username.trim().toLowerCase() === PASSWORD_ADMIN_USERNAME
+}
+
+export function assertPasswordAdmin(username: string) {
+  if (!canResetPasswords(username)) {
+    throw new WorkflowError("Parola sıfırlama yalnızca Halil hesabına açıktır.")
+  }
+}
+
 export function isDemoEmail(email: string | null | undefined) {
   if (!email) return false
   return email.toLowerCase().endsWith("@vekalet.local")

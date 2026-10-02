@@ -10,7 +10,7 @@
     "postinstall": "prisma generate",
     "setup": "prisma generate && prisma db push && tsx prisma/seed.ts",
     "db:seed": "tsx prisma/seed.ts",
-    "test": "tsx --test src/lib/workflow.test.ts"
+    "test": "tsx --test src/lib/workflow.test.ts src/lib/users.test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

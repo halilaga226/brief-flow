@@ -3,6 +3,8 @@ import type { SessionUser } from "@/lib/dto"
 import { prisma } from "@/lib/prisma"
 import {
   assertLawyer,
+  assertPasswordAdmin,
+  canResetPasswords,
   isDemoEmail,
   isDemoUsername,
   validateNewPassword,
@@ -111,6 +113,7 @@ export async function createOfficeUser(
       title: title.title,
       role: role.role,
       passwordHash,
+      passwordUpdatedAt: new Date(),
     },
   })
   return { id: created.id, username: created.username, name: created.name }
@@ -121,14 +124,17 @@ export async function resetOfficePassword(
   userId: string,
   rawPassword: string,
 ) {
-  assertLawyer(actor.role)
+  assertPasswordAdmin(actor.username)
   const password = validateNewPassword(rawPassword)
   if (!password.ok) throw new WorkflowError(password.error)
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) throw new WorkflowError("Kullanıcı bulunamadı.")
   await prisma.user.update({
     where: { id: userId },
-    data: { passwordHash: await bcrypt.hash(password.password, 12) },
+    data: {
+      passwordHash: await bcrypt.hash(password.password, 12),
+      passwordUpdatedAt: new Date(),
+    },
   })
   return { username: user.username, name: user.name }
 }
@@ -149,7 +155,10 @@ export async function changeOwnPassword(
   }
   await prisma.user.update({
     where: { id: actor.id },
-    data: { passwordHash: await bcrypt.hash(password.password, 12) },
+    data: {
+      passwordHash: await bcrypt.hash(password.password, 12),
+      passwordUpdatedAt: new Date(),
+    },
   })
 }
 
@@ -191,3 +200,5 @@ export async function deleteOfficeUser(actor: SessionUser, userId: string) {
   })
   return { name: user.name, username: user.username }
 }
+
+export { canResetPasswords }

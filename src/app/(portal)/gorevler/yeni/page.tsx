@@ -29,7 +29,7 @@ export default async function NewTaskPage({
 
   const params = await searchParams
   const people = await listAssignees(user)
-  const drive = getDriveStatus()
+  const drive = await getDriveStatus()
   const defaultDue = addDaysKey(istanbulDayKey(new Date()), 3)
   const source = params.from ? await getTask(user.id, user.role, params.from) : null
 

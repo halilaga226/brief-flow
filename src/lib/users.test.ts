@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
+  canResetPasswords,
   validateNewPassword,
   validatePersonEmail,
   validatePersonName,
@@ -15,6 +16,12 @@ describe("user validation", () => {
     assert.equal(validateNewPassword("short").ok, false)
     assert.equal(validateNewPassword("sadeceharfler").ok, false)
     assert.equal(validateNewPassword("GecerliParola12").ok, true)
+  })
+
+  it("limits password reset to halil", () => {
+    assert.equal(canResetPasswords("halil"), true)
+    assert.equal(canResetPasswords("Halil"), true)
+    assert.equal(canResetPasswords("kaan.atli"), false)
   })
 
   it("requires a real name and username", () => {

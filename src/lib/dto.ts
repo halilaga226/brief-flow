@@ -9,6 +9,7 @@ import type {
 export type SessionUser = {
   id: string
   name: string
+  username: string
   email: string
   role: Role
   title: string
