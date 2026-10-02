@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld("atliApp", {
   openFolder: () => ipcRenderer.invoke("open-folder"),
   restoreLocal: (filePath) => ipcRenderer.invoke("restore-local", filePath),
   reloadPortal: () => ipcRenderer.invoke("reload-portal"),
+  setSettingsOpen: (open) => ipcRenderer.invoke("set-settings-open", open),
   onStatus: (cb) => {
     const handler = (_event, text) => cb(text)
     ipcRenderer.on("status", handler)
@@ -18,5 +19,10 @@ contextBridge.exposeInMainWorld("atliApp", {
     const handler = (_event, rows) => cb(rows)
     ipcRenderer.on("locals", handler)
     return () => ipcRenderer.removeListener("locals", handler)
+  },
+  onSettingsOpen: (cb) => {
+    const handler = (_event, open) => cb(open)
+    ipcRenderer.on("settings-open", handler)
+    return () => ipcRenderer.removeListener("settings-open", handler)
   },
 })

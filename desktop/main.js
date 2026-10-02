@@ -35,7 +35,8 @@ let tray = null
 let timer = null
 let lastStatus = "Hazır"
 let busy = false
-const TOOLBAR_H = 52
+let settingsOpen = false
+const TOOLBAR_H = 56
 
 function defaultBackupDir() {
   return path.join(app.getPath("documents"), "Atli-Karakaya-Yedekler")
@@ -70,6 +71,18 @@ function normalizePortalUrl(raw) {
 function layoutPortalView() {
   if (!mainWindow || !portalView) return
   const [width, height] = mainWindow.getContentSize()
+
+  // Ayarlar açıkken BrowserView siteyi örter — kaldır ki panel görünsün
+  if (settingsOpen) {
+    if (mainWindow.getBrowserView()) {
+      mainWindow.removeBrowserView(portalView)
+    }
+    return
+  }
+
+  if (!mainWindow.getBrowserView()) {
+    mainWindow.setBrowserView(portalView)
+  }
   portalView.setBounds({
     x: 0,
     y: TOOLBAR_H,
@@ -77,6 +90,12 @@ function layoutPortalView() {
     height: Math.max(0, height - TOOLBAR_H),
   })
   portalView.setAutoResize({ width: true, height: true })
+}
+
+function setSettingsOpen(open) {
+  settingsOpen = Boolean(open)
+  layoutPortalView()
+  sendShell("settings-open", settingsOpen)
 }
 
 function sendShell(channel, payload) {
@@ -254,7 +273,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 640,
     title: "Atlı Karakaya",
-    backgroundColor: "#0f1419",
+    backgroundColor: "#e8ebf2",
     icon: appIcon(),
     autoHideMenuBar: true,
     webPreferences: {
@@ -384,6 +403,7 @@ function wireIpc() {
     if (typeof next.autoBackup === "boolean") store.set("autoBackup", next.autoBackup)
     schedule()
     reloadPortal()
+    setSettingsOpen(false)
     setStatus("Ayarlar kaydedildi")
     return { ok: true }
   })
@@ -410,19 +430,9 @@ function wireIpc() {
     reloadPortal()
     return true
   })
-  ipcMain.handle("toggle-settings", (_event, open) => {
-    // shell handles UI; keep portal layout
-    layoutPortalView()
-    sendShell("settings-open", Boolean(open))
-    return true
-  })
   ipcMain.handle("set-settings-open", (_event, open) => {
-    // When settings drawer open, hide portal view overlap optionally — keep both
-    if (open && portalView && mainWindow) {
-      // shrink portal a bit? keep full — settings is overlay in shell
-    }
-    layoutPortalView()
-    return true
+    setSettingsOpen(open)
+    return { ok: true, open: settingsOpen }
   })
 }
 
@@ -440,6 +450,10 @@ app.whenReady().then(() => {
       ? "Hazır — portal masaüstünde"
       : "Ayarlar’dan portal adresini girin",
   )
+
+  if (!normalizePortalUrl(store.get("portalUrl"))) {
+    setSettingsOpen(true)
+  }
 
   if (store.get("autoBackup") && store.get("agentToken") && normalizePortalUrl(store.get("portalUrl"))) {
     setTimeout(() => {

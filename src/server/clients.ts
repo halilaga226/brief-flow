@@ -109,7 +109,6 @@ export async function listClients(actor: SessionUser): Promise<ClientListDTO[]> 
   // Büro ortak listesi — avukat, yönetici ve stajyer görüntüleyebilir
   const rows = await prisma.client.findMany({
     where: { deletedAt: null },
-    orderBy: { name: "asc" },
     include: {
       caseFiles: {
         where: { deletedAt: null },
@@ -117,13 +116,20 @@ export async function listClients(actor: SessionUser): Promise<ClientListDTO[]> 
       },
     },
   })
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    fileCount: row.caseFiles.length,
-    taskCount: row.caseFiles.reduce((sum, file) => sum + file._count.tasks, 0),
-    updatedAt: row.updatedAt.toISOString(),
-  }))
+  return rows
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      fileCount: row.caseFiles.length,
+      taskCount: row.caseFiles.reduce((sum, file) => sum + file._count.tasks, 0),
+      updatedAt: row.updatedAt.toISOString(),
+    }))
+    .sort((a, b) => {
+      // En çok iş, sonra en çok dosya üstte; eşitlikte ada göre
+      if (b.taskCount !== a.taskCount) return b.taskCount - a.taskCount
+      if (b.fileCount !== a.fileCount) return b.fileCount - a.fileCount
+      return a.name.localeCompare(b.name, "tr")
+    })
 }
 
 export async function getClientWithFiles(actor: SessionUser, clientId: string) {

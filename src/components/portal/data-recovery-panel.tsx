@@ -191,7 +191,7 @@ export function DataRecoveryPanel({
         portalun aynısını bilgisayarda açar ve yedek alır.{" "}
         <a
           className="font-semibold text-foreground underline underline-offset-2"
-          href="https://github.com/halilaga226/brief-flow/releases/download/yedek-ajani-v1.1.0/Atli-Karakaya-Windows-Portable.zip"
+          href="https://github.com/halilaga226/brief-flow/releases/download/yedek-ajani-v1.1.1/Atli-Karakaya-Windows-Portable.zip"
         >
           Windows paketini indir
         </a>

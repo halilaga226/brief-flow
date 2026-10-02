@@ -7,7 +7,7 @@ Altında: canlı site (görevler, müvekkiller, ayarlar…)
 
 ## İndirme (Windows)
 
-1. **[Atlı Karakaya Windows (zip)](https://github.com/halilaga226/brief-flow/releases/download/yedek-ajani-v1.1.0/Atli-Karakaya-Windows-Portable.zip)**  
+1. **[Atlı Karakaya Windows (zip)](https://github.com/halilaga226/brief-flow/releases/download/yedek-ajani-v1.1.1/Atli-Karakaya-Windows-Portable.zip)**  
    *(yeni sürüm yayınlandığında bu link güncellenir)*
 2. Zip’i açın  
 3. `Atli Karakaya.exe` → sağ tık → **Gönder → Masaüstü (kısayol)**  

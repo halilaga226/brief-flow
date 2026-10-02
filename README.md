@@ -61,7 +61,7 @@ Supabase’te pahalı PITR şart değil. Bu portal kendi yedeğini alır:
 
 Web portalunun aynısını masaüstünde açar; üstten yedek alır.
 
-**[Windows paketi indir](https://github.com/halilaga226/brief-flow/releases/download/yedek-ajani-v1.1.0/Atli-Karakaya-Windows-Portable.zip)**
+**[Windows paketi indir](https://github.com/halilaga226/brief-flow/releases/download/yedek-ajani-v1.1.1/Atli-Karakaya-Windows-Portable.zip)**
 
 ```bash
 cd desktop && npm install && npm start   # geliştirme

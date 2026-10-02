@@ -12,8 +12,9 @@ function setStatus(text) {
   el.classList.toggle("error", /^Hata/i.test(text))
 }
 
-function setSettingsOpen(open) {
+async function setSettingsOpen(open) {
   $("settings").hidden = !open
+  await window.atliApp.setSettingsOpen(open)
 }
 
 function renderLocals(rows) {
@@ -78,25 +79,35 @@ function fillForm(cfg) {
   $("autoBackup").checked = Boolean(cfg.autoBackup)
   setStatus(cfg.status || "Hazır")
   renderLocals(cfg.locals || [])
-  if (cfg.needsSetup) setSettingsOpen(true)
 }
 
 async function boot() {
   const cfg = await window.atliApp.getConfig()
   fillForm(cfg)
+  if (cfg.needsSetup) await setSettingsOpen(true)
 
   window.atliApp.onStatus(setStatus)
   window.atliApp.onLocals(renderLocals)
-
-  $("toggleSettings").addEventListener("click", () => {
-    setSettingsOpen($("settings").hidden)
+  window.atliApp.onSettingsOpen((open) => {
+    $("settings").hidden = !open
   })
-  $("closeSettings").addEventListener("click", () => setSettingsOpen(false))
+
+  $("toggleSettings").addEventListener("click", async () => {
+    const next = $("settings").hidden
+    await setSettingsOpen(next)
+  })
+  $("closeSettings").addEventListener("click", async () => {
+    await setSettingsOpen(false)
+  })
 
   $("save").addEventListener("click", async () => {
-    await window.atliApp.saveConfig(readForm())
-    setSettingsOpen(false)
-    setStatus("Ayarlar kaydedildi — portal açılıyor")
+    $("save").disabled = true
+    try {
+      await window.atliApp.saveConfig(readForm())
+      setStatus("Ayarlar kaydedildi — portal açılıyor")
+    } finally {
+      $("save").disabled = false
+    }
   })
 
   $("pickFolder").addEventListener("click", async () => {
@@ -117,7 +128,7 @@ async function boot() {
       renderLocals(await window.atliApp.listLocals())
     } else if (result.error !== "busy") {
       setStatus(`Hata: ${result.error}`)
-      setSettingsOpen(true)
+      await setSettingsOpen(true)
     }
   })
 }
