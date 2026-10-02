@@ -51,6 +51,7 @@ export type TaskCardDTO = {
   canDelete: boolean
   expensePaid: boolean
   clientCallStatus: ClientCallStatus
+  workItemId: string | null
   updatedAt: string
   completedAt: string | null
   logs: TimelineEventDTO[]

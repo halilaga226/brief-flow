@@ -13,12 +13,14 @@ import {
   canUploadDraft,
   fileHref,
   isOnAssigneeWorkList,
+  isOnMyUnifiedWorkList,
   isParticipant,
   matchesFilter,
   matchesQuery,
   needsMyAction,
   safeFileName,
   showsOnHome,
+  unifiedWorkListRank,
   validateDraftFile,
   validateTrackingCode,
 } from "./workflow"
@@ -95,6 +97,38 @@ describe("state machine", () => {
     assert.equal(isOnAssigneeWorkList("ATANDI"), true)
     assert.equal(isOnAssigneeWorkList("INCELEME_BEKLIYOR"), false)
     assert.equal(isOnAssigneeWorkList("REVIZE_ISTENDI"), true)
+  })
+
+  it("unified list: assignee holds ATANDI; assigner gets INCELEME back on top rank", () => {
+    assert.equal(
+      isOnMyUnifiedWorkList(
+        { status: "ATANDI", assignerId: lawyer, assigneeId: intern },
+        lawyer,
+      ),
+      false,
+    )
+    assert.equal(
+      isOnMyUnifiedWorkList(
+        { status: "ATANDI", assignerId: lawyer, assigneeId: intern },
+        intern,
+      ),
+      true,
+    )
+    assert.equal(
+      isOnMyUnifiedWorkList(
+        { status: "INCELEME_BEKLIYOR", assignerId: lawyer, assigneeId: intern },
+        lawyer,
+      ),
+      true,
+    )
+    assert.equal(
+      isOnMyUnifiedWorkList(
+        { status: "INCELEME_BEKLIYOR", assignerId: lawyer, assigneeId: intern },
+        intern,
+      ),
+      false,
+    )
+    assert.ok(unifiedWorkListRank("INCELEME_BEKLIYOR") < unifiedWorkListRank("ATANDI"))
   })
 
   it("keeps home focused on active + due-soon items", () => {

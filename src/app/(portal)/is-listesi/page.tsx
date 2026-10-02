@@ -5,9 +5,11 @@ import { requireUser } from "@/lib/session"
 import {
   canAssignTask,
   canManageWorkItems,
-  isOnAssigneeWorkList,
+  isOnMyUnifiedWorkList,
+  unifiedWorkListRank,
 } from "@/lib/workflow"
 import { listTasksCached } from "@/server/cached"
+import { listClientsForPicker } from "@/server/clients"
 import { listWorkItems } from "@/server/work-items"
 import { Plus } from "lucide-react"
 import type { Metadata } from "next"
@@ -21,21 +23,37 @@ export default async function WorkListPage() {
   const user = await requireUser()
   const canAssign = canAssignTask(user.role)
   const canManageFiles = canManageWorkItems(user.role)
-  const isLawyerView = canAssign
 
-  const [items, tasks] = await Promise.all([
-    canManageFiles
-      ? listWorkItems(user, isLawyerView ? "own" : "all")
-      : Promise.resolve([]),
+  const [items, tasks, clients] = await Promise.all([
+    canManageFiles ? listWorkItems(user, "own") : Promise.resolve([]),
     listTasksCached(user.id, user.role),
+    canManageFiles ? listClientsForPicker(user) : Promise.resolve([]),
   ])
 
-  const given = tasks.filter((task) => task.assignerId === user.id)
-  const incoming = tasks.filter(
-    (task) => task.assigneeId === user.id && isOnAssigneeWorkList(task.status),
+  // Tek liste: bana atanan aktif + bana geri gelen inceleme/ops (stajyerdeyken ATANDI düşer)
+  const myTasks = tasks
+    .filter((task) => isOnMyUnifiedWorkList(task, user.id))
+    .sort((a, b) => {
+      const rank = unifiedWorkListRank(a.status) - unifiedWorkListRank(b.status)
+      if (rank !== 0) return rank
+      return b.updatedAt.localeCompare(a.updatedAt)
+    })
+
+  // Stajyere aktif atanmış işlerin dosya kayıtları avukat listesinden gizlensin
+  const outboundWorkItemIds = new Set(
+    tasks
+      .filter(
+        (task) =>
+          task.assignerId === user.id &&
+          task.assigneeId !== user.id &&
+          (task.status === "ATANDI" || task.status === "REVIZE_ISTENDI") &&
+          task.workItemId,
+      )
+      .map((task) => task.workItemId as string),
   )
-  // Avukata gönderilmiş işler atayanın listesinde öne çıkar
-  const awaitingMe = given.filter((task) => task.status === "INCELEME_BEKLIYOR")
+  const visibleItems = items.filter((item) => !outboundWorkItemIds.has(item.id))
+
+  const reviewCount = myTasks.filter((task) => task.status === "INCELEME_BEKLIYOR").length
 
   return (
     <div className="mx-auto w-full max-w-[80rem] space-y-8">
@@ -44,8 +62,8 @@ export default async function WorkListPage() {
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">İş listesi</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {canAssign
-              ? "Size gelen işler ve sizin verdiğiniz işler. Müvekkil/dosya için Müvekkiller sekmesine bakın."
-              : "Size atanan aktif işler. Avukata gönderince listeden düşer."}
+              ? "Kendi işleriniz tek listede. Stajyere atayınca listeden düşer; stajyer gönderince en üste gelir."
+              : "Size atanan işler. Avukata gönderince listeden düşer; açıklamanız avukata iletilir."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -73,40 +91,29 @@ export default async function WorkListPage() {
       <section className="space-y-3">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-base font-semibold">
-            {canAssign ? "Bana gelen" : "Görevlerim"}
+            Görevlerim
+            {reviewCount > 0 ? (
+              <span className="ml-2 text-sm font-medium text-orange-600">
+                ({reviewCount} inceleme)
+              </span>
+            ) : null}
           </h2>
-          <span className="text-sm text-muted-foreground tabular-nums">{incoming.length}</span>
+          <span className="text-sm text-muted-foreground tabular-nums">{myTasks.length}</span>
         </div>
-        <TaskWorkList tasks={incoming} canAssign={false} userId={user.id} />
+        <TaskWorkList
+          tasks={myTasks}
+          canAssign={canAssign}
+          userId={user.id}
+          mode="unified"
+        />
       </section>
-
-      {canAssign ? (
-        <section className="space-y-3">
-          <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-base font-semibold">
-              Verdiğim görevler
-              {awaitingMe.length > 0 ? (
-                <span className="ml-2 text-sm font-medium text-orange-600">
-                  ({awaitingMe.length} inceleme)
-                </span>
-              ) : null}
-            </h2>
-            <span className="text-sm text-muted-foreground tabular-nums">{given.length}</span>
-          </div>
-          <TaskWorkList
-            tasks={given}
-            canAssign={canAssign}
-            userId={user.id}
-            mode="given"
-          />
-        </section>
-      ) : null}
 
       {canManageFiles ? (
         <section className="space-y-3" id="is-ekle">
           <h2 className="text-base font-semibold">Dosya kayıtları</h2>
           <WorkItemAgenda
-            items={items}
+            items={visibleItems}
+            clients={clients}
             canCreate
             canAssign={canAssign}
             currentUserId={user.id}

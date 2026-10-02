@@ -70,29 +70,41 @@ export async function listTasks(userId: string, role: SessionUser["role"]) {
         ? {}
         : role === "LAWYER"
           ? {
+              // Kendi tarafı olduğu işler + stajyere atanmış işler (stajyer listesi görüntüleme)
               OR: [
                 { assignerId: userId },
                 { assigneeId: userId },
                 { assignee: { role: "INTERN" } },
               ],
             }
-          : { OR: [{ assignerId: userId }, { assigneeId: userId }] }),
+          : {
+              // Stajyer yalnızca kendi atadığı / kendisine atanan işler — avukat listesi yok
+              OR: [{ assignerId: userId }, { assigneeId: userId }],
+            }),
     },
     include: taskCardInclude,
-    orderBy: [{ dueDate: "asc" }, { updatedAt: "desc" }],
+    orderBy: [{ updatedAt: "desc" }, { dueDate: "asc" }],
   })
   return tasks
     .map((task) => toTaskCard(task, userId, role))
     .filter((task) => {
-      // Tamamlanan iş stajyer ekranından düşer; avukat/admin silene kadar görür.
       if (task.status === "TAMAMLANDI" && role === "INTERN") return false
+      // Avukat başka avukatın stajyer dışı işini görmesin (assignee LAWYER ve kendisi taraf değil)
+      if (
+        role === "LAWYER" &&
+        task.assignerId !== userId &&
+        task.assigneeId !== userId &&
+        task.assigneeRole !== "INTERN"
+      ) {
+        return false
+      }
       return true
     })
     .sort((a, b) => {
       const aDone = a.status === "TAMAMLANDI" ? 1 : 0
       const bDone = b.status === "TAMAMLANDI" ? 1 : 0
       if (aDone !== bDone) return aDone - bDone
-      return a.dueDate.localeCompare(b.dueDate)
+      return b.updatedAt.localeCompare(a.updatedAt)
     })
 }
 
@@ -331,6 +343,13 @@ export async function createTask(
         },
       },
     })
+    // Dosya kaydı da atananın listesine geçsin (stajyer/avukat)
+    if (workItemId) {
+      await prisma.workItem.update({
+        where: { id: workItemId },
+        data: { ownerId: assignee.id, updatedAt: new Date() },
+      })
+    }
     return task.id
   } catch (error) {
     if (stored) await deleteDriveFile(stored)
@@ -411,8 +430,34 @@ export async function sendToLawyer(actor: SessionUser, taskId: string, rawNote: 
     }
     await tx.task.update({
       where: { id: taskId },
-      data: { status: "INCELEME_BEKLIYOR" },
+      data: {
+        status: "INCELEME_BEKLIYOR",
+        description: [
+          task.description?.trim() || "",
+          "",
+          `---`,
+          `Stajyer notu (${actor.name} · ${new Date().toLocaleString("tr-TR")}):`,
+          noteResult.note,
+        ]
+          .filter((line, i, arr) => !(line === "" && arr[i - 1] === ""))
+          .join("\n")
+          .trim(),
+        updatedAt: new Date(),
+      },
     })
+    if (task.workItemId) {
+      await tx.workItemEntry.create({
+        data: {
+          workItemId: task.workItemId,
+          content: `Avukata gönderildi: ${noteResult.note}`,
+          createdById: actor.id,
+        },
+      })
+      await tx.workItem.update({
+        where: { id: task.workItemId },
+        data: { ownerId: task.assignerId, updatedAt: new Date() },
+      })
+    }
     await tx.taskLog.create({
       data: {
         taskId,
@@ -455,8 +500,14 @@ export async function requestRevision(actor: SessionUser, taskId: string, rawNot
     }
     await tx.task.update({
       where: { id: taskId },
-      data: { status: "REVIZE_ISTENDI" },
+      data: { status: "REVIZE_ISTENDI", updatedAt: new Date() },
     })
+    if (task.workItemId) {
+      await tx.workItem.update({
+        where: { id: task.workItemId },
+        data: { ownerId: task.assigneeId, updatedAt: new Date() },
+      })
+    }
     await tx.taskLog.create({
       data: {
         taskId,

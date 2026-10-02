@@ -127,6 +127,7 @@ export function toTaskCard(
     canDelete: canDeleteTask(record, userId, role),
     expensePaid: record.expensePaid,
     clientCallStatus: record.clientCallStatus as ClientCallStatus,
+    workItemId: record.workItemId ?? null,
     updatedAt: record.updatedAt.toISOString(),
     completedAt: record.completedAt?.toISOString() ?? null,
     logs: [],

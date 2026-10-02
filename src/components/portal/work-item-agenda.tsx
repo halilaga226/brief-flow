@@ -6,19 +6,41 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import type { ClientPickerDTO } from "@/server/clients"
 import type { WorkItemDTO } from "@/server/work-items"
 import { cn } from "@/lib/utils"
 import { Plus, Trash2, UserPlus } from "lucide-react"
 import Link from "next/link"
-import { useActionState, useEffect, useRef, useState } from "react"
+import { useActionState, useEffect, useMemo, useRef, useState } from "react"
 
-function CreateWorkItemForm({ open, onClose }: { open: boolean; onClose: () => void }) {
+function CreateWorkItemForm({
+  open,
+  onClose,
+  clients,
+}: {
+  open: boolean
+  onClose: () => void
+  clients: ClientPickerDTO[]
+}) {
   const [state, action, pending] = useActionState(createWorkItemAction, null)
   const formRef = useRef<HTMLFormElement>(null)
+  const [clientId, setClientId] = useState("")
+  const [caseFileId, setCaseFileId] = useState("")
   useActionResult(state, () => {
     formRef.current?.reset()
+    setClientId("")
+    setCaseFileId("")
     onClose()
   })
+
+  const selectedClient = useMemo(
+    () => clients.find((c) => c.id === clientId) ?? null,
+    [clients, clientId],
+  )
+  const selectedFile = useMemo(
+    () => selectedClient?.caseFiles.find((f) => f.id === caseFileId) ?? null,
+    [selectedClient, caseFileId],
+  )
 
   if (!open) return null
 
@@ -29,7 +51,7 @@ function CreateWorkItemForm({ open, onClose }: { open: boolean; onClose: () => v
       className="grid gap-3 border border-border bg-card p-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-semibold">Yeni dosya kaydı</p>
+        <p className="font-semibold">Yeni iş kaydı</p>
         <div className="flex gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={onClose}>
             Vazgeç
@@ -41,25 +63,79 @@ function CreateWorkItemForm({ open, onClose }: { open: boolean; onClose: () => v
       </div>
       {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
       <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1 sm:col-span-2">
+          <Label htmlFor="clientId">Müvekkil</Label>
+          <select
+            id="clientId"
+            name="clientId"
+            value={clientId}
+            onChange={(e) => {
+              setClientId(e.target.value)
+              setCaseFileId("")
+            }}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            required
+          >
+            <option value="">Müvekkil seçin…</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.name}
+              </option>
+            ))}
+          </select>
+          <input type="hidden" name="clientName" value={selectedClient?.name ?? ""} />
+        </div>
+        <div className="grid gap-1 sm:col-span-2">
+          <Label htmlFor="caseFileId">Dosya (varsa)</Label>
+          <select
+            id="caseFileId"
+            name="caseFileId"
+            value={caseFileId}
+            onChange={(e) => setCaseFileId(e.target.value)}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            disabled={!selectedClient}
+          >
+            <option value="">Dosya seçilmedi</option>
+            {(selectedClient?.caseFiles ?? []).map((file) => (
+              <option key={file.id} value={file.id}>
+                {file.fileNumber}
+                {file.courtName ? ` · ${file.courtName}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="grid gap-1">
           <Label htmlFor="courtName">Mahkeme</Label>
-          <Input id="courtName" name="courtName" required className="h-9" />
+          <Input
+            id="courtName"
+            name="courtName"
+            required
+            className="h-9"
+            key={`court-${caseFileId || "x"}`}
+            defaultValue={selectedFile?.courtName ?? ""}
+          />
         </div>
         <div className="grid gap-1">
           <Label htmlFor="fileNumber">Dosya no</Label>
-          <Input id="fileNumber" name="fileNumber" required className="h-9" />
+          <Input
+            id="fileNumber"
+            name="fileNumber"
+            required
+            className="h-9"
+            key={`file-${caseFileId || "x"}`}
+            defaultValue={selectedFile?.fileNumber ?? ""}
+          />
         </div>
         <div className="grid gap-1 sm:col-span-2">
           <Label htmlFor="workToDo">Yapılacaklar</Label>
           <Textarea id="workToDo" name="workToDo" required rows={2} />
         </div>
         <div className="grid gap-1 sm:col-span-2">
-          <Label htmlFor="notes">Özel not</Label>
+          <Label htmlFor="notes">Özel not / açıklama</Label>
           <Textarea id="notes" name="notes" rows={2} />
         </div>
-        <input type="hidden" name="clientName" value="" />
         <input type="hidden" name="opposingParty" value="" />
-        <input type="hidden" name="courtFile" value="" />
+        <input type="hidden" name="courtFile" value={selectedFile?.fileNumber ?? ""} />
       </div>
     </form>
   )
@@ -86,18 +162,19 @@ function DeleteButton({ id }: { id: string }) {
 }
 
 const COL =
-  "grid grid-cols-1 gap-2 border-b border-border px-3 py-3 md:grid-cols-[minmax(8rem,1.2fr)_6rem_minmax(8rem,1.4fr)_minmax(6rem,1fr)_3.5rem_auto] md:items-start md:gap-2 md:py-2.5"
+  "grid grid-cols-1 gap-2 border-b border-border px-3 py-3 md:grid-cols-[minmax(7rem,1fr)_minmax(8rem,1.2fr)_6rem_minmax(8rem,1.4fr)_minmax(6rem,1fr)_3.5rem_auto] md:items-start md:gap-2 md:py-2.5"
 
 export function WorkItemAgenda({
   items,
+  clients = [],
   canCreate = true,
   canAssign = false,
   currentUserId,
 }: {
   items: WorkItemDTO[]
+  clients?: ClientPickerDTO[]
   canCreate?: boolean
   canAssign?: boolean
-  /** Verilirse silme yalnızca kendi kayıtlarında görünür */
   currentUserId?: string
 }) {
   const [formOpen, setFormOpen] = useState(false)
@@ -130,12 +207,16 @@ export function WorkItemAgenda({
       ) : null}
 
       {canCreate ? (
-        <CreateWorkItemForm open={formOpen} onClose={() => setFormOpen(false)} />
+        <CreateWorkItemForm
+          open={formOpen}
+          onClose={() => setFormOpen(false)}
+          clients={clients}
+        />
       ) : null}
 
       {items.length === 0 ? (
         <p className="border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
-          Dosya kaydı yok
+          Dosya kaydı yok — «İş ekle» ile müvekkil seçerek ekleyin.
         </p>
       ) : (
         <div className="rounded-lg border border-border bg-card">
@@ -145,6 +226,7 @@ export function WorkItemAgenda({
               "hidden bg-muted/50 text-[10px] font-bold tracking-wide text-muted-foreground uppercase md:grid",
             )}
           >
+            <span>Müvekkil</span>
             <span>Mahkeme</span>
             <span>Dosya no</span>
             <span>Yapılacaklar</span>
@@ -157,16 +239,22 @@ export function WorkItemAgenda({
               <li key={item.id} className={COL}>
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
-                    Mahkeme
+                    Müvekkil
                   </p>
-                  <Link href={`/is-listesi/${item.id}`} className="text-sm font-bold hover:underline">
-                    {item.courtName}
-                  </Link>
+                  <p className="text-sm font-semibold">{item.clientName || "—"}</p>
                   {item.ownerRole === "INTERN" ? (
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
                       Stajyer · {item.ownerName}
                     </p>
                   ) : null}
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                    Mahkeme
+                  </p>
+                  <Link href={`/is-listesi/${item.id}`} className="text-sm font-bold hover:underline">
+                    {item.courtName}
+                  </Link>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">

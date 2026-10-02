@@ -88,7 +88,7 @@ export function TaskWorkList({
   tasks: TaskCardDTO[]
   canAssign: boolean
   userId: string
-  mode?: "all" | "given"
+  mode?: "all" | "given" | "unified"
   actOnlyOwnAssignments?: boolean
 }) {
   const [query, setQuery] = useState("")
@@ -96,11 +96,12 @@ export function TaskWorkList({
   const [scope, setScope] = useState<Scope>(mode === "given" ? "given" : "all")
   const [hideDone, setHideDone] = useState(true)
   const lockedGiven = mode === "given"
+  const unified = mode === "unified"
 
   const filtered = useMemo(() => {
     return tasks.filter((task) => {
       if (hideDone && task.status === "TAMAMLANDI") return false
-      if (!lockedGiven) {
+      if (!lockedGiven && !unified) {
         if (scope === "mine" && task.assigneeId !== userId) return false
         if (scope === "given" && task.assignerId !== userId) return false
       }
@@ -109,7 +110,7 @@ export function TaskWorkList({
       if (due === "gecikmis") return task.dueTone === "overdue" && task.status !== "TAMAMLANDI"
       return matchesDueWindow(task, due)
     })
-  }, [tasks, hideDone, lockedGiven, scope, userId, query, due])
+  }, [tasks, hideDone, lockedGiven, unified, scope, userId, query, due])
 
   function canAct(task: TaskCardDTO) {
     if (!actOnlyOwnAssignments) return true
@@ -119,7 +120,7 @@ export function TaskWorkList({
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        {!lockedGiven ? (
+        {!lockedGiven && !unified ? (
           <div className="flex flex-wrap gap-1">
             {(
               [

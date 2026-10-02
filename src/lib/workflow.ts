@@ -299,16 +299,45 @@ export function isOnAssigneeWorkList(status: TaskStatus) {
   return status === "ATANDI" || status === "REVIZE_ISTENDI" || status === "GONDERIM_BEKLIYOR"
 }
 
-/** Atayan avukatın iş listesinde öne çıkan durumlar. */
+/**
+ * Kullanıcının birleşik «İş listesi»nde görünecek görevler.
+ * Stajyere ATANDI/REVIZE iken atayan avukatın listesinden düşer;
+ * stajyer gönderince (INCELEME_BEKLIYOR) avukata geri gelir.
+ */
+export function isOnMyUnifiedWorkList(
+  task: { status: TaskStatus; assignerId: string; assigneeId: string },
+  userId: string,
+) {
+  if (task.assigneeId === userId && isOnAssigneeWorkList(task.status)) return true
+  if (task.assignerId === userId) {
+    return (
+      task.status === "INCELEME_BEKLIYOR" ||
+      task.status === "KONTROL_EDILECEK" ||
+      task.status === "ONAYLANDI" ||
+      task.status === "GONDERIM_BEKLIYOR"
+    )
+  }
+  return false
+}
+
+/** İnceleme bekleyenler listenin en üstüne. */
+export function unifiedWorkListRank(status: TaskStatus) {
+  if (status === "INCELEME_BEKLIYOR") return 0
+  if (status === "KONTROL_EDILECEK") return 1
+  if (status === "REVIZE_ISTENDI") return 2
+  if (status === "ATANDI") return 3
+  if (status === "GONDERIM_BEKLIYOR") return 4
+  if (status === "ONAYLANDI") return 5
+  return 6
+}
+
+/** Atayan avukatın iş listesinde öne çıkan durumlar (eski API; unified tercih edin). */
 export function isOnAssignerWorkList(status: TaskStatus) {
   return (
     status === "INCELEME_BEKLIYOR" ||
     status === "KONTROL_EDILECEK" ||
     status === "ONAYLANDI" ||
-    status === "ATANDI" ||
-    status === "REVIZE_ISTENDI" ||
-    status === "GONDERIM_BEKLIYOR" ||
-    status === "TAMAMLANDI"
+    status === "GONDERIM_BEKLIYOR"
   )
 }
 

@@ -11,6 +11,16 @@ export type ClientListDTO = {
   updatedAt: string
 }
 
+export type ClientPickerDTO = {
+  id: string
+  name: string
+  caseFiles: {
+    id: string
+    fileNumber: string
+    courtName: string
+  }[]
+}
+
 export type CaseFileListDTO = {
   id: string
   fileNumber: string
@@ -130,6 +140,29 @@ export async function listClients(actor: SessionUser): Promise<ClientListDTO[]> 
       if (b.fileCount !== a.fileCount) return b.fileCount - a.fileCount
       return a.name.localeCompare(b.name, "tr")
     })
+}
+
+/** İş ekleme formu için müvekkil + dosya seçenekleri */
+export async function listClientsForPicker(actor: SessionUser): Promise<ClientPickerDTO[]> {
+  if (!canAccessOfficeClients(actor)) {
+    throw new WorkflowError("Müvekkil listesine erişemezsiniz.")
+  }
+  const rows = await prisma.client.findMany({
+    where: { deletedAt: null },
+    orderBy: { name: "asc" },
+    include: {
+      caseFiles: {
+        where: { deletedAt: null },
+        orderBy: { updatedAt: "desc" },
+        select: { id: true, fileNumber: true, courtName: true },
+      },
+    },
+  })
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    caseFiles: row.caseFiles,
+  }))
 }
 
 export async function getClientWithFiles(actor: SessionUser, clientId: string) {

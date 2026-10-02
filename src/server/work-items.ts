@@ -57,10 +57,11 @@ function validateWorkItem(input: {
   const fileNumber = cleanText(input.fileNumber)
   const workToDo = cleanText(input.workToDo)
   const notes = cleanText(input.notes)
-  const clientName = cleanText(input.clientName) || "Belirtilmedi"
+  const clientName = cleanText(input.clientName)
   const opposingParty = cleanText(input.opposingParty) || "Belirtilmedi"
   const courtFile = cleanText(input.courtFile) || fileNumber
 
+  if (clientName.length < 2) return "Müvekkil seçin veya yazın."
   if (courtName.length < 2) return "Mahkeme adı gerekli."
   if (fileNumber.length < 2) return "Dosya no gerekli."
   if (workToDo.length < 3) return "Yapılacaklar en az 3 karakter olmalı."
