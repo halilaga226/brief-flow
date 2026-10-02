@@ -24,6 +24,7 @@ export const FILTERS = [
   "atadigim",
   "bekleyen",
   "inceleme",
+  "kontrol",
   "onay",
   "gonderim",
   "arama",
@@ -343,6 +344,22 @@ export function canReview(
   role: Role,
 ) {
   if (task.status !== "INCELEME_BEKLIYOR" && task.status !== "KONTROL_EDILECEK") {
+    return false
+  }
+  return isAdmin(role) || (role === "LAWYER" && task.assignerId === userId)
+}
+
+/** İnceleme/kontroldeki işi yönlendir veya tamamlanandan kontrole geri al. */
+export function canMoveToCheckFolder(
+  task: { status: TaskStatus; assignerId: string },
+  userId: string,
+  role: Role,
+) {
+  if (
+    task.status !== "INCELEME_BEKLIYOR" &&
+    task.status !== "KONTROL_EDILECEK" &&
+    task.status !== "TAMAMLANDI"
+  ) {
     return false
   }
   return isAdmin(role) || (role === "LAWYER" && task.assignerId === userId)
@@ -670,7 +687,9 @@ export function matchesFilter(
     case "geciken":
       return task.dueTone === "overdue"
     case "inceleme":
-      return task.status === "INCELEME_BEKLIYOR" || task.status === "KONTROL_EDILECEK"
+      return task.status === "INCELEME_BEKLIYOR"
+    case "kontrol":
+      return task.status === "KONTROL_EDILECEK"
     case "onay":
       return task.status === "ONAYLANDI"
     case "gonderim":

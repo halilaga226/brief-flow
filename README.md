@@ -5,7 +5,7 @@ Görev, inceleme ve evrak gönderim portalı. Müvekkil → dosya → iş hiyera
 ## Roller
 
 - **Avukat** müvekkil/dosya yönetir, görev atar, gelen işi inceler. Stajyer işlerini ayrı sekmeden görür; yalnızca kendi atadığı işlere müdahale eder. Ayarlar’dan kendi Drive klasörünü bağlayabilir.
-- **Stajyer** atanan işi doğrudan listesinde görür (kabul yok). Bitince **Avukata gönder** + not yazar; iş listesinden düşer, atayan avukata gider.
+- **Stajyer** müvekkilleri görüntüleyebilir ve müvekkil notu ekleyebilir; müvekkil/dosya düzenleyemez. Atanan işi doğrudan listesinde görür. Bitince **Avukata gönder** + not yazar; iş listesinden düşer, atayan avukata gider.
 - **Yönetici** tüm işleri görür, kullanıcı ekler, örnek veriyi sıfırlar.
 
 ## İş listesi
@@ -25,13 +25,17 @@ Sol menü **Müvekkiller**: müvekkil → dosya → o dosyadaki tüm işler. Gö
 
 1. `ATANDI` — atama; iş hemen atananın listesine düşer.
 2. `INCELEME_BEKLIYOR` — yürüten **Avukata gönder** + yapılanlar notu.
-3. `KONTROL_EDILECEK` — avukat gelen işi kontrol klasörüne alır (veya doğrudan tamamlar).
+3. `KONTROL_EDILECEK` — avukat gelen işi **Kontrol edilecekler** klasörüne alır (tamamlananlardan ayrı).
 4. `REVIZE_ISTENDI` — avukat notla geri yollar.
 5. `ONAYLANDI` — masraf / arama / gönderime alma.
 6. `GONDERIM_BEKLIYOR` — gönderime alındı.
-7. `TAMAMLANDI` — evrak takip kodu veya avukatın doğrudan tamamlaması.
+7. `TAMAMLANDI` — evrak takip kodu veya avukatın doğrudan tamamlaması; istenirse tekrar **Kontrol edileceklere** alınabilir.
 
-Avukat, stajyerden gelen işte **Kontrol edilecek** veya **Tamamlananlara al** seçebilir; klasik onay/revize de durur.
+Avukat, stajyerden gelen işte **Kontrol edilecek** veya **Tamamlananlara al** seçebilir; klasik onay/revize de durur. Tamamlanan bir işi tekrar kontrol klasörüne taşıyabilir.
+
+## Müvekkil notları
+
+Müvekkil detayında avukat ve stajyer ortak notlar bırakabilir (görüşme, hatırlatma vb.). Kendi notunu (veya avukat tüm notları) silebilir.
 
 ## Müvekkiller ve silinenler
 
@@ -48,6 +52,19 @@ Avukat, stajyerden gelen işte **Kontrol edilecek** veya **Tamamlananlara al** s
 
 - Başka kullanıcıların parolasını **yalnızca `halil`** sıfırlayabilir.
 - Silinen veya parolası değişen hesabın açık oturumu geçersiz sayılır.
+
+### Güvenliği artırmak için öneriler
+
+1. **2FA / TOTP** — özellikle avukat ve yönetici hesaplarında zorunlu ikinci faktör.
+2. **IP / ofis kısıtı** — portalı yalnızca büro VPN veya bilinen IP aralığına açmak (Vercel Firewall / Cloudflare Access).
+3. **Audit log** — müvekkil silme, not silme, parola sıfırlama ve Drive ayarı değişikliklerini kalıcı günlükte tutmak.
+4. **Müvekkil notlarında yetki ayrımı** — hassas mali/kişisel notları yalnız avukata görünür işaretlemek.
+5. **Oturum süresi** — JWT maxAge kısaltmak; uzun süre hareketsizlikte yeniden giriş.
+6. **Rate limit** — giriş ve parola sıfırlamada deneme sayısı sınırı (brute-force).
+7. **Yedekleme & silinenler** — soft-delete sonrası otomatik kalıcı silme süresi (örn. 90 gün) ve düzenli DB yedek.
+8. **Drive sırları** — servis hesabı JSON’u yalnızca şifreli saklamak; Vercel env’leri rotate etmek.
+9. **Rol gözden geçirme** — stajyer erişimini periyodik kontrol; ayrılan hesabı hemen pasifleştirmek.
+10. **HTTPS + güvenlik başlıkları** — CSP, HSTS (Vercel varsayılanları + sıkılaştırma).
 
 ## Performans
 

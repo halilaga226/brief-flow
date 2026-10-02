@@ -7,6 +7,7 @@ import {
   canCreateTask,
   canDeleteTask,
   canManageOps,
+  canMoveToCheckFolder,
   canQueueSend,
   canReview,
   canUploadDraft,
@@ -139,6 +140,18 @@ describe("state machine", () => {
       true,
     )
     assert.equal(
+      canReview({ status: "TAMAMLANDI", assignerId: lawyer }, lawyer, "LAWYER"),
+      false,
+    )
+    assert.equal(
+      canMoveToCheckFolder({ status: "TAMAMLANDI", assignerId: lawyer }, lawyer, "LAWYER"),
+      true,
+    )
+    assert.equal(
+      canMoveToCheckFolder({ status: "TAMAMLANDI", assignerId: lawyer }, otherLawyer, "LAWYER"),
+      false,
+    )
+    assert.equal(
       canReview({ status: "INCELEME_BEKLIYOR", assignerId: lawyer }, otherLawyer, "LAWYER"),
       false,
     )
@@ -220,6 +233,48 @@ describe("files and filters", () => {
         intern,
       ),
       true,
+    )
+    assert.equal(
+      matchesFilter(
+        {
+          status: "KONTROL_EDILECEK",
+          assignerId: lawyer,
+          assigneeId: intern,
+          dueTone: "later",
+          needsAction: false,
+        },
+        "kontrol",
+        lawyer,
+      ),
+      true,
+    )
+    assert.equal(
+      matchesFilter(
+        {
+          status: "KONTROL_EDILECEK",
+          assignerId: lawyer,
+          assigneeId: intern,
+          dueTone: "later",
+          needsAction: false,
+        },
+        "inceleme",
+        lawyer,
+      ),
+      false,
+    )
+    assert.equal(
+      matchesFilter(
+        {
+          status: "KONTROL_EDILECEK",
+          assignerId: lawyer,
+          assigneeId: intern,
+          dueTone: "later",
+          needsAction: false,
+        },
+        "tamam",
+        lawyer,
+      ),
+      false,
     )
   })
 })

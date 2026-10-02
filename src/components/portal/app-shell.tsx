@@ -52,18 +52,22 @@ function NavLinks({
   inSheet = false,
   canAssign = false,
   canManage = false,
+  canViewClients = false,
 }: {
   inSheet?: boolean
   canAssign?: boolean
   canManage?: boolean
+  canViewClients?: boolean
 }) {
   const pathname = usePathname()
   const links = [
     { href: "/ana", label: "Ana sayfa", icon: Home },
     { href: "/is-listesi", label: "İş listesi", icon: ClipboardList },
+    ...(canViewClients
+      ? [{ href: "/muvekkiller", label: "Müvekkiller", icon: Briefcase }]
+      : []),
     ...(canAssign
       ? [
-          { href: "/muvekkiller", label: "Müvekkiller", icon: Briefcase },
           { href: "/stajyer-isleri", label: "Stajyer işleri", icon: GraduationCap },
           { href: "/silinenler", label: "Silinenler", icon: Trash2 },
         ]
@@ -116,11 +120,12 @@ export function AppShell({
   const pathname = usePathname()
   const lawyer = canCreateTask(user.role)
   const manager = canManageUsers(user.role)
+  const canViewClients = lawyer || user.role === "INTERN"
 
   const mobileLinks = [
     { href: "/ana", label: "Ana", icon: Home },
     { href: "/is-listesi", label: "İşler", icon: ClipboardList },
-    ...(lawyer ? [{ href: "/muvekkiller", label: "Müvekkil", icon: Briefcase }] : []),
+    ...(canViewClients ? [{ href: "/muvekkiller", label: "Müvekkil", icon: Briefcase }] : []),
     ...(lawyer ? [{ href: "/stajyer-isleri", label: "Stajyer", icon: GraduationCap }] : []),
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(manager && !lawyer ? [{ href: "/kullanicilar", label: "Kullanıcı", icon: Users }] : []),
@@ -150,7 +155,7 @@ export function AppShell({
           </Link>
         </div>
         <div className="flex-1 px-3 py-4">
-          <NavLinks canAssign={lawyer} canManage={manager} />
+          <NavLinks canAssign={lawyer} canManage={manager} canViewClients={canViewClients} />
           {lawyer ? (
             <Button asChild className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 font-semibold text-white">
               <Link href="/gorevler/yeni">
@@ -194,7 +199,12 @@ export function AppShell({
                 <p className="text-lg font-semibold leading-tight">{BRAND.shortName}</p>
                 <p className="text-xs font-medium text-sidebar-foreground/60">Hukuk Bürosu</p>
                 <div className="mt-4">
-                  <NavLinks inSheet canAssign={lawyer} canManage={manager} />
+                  <NavLinks
+                    inSheet
+                    canAssign={lawyer}
+                    canManage={manager}
+                    canViewClients={canViewClients}
+                  />
                 </div>
                 {lawyer ? (
                   <SheetClose asChild>

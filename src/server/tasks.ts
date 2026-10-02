@@ -9,6 +9,7 @@ import {
   canCreateTask,
   canDeleteTask,
   canManageOps,
+  canMoveToCheckFolder,
   canQueueSend,
   canReview,
   canUploadDraft,
@@ -742,11 +743,11 @@ export async function deleteTask(actor: SessionUser, taskId: string) {
   })
 }
 
-/** Gönderilen işi kontrol edilecek klasörüne alır. */
+/** Gönderilen veya tamamlanan işi kontrol edilecek klasörüne alır. */
 export async function moveToCheckFolder(actor: SessionUser, taskId: string) {
   const existing = await visibleTask(taskId, actor)
   if (!existing) throw new WorkflowError("Görev bulunamadı.")
-  if (!canReview(existing, actor.id, actor.role)) {
+  if (!canMoveToCheckFolder(existing, actor.id, actor.role)) {
     throw new WorkflowError("Bu işi kontrol klasörüne alamazsınız.")
   }
   if (existing.status === "KONTROL_EDILECEK") {
@@ -754,12 +755,15 @@ export async function moveToCheckFolder(actor: SessionUser, taskId: string) {
   }
   await prisma.$transaction(async (tx) => {
     const task = await tx.task.findUnique({ where: { id: taskId } })
-    if (!task || !canReview(task, actor.id, actor.role)) {
+    if (!task || !canMoveToCheckFolder(task, actor.id, actor.role)) {
       throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
     }
     await tx.task.update({
       where: { id: taskId },
-      data: { status: "KONTROL_EDILECEK" },
+      data: {
+        status: "KONTROL_EDILECEK",
+        completedAt: null,
+      },
     })
     await tx.taskLog.create({
       data: {
@@ -768,6 +772,10 @@ export async function moveToCheckFolder(actor: SessionUser, taskId: string) {
         type: "MOVED_TO_CHECK",
         fromStatus: task.status,
         toStatus: "KONTROL_EDILECEK",
+        note:
+          task.status === "TAMAMLANDI"
+            ? "Tamamlananlardan kontrol edileceklere alındı."
+            : null,
       },
     })
   })

@@ -18,6 +18,7 @@ import {
 import { listTasksCached } from "@/server/cached"
 import {
   CheckCircle2,
+  ClipboardCheck,
   ClipboardList,
   FolderOpen,
   Inbox,
@@ -39,6 +40,7 @@ const folders: { id: TaskFilter; label: string; icon: LucideIcon }[] = [
   { id: "tum", label: "Tümü", icon: FolderOpen },
   { id: "atandi", label: "Atanan işler", icon: Inbox },
   { id: "inceleme", label: "Onaya gidenler", icon: ClipboardList },
+  { id: "kontrol", label: "Kontrol edilecekler", icon: ClipboardCheck },
   { id: "gonderilecek", label: "Gönderilecekler", icon: Send },
   { id: "tamam", label: "Tamamlananlar", icon: CheckCircle2 },
   { id: "atanan", label: "Bana atanan", icon: UserRound },

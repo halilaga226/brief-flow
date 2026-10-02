@@ -77,6 +77,7 @@ model User {
   workItems     WorkItem[]
   workItemEntries WorkItemEntry[]
   clients       Client[]
+  clientNotes   ClientNote[]
   comments      TaskComment[]
   logs          TaskLog[]
   files         TaskFile[]
@@ -118,13 +119,30 @@ model Client {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  owner     User       @relation(fields: [ownerId], references: [id])
+  owner     User         @relation(fields: [ownerId], references: [id])
   caseFiles CaseFile[]
+  notes     ClientNote[]
 
   @@unique([ownerId, name])
   @@index([ownerId])
   @@index([nameKey])
   @@index([deletedAt])
+}
+
+/// Müvekkil hakkında avukat/stajyer notları
+model ClientNote {
+  id        String   @id @default(cuid())
+  clientId  String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id])
+
+  @@index([clientId])
+  @@index([authorId])
 }
 
 model CaseFile {

@@ -80,6 +80,7 @@ export function TaskDetailView({
             canUpload={task.canUpload}
             canReview={task.canReview}
             canTriage={task.canTriage}
+            canMoveToCheck={task.canMoveToCheck}
             canManageOps={task.canManageOps}
             canQueueSend={task.canQueueSend}
             canComplete={task.canComplete}

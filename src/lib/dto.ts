@@ -92,6 +92,7 @@ export type TaskDetailDTO = TaskCardDTO & {
   canUpload: boolean
   canReview: boolean
   canTriage: boolean
+  canMoveToCheck: boolean
   canManageOps: boolean
   canQueueSend: boolean
   canComplete: boolean

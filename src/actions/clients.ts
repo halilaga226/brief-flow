@@ -8,6 +8,8 @@ import { WorkflowError } from "@/lib/workflow"
 import {
   createCaseFile,
   createClient,
+  addClientNote,
+  deleteClientNote,
   restoreCaseFile,
   restoreClient,
   restoreTask,
@@ -180,6 +182,35 @@ export async function restoreTaskAction(
   revalidatePath("/is-listesi")
   revalidatePath("/silinenler")
   return { ok: true, message: "İş geri yüklendi." }
+}
+
+export async function addClientNoteAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const clientId = readText(formData, "clientId")
+  try {
+    await addClientNote(user, clientId, readText(formData, "body"))
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidatePath(`/muvekkiller/${clientId}`)
+  return { ok: true, message: "Not eklendi." }
+}
+
+export async function deleteClientNoteAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  try {
+    const clientId = await deleteClientNote(user, readText(formData, "noteId"))
+    revalidatePath(`/muvekkiller/${clientId}`)
+  } catch (error) {
+    return actionError(error)
+  }
+  return { ok: true, message: "Not silindi." }
 }
 
 export async function saveDriveFolderAction(

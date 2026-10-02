@@ -175,8 +175,7 @@ function TriageControls({
     <div className="mt-3 grid gap-2 rounded-xl border border-border bg-muted/30 p-3">
       <p className="text-sm font-bold">Gelen işi yönlendir</p>
       <p className="text-xs text-muted-foreground">
-        Doğrudan tamamlananlara alın veya kontrol edilecek klasörüne koyun. İsterseniz aşağıdan onay /
-        revize de kullanabilirsiniz.
+        Kontrol edilecek klasörüne koyun (tamamlananlardan ayrı tutulur) veya doğrudan tamamlananlara alın.
       </p>
       <div className="flex flex-wrap gap-2">
         {!inCheck ? (
@@ -231,6 +230,30 @@ function TriageControls({
           </form>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+function MoveCompletedToCheck({ taskId }: { taskId: string }) {
+  const [state, action, pending] = useActionState(moveToCheckFolderAction, null)
+  useActionResult(state)
+
+  return (
+    <div className="mt-3 grid gap-2 rounded-xl border border-border bg-muted/30 p-3">
+      <p className="text-sm font-bold">Kontrol edileceklere al</p>
+      <p className="text-xs text-muted-foreground">
+        Bu iş tamamlananlardan çıkarılıp kontrol edilecek klasörüne taşınır.
+      </p>
+      <form action={action}>
+        <input type="hidden" name="taskId" value={taskId} />
+        <Button type="submit" disabled={pending} variant="outline" className="font-semibold">
+          <ClipboardCheck />
+          {pending ? "…" : "Kontrol edileceklere taşı"}
+        </Button>
+      </form>
+      {state?.error ? (
+        <p className="text-sm font-medium text-destructive">{state.error}</p>
+      ) : null}
     </div>
   )
 }
@@ -362,6 +385,7 @@ export function TaskActions({
   canUpload,
   canReview,
   canTriage,
+  canMoveToCheck,
   canManageOps,
   canQueueSend,
   canComplete,
@@ -380,6 +404,7 @@ export function TaskActions({
   canUpload: boolean
   canReview: boolean
   canTriage: boolean
+  canMoveToCheck: boolean
   canManageOps: boolean
   canQueueSend: boolean
   canComplete: boolean
@@ -426,6 +451,9 @@ export function TaskActions({
       ) : null}
       {canUpload ? <SendToLawyerForm taskId={taskId} /> : null}
       {canTriage ? <TriageControls taskId={taskId} status={status} /> : null}
+      {!canTriage && canMoveToCheck && status === "TAMAMLANDI" ? (
+        <MoveCompletedToCheck taskId={taskId} />
+      ) : null}
       {canReview ? (
         <div className="mt-3 flex flex-wrap gap-2">
           <RevisionDialog taskId={taskId} />

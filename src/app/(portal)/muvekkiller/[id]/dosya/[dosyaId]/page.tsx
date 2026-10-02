@@ -2,7 +2,7 @@ import { CaseFileEditor } from "@/components/portal/clients-view"
 import { StatusBadge } from "@/components/portal/status-badge"
 import { Button } from "@/components/ui/button"
 import { requireUser } from "@/lib/session"
-import { canCreateTask, type TaskStatus } from "@/lib/workflow"
+import { type TaskStatus } from "@/lib/workflow"
 import { getCaseFileDetail } from "@/server/clients"
 import { UserPlus } from "lucide-react"
 import type { Metadata } from "next"
@@ -18,17 +18,6 @@ export default async function CaseFilePage({
 }) {
   const user = await requireUser()
   const { id, dosyaId } = await params
-  if (!canCreateTask(user.role)) {
-    return (
-      <div className="mx-auto max-w-lg px-6 py-12 text-center">
-        <h1 className="text-2xl font-semibold">Yetki yok</h1>
-        <Button asChild className="mt-5">
-          <Link href="/is-listesi">İş listesi</Link>
-        </Button>
-      </div>
-    )
-  }
-
   const file = await getCaseFileDetail(user, dosyaId)
 
   return (
@@ -49,29 +38,33 @@ export default async function CaseFilePage({
               <p className="mt-1 text-sm text-muted-foreground">{file.courtName}</p>
             ) : null}
           </div>
-          <Button asChild className="font-semibold">
-            <Link
-              href={`/gorevler/yeni?client=${encodeURIComponent(file.clientName)}&file=${encodeURIComponent(file.fileNumber)}&caseFileId=${file.id}`}
-            >
-              <UserPlus />
-              Bu dosyadan iş ata
-            </Link>
-          </Button>
+          {file.canManage ? (
+            <Button asChild className="font-semibold">
+              <Link
+                href={`/gorevler/yeni?client=${encodeURIComponent(file.clientName)}&file=${encodeURIComponent(file.fileNumber)}&caseFileId=${file.id}`}
+              >
+                <UserPlus />
+                Bu dosyadan iş ata
+              </Link>
+            </Button>
+          ) : null}
         </div>
         {file.notes ? (
           <p className="mt-3 text-sm whitespace-pre-wrap text-muted-foreground">{file.notes}</p>
         ) : null}
-        <div className="mt-4">
-          <CaseFileEditor
-            clientId={id}
-            file={{
-              id: file.id,
-              fileNumber: file.fileNumber,
-              courtName: file.courtName,
-              notes: file.notes,
-            }}
-          />
-        </div>
+        {file.canManage ? (
+          <div className="mt-4">
+            <CaseFileEditor
+              clientId={id}
+              file={{
+                id: file.id,
+                fileNumber: file.fileNumber,
+                courtName: file.courtName,
+                notes: file.notes,
+              }}
+            />
+          </div>
+        ) : null}
       </div>
 
       <section className="space-y-3">
