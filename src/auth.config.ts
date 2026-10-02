@@ -12,6 +12,8 @@ export const authConfig = {
       const { pathname } = request.nextUrl
       const loggedIn = Boolean(auth?.user)
       if (pathname.startsWith("/api/auth")) return true
+      // Vercel Cron; route içinde CRON_SECRET ile korunur
+      if (pathname.startsWith("/api/cron")) return true
       if (pathname === "/giris") {
         return true
       }
