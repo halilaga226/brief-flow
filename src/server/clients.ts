@@ -302,6 +302,35 @@ export async function updateCaseFile(
   } catch {
     throw new WorkflowError("Bu dosya numarası müvekkilde zaten var.")
   }
+
+  const related = await prisma.task.findMany({
+    where: {
+      caseFileId,
+      deletedAt: null,
+      status: { not: "TAMAMLANDI" },
+    },
+    select: { id: true, title: true, assignerId: true, assigneeId: true },
+    take: 20,
+  })
+  if (related.length > 0) {
+    const rows: { userId: string; taskId: string; title: string; body: string }[] = []
+    const seen = new Set<string>()
+    for (const task of related) {
+      for (const userId of [task.assignerId, task.assigneeId]) {
+        if (userId === actor.id) continue
+        const key = `${userId}:${task.id}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        rows.push({
+          userId,
+          taskId: task.id,
+          title: "Dosya güncellendi",
+          body: `${actor.name} dosyayı güncelledi (${fileNumber}): ${task.title}`,
+        })
+      }
+    }
+    if (rows.length) await prisma.notification.createMany({ data: rows })
+  }
 }
 
 export async function softDeleteClient(actor: SessionUser, clientId: string) {
@@ -516,5 +545,25 @@ export async function deleteClientNote(actor: SessionUser, noteId: string) {
   }
   await prisma.clientNote.delete({ where: { id: noteId } })
   return note.clientId
+}
+
+/** Tüm müvekkil/dosya kayıtlarını kalıcı siler; JSON yeniden yükleme için izleri temizler. */
+export async function purgeAllClients(actor: SessionUser) {
+  const { canResetPasswords } = await import("@/lib/users")
+  if (!canResetPasswords(actor.username) && !isAdmin(actor.role)) {
+    throw new WorkflowError("Müvekkilleri toplu silme yalnızca Halil / yönetici içindir.")
+  }
+  const [notes, files, clients, fingerprints] = await prisma.$transaction([
+    prisma.clientNote.deleteMany({}),
+    prisma.caseFile.deleteMany({}),
+    prisma.client.deleteMany({}),
+    prisma.importFingerprint.deleteMany({ where: { kind: "party" } }),
+  ])
+  return {
+    deletedNotes: notes.count,
+    deletedFiles: files.count,
+    deletedClients: clients.count,
+    clearedImports: fingerprints.count,
+  }
 }
 

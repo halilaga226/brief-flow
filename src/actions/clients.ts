@@ -10,6 +10,7 @@ import {
   createClient,
   addClientNote,
   deleteClientNote,
+  purgeAllClients,
   restoreCaseFile,
   restoreClient,
   restoreTask,
@@ -211,6 +212,26 @@ export async function deleteClientNoteAction(
     return actionError(error)
   }
   return { ok: true, message: "Not silindi." }
+}
+
+export async function purgeAllClientsAction(
+  _prev: ActionState,
+  _formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  try {
+    const result = await purgeAllClients(user)
+    revalidatePath("/muvekkiller")
+    revalidatePath("/silinenler")
+    revalidatePath("/ayarlar")
+    revalidatePath("/gorevler")
+    return {
+      ok: true,
+      message: `${result.deletedClients} müvekkil, ${result.deletedFiles} dosya silindi. JSON ile yeniden yükleyebilirsiniz.`,
+    }
+  } catch (error) {
+    return actionError(error)
+  }
 }
 
 export async function saveDriveFolderAction(

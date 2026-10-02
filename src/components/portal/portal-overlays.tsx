@@ -1,6 +1,6 @@
 "use client"
 
-import { AssignmentToasts } from "@/components/portal/assignment-toasts"
+import { LiveAlertToasts } from "@/components/portal/live-alert-toasts"
 import type { NotificationDTO } from "@/lib/dto"
 import dynamic from "next/dynamic"
 
@@ -25,7 +25,7 @@ export function PortalOverlays({
     <>
       <WelcomeSplash name={name} />
       <IntroTour />
-      <AssignmentToasts items={notifications} />
+      <LiveAlertToasts items={notifications} />
     </>
   )
 }

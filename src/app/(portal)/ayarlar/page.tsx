@@ -1,8 +1,10 @@
 import { ClearDemoButton } from "@/components/portal/clear-demo-button"
+import { DesktopNotifySettings } from "@/components/portal/desktop-notify-settings"
 import { DriveSettingsForm } from "@/components/portal/drive-settings-form"
 import { IntroToggle } from "@/components/portal/intro-tour"
 import { OfficeDriveAdminForm } from "@/components/portal/office-drive-form"
 import { PasswordForm } from "@/components/portal/password-form"
+import { PurgeClientsButton } from "@/components/portal/purge-clients-button"
 import { StatusBadge } from "@/components/portal/status-badge"
 import { Button } from "@/components/ui/button"
 import { getDriveStatus, getOfficeDriveAdminState } from "@/lib/drive"
@@ -19,7 +21,7 @@ import {
 } from "@/lib/workflow"
 import { getAdminOverview, listClientCalls } from "@/server/admin"
 import { getDashboard } from "@/server/tasks"
-import { Phone, Users } from "lucide-react"
+import { Briefcase, Phone, Users } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 
@@ -55,6 +57,8 @@ export default async function SettingsPage() {
 
       <IntroToggle />
 
+      <DesktopNotifySettings />
+
       {officeDrive ? (
         <OfficeDriveAdminForm
           connected={officeDrive.connected}
@@ -72,6 +76,28 @@ export default async function SettingsPage() {
           orgConnected={drive.mode === "google"}
           serviceEmail={drive.serviceEmail}
         />
+      ) : null}
+
+      {isHalil || isAdmin(user.role) ? (
+        <section className="glass rounded-2xl p-4">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <Briefcase className="size-5 text-destructive" />
+            Müvekkil verisi
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tüm müvekkil ve dosyaları silip taraf JSON ile yeniden yükleyebilirsiniz. Görevler
+            kalır.
+          </p>
+          <div className="mt-3">
+            <PurgeClientsButton />
+          </div>
+          {isHalil ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Silmeden sonra <Link href="/muvekkiller" className="font-semibold underline">Müvekkiller</Link>{" "}
+              sayfasından JSON içe aktarımı kullanın.
+            </p>
+          ) : null}
+        </section>
       ) : null}
 
       <section className="grid gap-3 sm:grid-cols-3">

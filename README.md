@@ -52,6 +52,11 @@ Müvekkil detayında avukat ve stajyer ortak notlar bırakabilir (görüşme, ha
 
 - Başka kullanıcıların parolasını **yalnızca `halil`** sıfırlayabilir.
 - Silinen veya parolası değişen hesabın açık oturumu geçersiz sayılır.
+- Halil / yönetici Ayarlar’dan tüm müvekkilleri kalıcı silebilir; ardından JSON yeniden yüklenir.
+
+### Canlı bildirimler
+
+Ayarlar → **Canlı bildirimler** ile masaüstü izni verin. Yeni iş, inceleme, revizyon, onay, gönderim ve dosya güncellemeleri renkli popup olarak görünür; sekme arkadayken tarayıcı bildirimi de gelir.
 
 ### Güvenliği artırmak için öneriler
 
