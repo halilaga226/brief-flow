@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron")
 
-contextBridge.exposeInMainWorld("yedekAjani", {
+contextBridge.exposeInMainWorld("atliApp", {
   getConfig: () => ipcRenderer.invoke("get-config"),
   saveConfig: (cfg) => ipcRenderer.invoke("save-config", cfg),
   pickFolder: () => ipcRenderer.invoke("pick-folder"),
@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld("yedekAjani", {
   listLocals: () => ipcRenderer.invoke("list-locals"),
   openFolder: () => ipcRenderer.invoke("open-folder"),
   restoreLocal: (filePath) => ipcRenderer.invoke("restore-local", filePath),
+  reloadPortal: () => ipcRenderer.invoke("reload-portal"),
   onStatus: (cb) => {
     const handler = (_event, text) => cb(text)
     ipcRenderer.on("status", handler)

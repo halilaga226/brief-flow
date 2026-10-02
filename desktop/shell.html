@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:;"
+    />
+    <title>Atlı Karakaya</title>
+    <link rel="stylesheet" href="shell.css" />
+  </head>
+  <body>
+    <header class="toolbar">
+      <div class="brand-block">
+        <img src="assets/icon.png" alt="" class="brand-icon" width="28" height="28" />
+        <div>
+          <p class="brand">Atlı Karakaya</p>
+          <p id="status" class="status-line">Yükleniyor…</p>
+        </div>
+      </div>
+      <div class="toolbar-actions">
+        <button type="button" id="reload" class="ghost">Yenile</button>
+        <button type="button" id="backupNow" class="accent">Yedek al</button>
+        <button type="button" id="openFolder" class="ghost">Yedek klasörü</button>
+        <button type="button" id="toggleSettings" class="primary">Ayarlar</button>
+      </div>
+    </header>
+
+    <aside id="settings" class="settings" hidden>
+      <div class="settings-inner">
+        <div class="settings-head">
+          <h2>Uygulama ayarları</h2>
+          <button type="button" id="closeSettings" class="ghost">Kapat</button>
+        </div>
+        <p class="lead">
+          Bu program web portalını masaüstünde açar ve arka planda bilgisayarınıza yedek alır.
+        </p>
+        <label>
+          Portal adresi (canlı site)
+          <input id="portalUrl" type="url" placeholder="https://siteniz.vercel.app" />
+        </label>
+        <label>
+          Ajan anahtarı (BACKUP_AGENT_TOKEN)
+          <input
+            id="agentToken"
+            type="password"
+            autocomplete="off"
+            placeholder="Vercel Environment Variable"
+          />
+        </label>
+        <label>
+          Yerel yedek klasörü
+          <div class="row">
+            <input id="backupDir" type="text" readonly />
+            <button type="button" id="pickFolder" class="ghost">Seç</button>
+          </div>
+        </label>
+        <div class="grid-2">
+          <label>
+            Otomatik aralık (saat)
+            <input id="intervalHours" type="number" min="1" max="168" />
+          </label>
+          <label>
+            Yerelde tut (adet)
+            <input id="keepLocal" type="number" min="3" max="200" />
+          </label>
+        </div>
+        <label class="check">
+          <input id="autoBackup" type="checkbox" />
+          Otomatik yedek açık
+        </label>
+        <div class="actions">
+          <button type="button" id="save" class="primary">Kaydet ve siteyi aç</button>
+        </div>
+
+        <h3>Bu bilgisayardaki yedekler</h3>
+        <ul id="locals" class="locals"></ul>
+        <p class="hint">«Siteye yükle» portal verisinin üzerine yazabilir.</p>
+      </div>
+    </aside>
+
+    <script src="shell.js"></script>
+  </body>
+</html>

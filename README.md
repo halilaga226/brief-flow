@@ -57,15 +57,15 @@ Supabase’te pahalı PITR şart değil. Bu portal kendi yedeğini alır:
 3. **Vercel Cron** her gece 02:00 UTC’de `/api/cron/backup` çalışır — Vercel’de `CRON_SECRET` tanımlayın
 4. **Masaüstü Yedek Ajanı** (`desktop/`) — ofis bilgisayarında çalışır, siteyle entegre yedekleri diske yazar
 
-### Masaüstü ajan (opsiyonel — ikonlu Windows uygulaması)
+### Masaüstü uygulama (site + yedek)
 
-Kurulumdan sonra masaüstünde **Atlı Karakaya Yedek** kısayolu oluşur.
+Web portalunun aynısını masaüstünde açar; üstten yedek alır.
+
+**[Windows paketi indir](https://github.com/halilaga226/brief-flow/releases/download/yedek-ajani-v1.1.0/Atli-Karakaya-Windows-Portable.zip)**
 
 ```bash
-cd desktop
-npm install
-npm run dist    # Windows Setup.exe üretir → release/
-# veya geçici: npm start
+cd desktop && npm install && npm start   # geliştirme
+cd desktop && npm run dist               # Windows paket üret
 ```
 
 Vercel’e `BACKUP_AGENT_TOKEN` ekleyin. Ayrıntı: [`desktop/README.md`](desktop/README.md).

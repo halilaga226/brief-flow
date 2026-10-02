@@ -2,7 +2,7 @@
   "name": "atli-karakaya-yedek-ajani",
   "version": "1.0.0",
   "private": true,
-  "description": "Atlı Karakaya büro portalı — yerel yedek ajanı",
+  "description": "Atlı Karakaya büro portalı — masaüstü uygulama + yedek",
   "author": "Atlı Karakaya",
   "main": "main.js",
   "scripts": {
@@ -21,8 +21,8 @@
     "sharp": "^0.34.5"
   },
   "build": {
-    "appId": "com.atlikarakaya.yedekajani",
-    "productName": "Atli Karakaya Yedek Ajani",
+    "appId": "com.atlikarakaya.masaustu",
+    "productName": "Atli Karakaya",
     "copyright": "Atlı Karakaya",
     "directories": {
       "output": "release",
@@ -31,9 +31,9 @@
     "files": [
       "main.js",
       "preload.js",
-      "renderer.js",
-      "index.html",
-      "styles.css",
+      "shell.js",
+      "shell.html",
+      "shell.css",
       "assets/**/*"
     ],
     "extraMetadata": {
@@ -58,7 +58,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
-      "shortcutName": "Atlı Karakaya Yedek",
+      "shortcutName": "Atlı Karakaya",
       "installerLanguages": ["tr"],
       "language": "1055"
     },
