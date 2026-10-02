@@ -89,7 +89,7 @@ function extractFiles(row: Record<string, unknown>): PartyFileInput[] {
     }
   }
 
-  // Tek dosya alanları kökte ise
+  // Tek dosya alanları kökte ise (UYAP satırı: muvekkil + dosyaNo)
   const singleNo = pickString(row, [
     "fileNumber",
     "dosyaNo",
@@ -98,10 +98,24 @@ function extractFiles(row: Record<string, unknown>): PartyFileInput[] {
     "esas_no",
   ])
   if (singleNo.length >= 2 && list.every((f) => f.fileNumber !== singleNo)) {
+    const courtName = pickString(row, [
+      "courtName",
+      "mahkeme",
+      "mahkemeAdi",
+      "court",
+      "birimAdi",
+      "birimLabel",
+      "kurum",
+    ])
+    const noteParts = [
+      pickString(row, ["dosyaTuru", "groupLabel"]),
+      pickString(row, ["dosyaDurumu"]),
+      pickString(row, ["tarafOzet", "notes", "not", "aciklama", "konu"]),
+    ].filter(Boolean)
     list.push({
       fileNumber: singleNo,
-      courtName: pickString(row, ["courtName", "mahkeme", "mahkemeAdi", "court"]),
-      notes: pickString(row, ["notes", "not", "aciklama", "konu"]),
+      courtName,
+      notes: noteParts.join(" · "),
     })
   }
   return list
@@ -150,6 +164,7 @@ export function parsePartiesJson(raw: string): PartyInput[] {
     const obj = asRecord(parsed)
     if (!obj) throw new Error("JSON dizi veya nesne olmalı.")
     const nested =
+      obj.rows ??
       obj.taraflar ??
       obj.parties ??
       obj.muvekkiller ??
