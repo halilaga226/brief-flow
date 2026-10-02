@@ -63,8 +63,15 @@ export function DataRecoveryPanel({
         Yedekleme ve geri getirme
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Günlük otomatik yedek + elle yedek/indirme. JSON’u bilgisayarınıza da kaydedin — veritabanı
-        silinse bile dosyadan geri gelir. Pahalı PITR şart değil.
+        Günlük otomatik yedek + elle yedek/indirme. Ofis bilgisayarında{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">desktop/</code> Yedek Ajanı ile
+        yedekler diske de yazılır — site + bilgisayar birlikte güvence. Pahalı PITR şart değil.
+      </p>
+      <p className="mt-2 rounded-xl border border-border/80 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+        <span className="font-semibold text-foreground">Masaüstü ajan:</span> bilgisayarda{" "}
+        <code className="text-xs">cd desktop && npm install && npm start</code> — portal URL +
+        Vercel’deki <code className="text-xs">BACKUP_AGENT_TOKEN</code> ile bağlanır; klasöre
+        otomatik JSON kaydeder.
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">

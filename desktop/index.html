@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:;"
+    />
+    <title>Atlı Karakaya · Yedek Ajanı</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="hero">
+        <p class="brand">Atlı Karakaya</p>
+        <h1>Yedek Ajanı</h1>
+        <p class="lead">
+          Portal ile entegre çalışır: yedekleri bu bilgisayara kaydeder, istenirse
+          siteye geri yükler.
+        </p>
+        <p id="status" class="status">Yükleniyor…</p>
+      </header>
+
+      <section class="panel">
+        <h2>Bağlantı</h2>
+        <label>
+          Portal adresi
+          <input id="portalUrl" type="url" placeholder="https://vekalet.example.com" />
+        </label>
+        <label>
+          Ajan anahtarı (BACKUP_AGENT_TOKEN)
+          <input id="agentToken" type="password" autocomplete="off" placeholder="Vercel / .env anahtarı" />
+        </label>
+        <label>
+          Yerel yedek klasörü
+          <div class="row">
+            <input id="backupDir" type="text" readonly />
+            <button type="button" id="pickFolder" class="ghost">Klasör seç</button>
+          </div>
+        </label>
+        <div class="grid-2">
+          <label>
+            Otomatik aralık (saat)
+            <input id="intervalHours" type="number" min="1" max="168" />
+          </label>
+          <label>
+            Yerelde tut (adet)
+            <input id="keepLocal" type="number" min="3" max="200" />
+          </label>
+        </div>
+        <label class="check">
+          <input id="autoBackup" type="checkbox" />
+          Otomatik yedek açık (sistem tepsisinde çalışır)
+        </label>
+        <div class="actions">
+          <button type="button" id="save" class="primary">Ayarları kaydet</button>
+          <button type="button" id="backupNow" class="accent">Şimdi yedekle</button>
+          <button type="button" id="openFolder" class="ghost">Klasörü aç</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="row-between">
+          <h2>Bu bilgisayardaki yedekler</h2>
+          <button type="button" id="refresh" class="ghost">Yenile</button>
+        </div>
+        <ul id="locals" class="locals"></ul>
+        <p class="hint">
+          «Siteye yükle» seçilen JSON’u portal verisinin üzerine yazar. Dikkatli kullanın.
+        </p>
+      </section>
+    </div>
+    <script src="renderer.js"></script>
+  </body>
+</html>

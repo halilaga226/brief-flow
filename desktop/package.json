@@ -1,0 +1,17 @@
+{
+  "name": "atli-karakaya-yedek-ajani",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Atlı Karakaya büro portalı — yerel yedek ajanı",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1"
+  }
+}

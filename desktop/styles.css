@@ -1,0 +1,259 @@
+:root {
+  --bg0: #0c1218;
+  --bg1: #141c26;
+  --bg2: #1c2733;
+  --line: #2a3a4a;
+  --text: #e8eef4;
+  --muted: #8fa3b5;
+  --brand: #c9a227;
+  --accent: #2f6f5e;
+  --accent-2: #3d8f78;
+  --danger: #c45c4a;
+  --radius: 14px;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-body: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(201, 162, 39, 0.14), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(47, 111, 94, 0.22), transparent 50%),
+    linear-gradient(165deg, var(--bg0), #101820 45%, #0a1016);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+.shell {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 28px 22px 40px;
+}
+
+.hero {
+  margin-bottom: 22px;
+}
+
+.brand {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  letter-spacing: 0.02em;
+  color: var(--brand);
+}
+
+.hero h1 {
+  margin: 4px 0 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.35rem;
+  color: var(--text);
+}
+
+.lead {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+  font-size: 0.95rem;
+}
+
+.status {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(47, 111, 94, 0.18);
+  border: 1px solid rgba(61, 143, 120, 0.35);
+  color: #b7e0d2;
+  font-size: 0.88rem;
+}
+
+.status.error {
+  background: rgba(196, 92, 74, 0.15);
+  border-color: rgba(196, 92, 74, 0.4);
+  color: #f0b8ae;
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(28, 39, 51, 0.92), rgba(20, 28, 38, 0.96));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 16px 18px;
+  margin-bottom: 16px;
+}
+
+.panel h2 {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+input[type="url"],
+input[type="text"],
+input[type="password"],
+input[type="number"] {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg0);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+}
+
+input:focus {
+  outline: 2px solid rgba(201, 162, 39, 0.45);
+  outline-offset: 1px;
+}
+
+.row,
+.row-between,
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.row-between {
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.row-between h2 {
+  margin: 0;
+}
+
+.row input {
+  flex: 1;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.check input {
+  width: auto;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.primary {
+  background: var(--brand);
+  color: #1a1405;
+}
+
+.accent {
+  background: var(--accent);
+  color: #e8fff6;
+}
+
+.accent:hover {
+  background: var(--accent-2);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.danger {
+  background: transparent;
+  color: #f0b8ae;
+  border: 1px solid rgba(196, 92, 74, 0.45);
+}
+
+.actions {
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.locals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.locals li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.locals li:last-child {
+  border-bottom: none;
+}
+
+.locals .meta {
+  min-width: 0;
+}
+
+.locals .name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.locals .sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.hint {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.empty {
+  padding: 16px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}

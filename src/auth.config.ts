@@ -14,6 +14,8 @@ export const authConfig = {
       if (pathname.startsWith("/api/auth")) return true
       // Vercel Cron; route içinde CRON_SECRET ile korunur
       if (pathname.startsWith("/api/cron")) return true
+      // Masaüstü yedek ajanı; route içinde BACKUP_AGENT_TOKEN ile korunur
+      if (pathname.startsWith("/api/agent")) return true
       if (pathname === "/giris") {
         return true
       }

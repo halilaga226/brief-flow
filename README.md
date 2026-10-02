@@ -55,9 +55,20 @@ Supabase’te pahalı PITR şart değil. Bu portal kendi yedeğini alır:
 1. **Ayarlar → Yedekleme** — «Şimdi yedek al» / «Yedek indir (JSON)» / «JSON’dan geri yükle»
 2. Son **14** büro yedeği veritabanında tutulur
 3. **Vercel Cron** her gece 02:00 UTC’de `/api/cron/backup` çalışır — Vercel’de `CRON_SECRET` tanımlayın
-4. Haftada bir indirilen JSON’u bilgisayarınıza veya Google Drive’a koyun (asıl güvence bu)
+4. **Masaüstü Yedek Ajanı** (`desktop/`) — ofis bilgisayarında çalışır, siteyle entegre yedekleri diske yazar
 
-**Maliyet önerisi:** Supabase Free veya Pro (PITR kapalı) + Vercel + bu yedekler. ~100$/ay PITR’ye gerek kalmaz.
+### Masaüstü ajan (önerilen)
+
+```bash
+cd desktop
+npm install
+npm start
+```
+
+Vercel’e `BACKUP_AGENT_TOKEN` ekleyin; ajan aynı anahtarla `/api/agent/backup` üzerinden bağlanır.
+Ayrıntı: [`desktop/README.md`](desktop/README.md).
+
+**Maliyet önerisi:** Supabase Free veya Pro (PITR kapalı) + Vercel + bu yedekler + ofis PC ajanı. ~100$/ay PITR’ye gerek kalmaz.
 
 ## Güvenlik
 
