@@ -63,8 +63,9 @@ export function DesktopNotifySettings() {
         Canlı bildirimler
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Yeni iş atandığında veya dosyada güncelleme olduğunda ekranda renkli popup ve (izin
-        verirseniz) bilgisayar bildirimi gösterilir.
+        Yeni iş, inceleme, revizyon, onay, gönderim ve dosya güncellemelerinde ekranın sağ üstünde
+        renkli popup açılır. Masaüstü izni verirseniz sekme arkadayken bilgisayar bildirimi de
+        gelir. İzin şart değil — popup her zaman çalışır.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button
@@ -75,6 +76,16 @@ export function DesktopNotifySettings() {
         >
           <BellRing />
           {permission === "granted" ? "Açık" : "Bildirim izni ver"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="font-semibold"
+          onClick={() => {
+            window.dispatchEvent(new Event("brief-flow:demo-alert"))
+          }}
+        >
+          Test popup
         </Button>
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
       </div>

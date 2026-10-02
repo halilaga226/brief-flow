@@ -127,7 +127,7 @@ export async function listNotifications(userId: string) {
   const rows = await prisma.notification.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
-    take: 15,
+    take: 40,
   })
   return rows.map(toNotification)
 }
