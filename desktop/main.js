@@ -16,7 +16,7 @@ const Store = require("electron-store")
 const store = new Store({
   name: "atli-karakaya-masaustu",
   defaults: {
-    portalUrl: "",
+    portalUrl: "https://brief-flow-ashy.vercel.app",
     agentToken: "",
     backupDir: "",
     intervalHours: 6,
@@ -393,7 +393,9 @@ function wireIpc() {
     if (typeof next.portalUrl === "string") {
       store.set("portalUrl", normalizePortalUrl(next.portalUrl))
     }
-    if (typeof next.agentToken === "string") store.set("agentToken", next.agentToken.trim())
+    if (typeof next.agentToken === "string") {
+      store.set("agentToken", next.agentToken.trim().replace(/^["']|["']$/g, ""))
+    }
     if (typeof next.backupDir === "string" && next.backupDir) {
       ensureBackupDir(next.backupDir)
       store.set("backupDir", next.backupDir)
