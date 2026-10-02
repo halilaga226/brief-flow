@@ -23,6 +23,7 @@ import {
   sendToLawyer,
 } from "@/server/tasks"
 import { clearDemoData, restoreAllSoftDeleted, restoreDataSnapshot } from "@/server/admin"
+import { createOfficeBackup, restoreOfficeBackupById } from "@/server/backup"
 import type { ClientCallStatus } from "@/lib/workflow"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -281,6 +282,25 @@ export async function restoreAllDeletedAction(
   }
 }
 
+export async function createOfficeBackupAction(
+  _prev: ActionState,
+  _formData: FormData,
+): Promise<ActionState> {
+  void _prev
+  void _formData
+  const user = await requireUser()
+  try {
+    const result = await createOfficeBackup(user)
+    revalidatePath("/ayarlar")
+    return {
+      ok: true,
+      message: `Yedek alındı: ${result.counts.clients} müvekkil, ${result.counts.tasks} iş. İndirmek için listeden kullanın.`,
+    }
+  } catch (error) {
+    return actionError(error)
+  }
+}
+
 export async function restoreSnapshotAction(
   _prev: ActionState,
   formData: FormData,
@@ -288,7 +308,20 @@ export async function restoreSnapshotAction(
   void _prev
   const user = await requireUser()
   const snapshotId = readText(formData, "snapshotId")
+  const kind = readText(formData, "kind")
   try {
+    if (kind === "office_backup") {
+      const result = await restoreOfficeBackupById(user, snapshotId)
+      revalidatePath("/silinenler")
+      revalidatePath("/gorevler")
+      revalidatePath("/muvekkiller")
+      revalidatePath("/ayarlar")
+      revalidatePath("/is-listesi")
+      return {
+        ok: true,
+        message: `Büro yedeği yüklendi: ${result.clients} müvekkil, ${result.tasks} iş.`,
+      }
+    }
     const result = await restoreDataSnapshot(user, snapshotId)
     revalidatePath("/silinenler")
     revalidatePath("/gorevler")

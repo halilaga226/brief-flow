@@ -48,6 +48,17 @@ Müvekkil detayında avukat ve stajyer ortak notlar bırakabilir (görüşme, ha
 - Klasörü servis hesabı e-postasıyla **Düzenleyici** paylaşın.
 - **Avukat:** Ayarlar → kişisel klasör kimliği; isteğe bağlı stajyer yazma erişimi.
 
+## Yedekleme (ucuz + güvenli)
+
+Supabase’te pahalı PITR şart değil. Bu portal kendi yedeğini alır:
+
+1. **Ayarlar → Yedekleme** — «Şimdi yedek al» / «Yedek indir (JSON)» / «JSON’dan geri yükle»
+2. Son **14** büro yedeği veritabanında tutulur
+3. **Vercel Cron** her gece 02:00 UTC’de `/api/cron/backup` çalışır — Vercel’de `CRON_SECRET` tanımlayın
+4. Haftada bir indirilen JSON’u bilgisayarınıza veya Google Drive’a koyun (asıl güvence bu)
+
+**Maliyet önerisi:** Supabase Free veya Pro (PITR kapalı) + Vercel + bu yedekler. ~100$/ay PITR’ye gerek kalmaz.
+
 ## Güvenlik
 
 - Başka kullanıcıların parolasını **yalnızca `halil`** sıfırlayabilir.

@@ -159,7 +159,7 @@ export async function listDataSnapshots(actor: SessionUser) {
   if (!isAdmin(actor.role)) throw new WorkflowError("Yetki yok.")
   return prisma.dataSnapshot.findMany({
     orderBy: { createdAt: "desc" },
-    take: 20,
+    take: 30,
     select: {
       id: true,
       kind: true,

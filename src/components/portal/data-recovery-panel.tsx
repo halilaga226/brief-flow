@@ -1,11 +1,16 @@
 "use client"
 
 import { restoreClientPurgeAction } from "@/actions/clients"
-import { restoreAllDeletedAction, restoreSnapshotAction } from "@/actions/tasks"
+import {
+  createOfficeBackupAction,
+  restoreAllDeletedAction,
+  restoreSnapshotAction,
+} from "@/actions/tasks"
 import { useActionResult } from "@/components/portal/use-action-result"
 import { Button } from "@/components/ui/button"
-import { RotateCcw } from "lucide-react"
-import { useActionState } from "react"
+import { Download, RotateCcw, ShieldCheck, Upload } from "lucide-react"
+import { useActionState, useRef, useState } from "react"
+import { toast } from "sonner"
 
 export function DataRecoveryPanel({
   snapshots,
@@ -21,24 +26,87 @@ export function DataRecoveryPanel({
   const [allState, allAction, allPending] = useActionState(restoreAllDeletedAction, null)
   const [purgeState, purgeAction, purgePending] = useActionState(restoreClientPurgeAction, null)
   const [snapState, snapAction, snapPending] = useActionState(restoreSnapshotAction, null)
+  const [backupState, backupAction, backupPending] = useActionState(createOfficeBackupAction, null)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
   useActionResult(allState)
   useActionResult(purgeState)
   useActionResult(snapState)
+  useActionResult(backupState)
+
+  async function uploadRestore(file: File) {
+    setUploading(true)
+    try {
+      const body = new FormData()
+      body.set("file", file)
+      const res = await fetch("/api/backups", { method: "POST", body })
+      const data = (await res.json()) as { ok?: boolean; error?: string; result?: { tasks: number; clients: number } }
+      if (!res.ok) {
+        toast.error(data.error || "Geri yükleme başarısız.")
+        return
+      }
+      toast.success(
+        `Yedek yüklendi: ${data.result?.clients ?? 0} müvekkil, ${data.result?.tasks ?? 0} iş.`,
+      )
+      window.location.reload()
+    } catch {
+      toast.error("Yükleme sırasında hata oluştu.")
+    } finally {
+      setUploading(false)
+    }
+  }
 
   return (
     <section className="glass rounded-2xl p-4">
       <h2 className="flex items-center gap-2 text-lg font-semibold">
-        <RotateCcw className="size-5 text-emerald-600" />
-        Veri geri getirme
+        <ShieldCheck className="size-5 text-emerald-600" />
+        Yedekleme ve geri getirme
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Soft-delete edilen kayıtları veya son yedekleri geri yükleyin. Eski “örnek sil”
-        tüm işleri kalıcı silerdi; artık yalnızca örnek işler silinenlere taşınır.
+        Günlük otomatik yedek + elle yedek/indirme. JSON’u bilgisayarınıza da kaydedin — veritabanı
+        silinse bile dosyadan geri gelir. Pahalı PITR şart değil.
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
+        <form action={backupAction}>
+          <Button type="submit" disabled={backupPending} className="font-semibold">
+            <ShieldCheck />
+            {backupPending ? "Yedekleniyor…" : "Şimdi yedek al"}
+          </Button>
+        </form>
+        <Button asChild variant="outline" className="font-semibold">
+          <a href="/api/backups" download>
+            <Download />
+            Yedek indir (JSON)
+          </a>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="font-semibold"
+          disabled={uploading}
+          onClick={() => fileRef.current?.click()}
+        >
+          <Upload />
+          {uploading ? "Yükleniyor…" : "JSON’dan geri yükle"}
+        </Button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            event.target.value = ""
+            if (file) void uploadRestore(file)
+          }}
+        />
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
         <form action={allAction}>
-          <Button type="submit" disabled={allPending} className="font-semibold">
+          <Button type="submit" disabled={allPending} variant="secondary" className="font-semibold">
+            <RotateCcw />
             {allPending ? "…" : "Silinenlerdekilerin tümünü geri getir"}
           </Button>
         </form>
@@ -48,9 +116,9 @@ export function DataRecoveryPanel({
           </Button>
         </form>
       </div>
-      {allState?.error || purgeState?.error || snapState?.error ? (
+      {allState?.error || purgeState?.error || snapState?.error || backupState?.error ? (
         <p className="mt-2 text-sm text-destructive">
-          {allState?.error || purgeState?.error || snapState?.error}
+          {allState?.error || purgeState?.error || snapState?.error || backupState?.error}
         </p>
       ) : null}
 
@@ -68,38 +136,76 @@ export function DataRecoveryPanel({
                   {snap.restoredAt ? " · geri yüklendi" : ""}
                 </p>
               </div>
-              {snap.kind === "clear_demo" ? (
-                <form action={snapAction}>
-                  <input type="hidden" name="snapshotId" value={snap.id} />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    variant="outline"
-                    disabled={snapPending}
-                    className="font-semibold"
-                  >
-                    Geri yükle
-                  </Button>
-                </form>
-              ) : snap.kind === "purge_clients" ? (
-                <form action={purgeAction}>
-                  <input type="hidden" name="snapshotId" value={snap.id} />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    variant="outline"
-                    disabled={purgePending}
-                    className="font-semibold"
-                  >
-                    Geri yükle
-                  </Button>
-                </form>
-              ) : null}
+              <div className="flex flex-wrap gap-2">
+                {snap.kind === "office_backup" ? (
+                  <>
+                    <Button asChild size="sm" variant="outline" className="font-semibold">
+                      <a href={`/api/backups?id=${snap.id}`} download>
+                        <Download />
+                        İndir
+                      </a>
+                    </Button>
+                    <form action={snapAction}>
+                      <input type="hidden" name="snapshotId" value={snap.id} />
+                      <input type="hidden" name="kind" value="office_backup" />
+                      <Button
+                        type="submit"
+                        size="sm"
+                        variant="outline"
+                        disabled={snapPending}
+                        className="font-semibold"
+                        onClick={(event) => {
+                          if (
+                            !window.confirm(
+                              "Bu yedek mevcut verilerin üzerine yazılabilir. Devam?",
+                            )
+                          ) {
+                            event.preventDefault()
+                          }
+                        }}
+                      >
+                        Geri yükle
+                      </Button>
+                    </form>
+                  </>
+                ) : null}
+                {snap.kind === "clear_demo" ? (
+                  <form action={snapAction}>
+                    <input type="hidden" name="snapshotId" value={snap.id} />
+                    <input type="hidden" name="kind" value="clear_demo" />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      variant="outline"
+                      disabled={snapPending}
+                      className="font-semibold"
+                    >
+                      Geri yükle
+                    </Button>
+                  </form>
+                ) : null}
+                {snap.kind === "purge_clients" ? (
+                  <form action={purgeAction}>
+                    <input type="hidden" name="snapshotId" value={snap.id} />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      variant="outline"
+                      disabled={purgePending}
+                      className="font-semibold"
+                    >
+                      Geri yükle
+                    </Button>
+                  </form>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-muted-foreground">Henüz yedek yok.</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Henüz yedek yok — “Şimdi yedek al” ile ilkini oluşturun.
+        </p>
       )}
     </section>
   )
