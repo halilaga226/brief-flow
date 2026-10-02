@@ -1,14 +1,34 @@
 # Atlı Karakaya · Masaüstü Yedek Ajanı
 
-Portal ile entegre çalışan küçük bir bilgisayar uygulaması. Site üzerinden yedek alır, **bu bilgisayara** JSON olarak kaydeder; istenirse aynı dosyayı siteye geri yükler.
+Evet — bu **gerçek bir masaüstü programı**. Kurulum / açılıştan sonra masaüstünde
+veya Başlat menüsünde **«Atlı Karakaya Yedek»** ikonu (kalkan amblemi) ile erişirsiniz.
 
-## Gereksinimler
+## Windows’a kurulum
 
-- Windows / macOS / Linux
-- [Node.js 20+](https://nodejs.org/)
-- Portalda `BACKUP_AGENT_TOKEN` tanımlı olmalı (Vercel Environment Variables + yerel `.env`)
+### Yol 1 — Kurulum dosyası (Setup.exe)
 
-## Kurulum
+Windows bilgisayarda bir kez paket üretin:
+
+```bash
+cd desktop
+npm install
+npm run dist
+```
+
+`desktop/release/` içinde **Setup.exe** oluşur. Çift tıklayıp kurun:
+- Masaüstü kısayolu otomatik gelir
+- Başlat menüsüne de eklenir
+
+Sonra masaüstündeki **Atlı Karakaya Yedek** ikonuna çift tıklamanız yeterli.
+
+### Yol 2 — Taşınabilir klasör (Portable)
+
+1. `release/win-unpacked` klasörünü (veya Portable zip’i) ofis PC’ye kopyalayın  
+2. İçindeki **`Atli Karakaya Yedek Ajani.exe`** dosyasına sağ tıklayın  
+3. **Gönder → Masaüstü (kısayol oluştur)**  
+4. Bundan sonra masaüstü ikonundan açın  
+
+### Yol 3 — Geliştirici (Node)
 
 ```bash
 cd desktop
@@ -16,17 +36,22 @@ npm install
 npm start
 ```
 
-İlk açılışta:
+Aynı pencereli uygulama açılır; kalıcı ikon için Yol 1 veya 2’yi kullanın.
 
-1. **Portal adresi** — canlı site URL’niz (örn. `https://….vercel.app`) veya yerel `http://127.0.0.1:4317`
-2. **Ajan anahtarı** — sunucudaki `BACKUP_AGENT_TOKEN` değeri (parola değil; yalnızca yedek API için)
-3. **Yedek klasörü** — varsayılan: Belgeler → `Atli-Karakaya-Yedekler`
-4. **Ayarları kaydet** → **Şimdi yedekle**
+## İlk açılış ayarları
 
-Uygulama kapatılınca sistem tepsisinde kalır; otomatik aralıkla yedek almaya devam eder.
+1. **Portal adresi** — canlı site URL’niz  
+2. **Ajan anahtarı** — Vercel `BACKUP_AGENT_TOKEN`  
+3. **Ayarları kaydet** → **Şimdi yedekle**  
 
-## Güvenlik
+Yedekler varsayılan olarak **Belgeler → Atli-Karakaya-Yedekler** klasörüne yazılır.
+Pencereyi kapatınca sistem tepsisinde çalışmaya devam eder.
 
-- Anahtarı yalnızca ofis bilgisayarında tutun; paylaşmayın.
-- Anahtar çalınırsa Vercel’de yeni `BACKUP_AGENT_TOKEN` üretip eskiyi silin.
-- «Siteye yükle» mevcut portal verisinin üzerine yazabilir — onay ister.
+## Site tarafı (bir kez)
+
+Vercel → Environment Variables → `BACKUP_AGENT_TOKEN` ekleyin → Redeploy.
+
+## Not
+
+Siteden «Yedek al ve indir» yeterliyse bu uygulamayı kurmak **zorunlu değil**.
+Otomatik / arka planda diske yazmak istiyorsanız masaüstü programı kullanın.

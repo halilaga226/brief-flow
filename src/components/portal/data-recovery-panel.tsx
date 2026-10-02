@@ -187,9 +187,10 @@ export function DataRecoveryPanel({
       </div>
 
       <p className="mt-3 rounded-xl border border-border/80 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-        <span className="font-semibold text-foreground">Masaüstü ajan (opsiyonel):</span>{" "}
-        <code className="text-xs">cd desktop && npm install && npm start</code> — otomatik diske
-        yazar. Anahtar: Vercel <code className="text-xs">BACKUP_AGENT_TOKEN</code>.
+        <span className="font-semibold text-foreground">Masaüstü uygulama (opsiyonel):</span>{" "}
+        <code className="text-xs">desktop/</code> içinde Windows Setup.exe üretilir; kurunca
+        masaüstünde <strong>Atlı Karakaya Yedek</strong> ikonu çıkar. Anahtar:{" "}
+        <code className="text-xs">BACKUP_AGENT_TOKEN</code>.
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">

@@ -44,6 +44,12 @@ function ensureBackupDir(dir) {
   return store.get("backupDir") || target
 }
 
+function appIcon() {
+  const iconPath = path.join(__dirname, "assets", "icon.png")
+  if (fs.existsSync(iconPath)) return nativeImage.createFromPath(iconPath)
+  return undefined
+}
+
 function createWindow() {
   if (mainWindow) {
     mainWindow.show()
@@ -58,6 +64,7 @@ function createWindow() {
     minHeight: 640,
     title: "Atlı Karakaya · Yedek Ajanı",
     backgroundColor: "#0f1419",
+    icon: appIcon(),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -78,12 +85,11 @@ function createWindow() {
 }
 
 function trayIcon() {
-  // 16x16 simple PNG (dark teal square) as data URL → nativeImage
-  const png = Buffer.from(
-    "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGD4z0ABYBzVMKoBBgQYGBgYGRgYGBhGNTAwMDAwjGqAAQAAAP//AwB4cATwH2p4VQAAAABJRU5ErkJggg==",
-    "base64",
-  )
-  return nativeImage.createFromBuffer(png)
+  const trayPath = path.join(__dirname, "assets", "tray.png")
+  if (fs.existsSync(trayPath)) {
+    return nativeImage.createFromPath(trayPath)
+  }
+  return appIcon() || nativeImage.createEmpty()
 }
 
 function updateTray() {
