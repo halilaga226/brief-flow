@@ -11,6 +11,7 @@ import {
   type Role,
   type TaskStatus,
 } from "@/lib/workflow"
+import { ensureWorkItemSchema } from "@/server/ensure-work-item-schema"
 
 export type WorkItemDTO = {
   id: string
@@ -214,6 +215,7 @@ function mapWorkItemRow(row: {
 export async function listInternsForWorkView(
   actor: SessionUser,
 ): Promise<InternColleagueDTO[]> {
+  await ensureWorkItemSchema()
   if (!(canAssignTask(actor.role) || isAdmin(actor.role))) {
     throw new WorkflowError("Stajyer listelerine erişemezsiniz.")
   }
@@ -242,6 +244,7 @@ export async function listWorkItems(
   scope: "all" | "own" | "intern" = "all",
   ownerId?: string | null,
 ): Promise<WorkItemDTO[]> {
+  await ensureWorkItemSchema()
   if (!canManageWorkItems(actor.role)) {
     throw new WorkflowError("İş listesine erişemezsiniz.")
   }
@@ -271,6 +274,7 @@ export async function listWorkItems(
 }
 
 export async function getWorkItem(actor: SessionUser, id: string) {
+  await ensureWorkItemSchema()
   if (!canManageWorkItems(actor.role)) {
     throw new WorkflowError("İş listesine erişemezsiniz.")
   }
@@ -287,6 +291,7 @@ export async function getWorkItemDetail(
   actor: SessionUser,
   id: string,
 ): Promise<WorkItemDetailDTO> {
+  await ensureWorkItemSchema()
   if (!canManageWorkItems(actor.role)) {
     throw new WorkflowError("İş listesine erişemezsiniz.")
   }
@@ -351,6 +356,7 @@ export async function createWorkItem(
     notes: string
   },
 ) {
+  await ensureWorkItemSchema()
   if (!canManageWorkItems(actor.role)) {
     throw new WorkflowError("İş listesine kayıt ekleyemezsiniz.")
   }
