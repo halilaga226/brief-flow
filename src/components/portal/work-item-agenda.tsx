@@ -203,7 +203,7 @@ function CompleteToggle({ id, completed }: { id: string; completed: boolean }) {
         title={completed ? "Yeniden aç" : "Kendim tamamladım"}
       >
         {completed ? <RotateCcw className="size-3.5" /> : <Check className="size-3.5" />}
-        {completed ? "Aç" : "Tamamla"}
+        {completed ? "Yeniden aç" : "Tamamla"}
       </Button>
     </form>
   )
@@ -286,7 +286,7 @@ export function WorkItemAgenda({
             <span>Dosya no</span>
             <span>Yapılacaklar</span>
             <span>Durum</span>
-            <span>Görev</span>
+            <span>Atama</span>
             <span />
           </div>
           <ul>
