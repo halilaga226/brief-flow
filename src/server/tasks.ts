@@ -343,7 +343,8 @@ export async function createTask(
         },
       },
     })
-    // Dosya kaydı iş listesinde kalır; sahiplik stajyere geçmez.
+    // Dosya kaydı atayanın kişisel listesinde kalır; sahiplik stajyere geçmez.
+    // Stajyer görev olarak görür; avukat «Stajyer işleri»nden aşamayı izler.
     if (workItemId) {
       await prisma.workItem.update({
         where: { id: workItemId },

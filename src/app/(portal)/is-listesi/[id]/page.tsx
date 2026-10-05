@@ -1,6 +1,7 @@
 import { WorkItemDetail } from "@/components/portal/work-item-detail"
 import { requireUser } from "@/lib/session"
-import { canAssignTask, canManageWorkItems } from "@/lib/workflow"
+import { canAssignTask, canManageWorkItems, isAdmin } from "@/lib/workflow"
+import { listClientsForPicker } from "@/server/clients"
 import { getWorkItemDetail } from "@/server/work-items"
 import type { Metadata } from "next"
 import Link from "next/link"
@@ -28,5 +29,15 @@ export default async function WorkItemDetailPage({
   }
 
   const item = await getWorkItemDetail(user, id)
-  return <WorkItemDetail item={item} canAssign={canAssignTask(user.role)} />
+  const canEdit = isAdmin(user.role) || item.ownerId === user.id
+  const clients = canEdit ? await listClientsForPicker(user) : []
+
+  return (
+    <WorkItemDetail
+      item={item}
+      canAssign={canAssignTask(user.role)}
+      canEdit={canEdit}
+      clients={clients}
+    />
+  )
 }

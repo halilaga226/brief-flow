@@ -1,6 +1,11 @@
 "use client"
 
-import { createWorkItemAction, deleteWorkItemAction } from "@/actions/work-items"
+import {
+  completeWorkItemAction,
+  createWorkItemAction,
+  deleteWorkItemAction,
+  reopenWorkItemAction,
+} from "@/actions/work-items"
 import { useActionResult } from "@/components/portal/use-action-result"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import type { ClientPickerDTO } from "@/server/clients"
 import type { WorkItemDTO } from "@/server/work-items"
 import { cn } from "@/lib/utils"
-import { Plus, Trash2, UserPlus } from "lucide-react"
+import { Check, Plus, RotateCcw, Trash2, UserPlus } from "lucide-react"
 import Link from "next/link"
 import { useActionState, useEffect, useMemo, useRef, useState } from "react"
 
@@ -51,7 +56,12 @@ function CreateWorkItemForm({
       className="grid gap-3 border border-border bg-card p-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-semibold">Yeni iş kaydı</p>
+        <div>
+          <p className="font-semibold">Kendi işime ekle</p>
+          <p className="text-xs text-muted-foreground">
+            Kayıt sizin listenizde kalır. İsterseniz sonra stajyere atayabilirsiniz.
+          </p>
+        </div>
         <div className="flex gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={onClose}>
             Vazgeç
@@ -65,45 +75,59 @@ function CreateWorkItemForm({
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-1 sm:col-span-2">
           <Label htmlFor="clientId">Müvekkil</Label>
-          <select
-            id="clientId"
-            name="clientId"
-            value={clientId}
-            onChange={(e) => {
-              setClientId(e.target.value)
-              setCaseFileId("")
-            }}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            required
-          >
-            <option value="">Müvekkil seçin…</option>
-            {clients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-              </option>
-            ))}
-          </select>
-          <input type="hidden" name="clientName" value={selectedClient?.name ?? ""} />
+          {clients.length > 0 ? (
+            <>
+              <select
+                id="clientId"
+                name="clientId"
+                value={clientId}
+                onChange={(e) => {
+                  setClientId(e.target.value)
+                  setCaseFileId("")
+                }}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                required
+              >
+                <option value="">Müvekkil seçin…</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </select>
+              <input type="hidden" name="clientName" value={selectedClient?.name ?? ""} />
+            </>
+          ) : (
+            <Input
+              id="clientName"
+              name="clientName"
+              required
+              className="h-9"
+              placeholder="Müvekkil adı"
+            />
+          )}
         </div>
-        <div className="grid gap-1 sm:col-span-2">
-          <Label htmlFor="caseFileId">Dosya (varsa)</Label>
-          <select
-            id="caseFileId"
-            name="caseFileId"
-            value={caseFileId}
-            onChange={(e) => setCaseFileId(e.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            disabled={!selectedClient}
-          >
-            <option value="">Dosya seçilmedi</option>
-            {(selectedClient?.caseFiles ?? []).map((file) => (
-              <option key={file.id} value={file.id}>
-                {file.fileNumber}
-                {file.courtName ? ` · ${file.courtName}` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
+        {clients.length > 0 ? (
+          <div className="grid gap-1 sm:col-span-2">
+            <Label htmlFor="caseFileId">Dosya (varsa)</Label>
+            <select
+              id="caseFileId"
+              name="caseFileId"
+              value={caseFileId}
+              onChange={(e) => setCaseFileId(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              disabled={!selectedClient}
+            >
+              <option value="">Dosya seçilmedi</option>
+              {(selectedClient?.caseFiles ?? []).map((file) => (
+                <option key={file.id} value={file.id}>
+                  {file.fileNumber}
+                  {file.courtName ? ` · ${file.courtName}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
         <div className="grid gap-1">
           <Label htmlFor="courtName">Mahkeme</Label>
           <Input
@@ -161,8 +185,32 @@ function DeleteButton({ id }: { id: string }) {
   )
 }
 
+function CompleteToggle({ id, completed }: { id: string; completed: boolean }) {
+  const [state, action, pending] = useActionState(
+    completed ? reopenWorkItemAction : completeWorkItemAction,
+    null,
+  )
+  useActionResult(state)
+  return (
+    <form action={action}>
+      <input type="hidden" name="workItemId" value={id} />
+      <Button
+        type="submit"
+        variant="ghost"
+        size="sm"
+        disabled={pending}
+        className="h-8 px-2 font-semibold"
+        title={completed ? "Yeniden aç" : "Kendim tamamladım"}
+      >
+        {completed ? <RotateCcw className="size-3.5" /> : <Check className="size-3.5" />}
+        {completed ? "Aç" : "Tamamla"}
+      </Button>
+    </form>
+  )
+}
+
 const COL =
-  "grid grid-cols-1 gap-2 border-b border-border px-3 py-3 md:grid-cols-[minmax(7rem,1fr)_minmax(8rem,1.2fr)_6rem_minmax(8rem,1.4fr)_minmax(6rem,1fr)_3.5rem_auto] md:items-start md:gap-2 md:py-2.5"
+  "grid grid-cols-1 gap-2 border-b border-border px-3 py-3 md:grid-cols-[minmax(7rem,1fr)_minmax(8rem,1.2fr)_6rem_minmax(8rem,1.4fr)_minmax(5rem,0.9fr)_minmax(5rem,0.8fr)_auto] md:items-start md:gap-2 md:py-2.5"
 
 export function WorkItemAgenda({
   items,
@@ -170,12 +218,16 @@ export function WorkItemAgenda({
   canCreate = true,
   canAssign = false,
   currentUserId,
+  showOwner = false,
+  emptyMessage,
 }: {
   items: WorkItemDTO[]
   clients?: ClientPickerDTO[]
   canCreate?: boolean
   canAssign?: boolean
   currentUserId?: string
+  showOwner?: boolean
+  emptyMessage?: string
 }) {
   const [formOpen, setFormOpen] = useState(false)
 
@@ -216,7 +268,10 @@ export function WorkItemAgenda({
 
       {items.length === 0 ? (
         <p className="border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
-          Dosya kaydı yok — «İş ekle» ile müvekkil seçerek ekleyin.
+          {emptyMessage ??
+            (canCreate
+              ? "Listeniz boş — «İş ekle» ile müvekkil seçerek kendi işinizi ekleyin."
+              : "Bu listede henüz kayıt yok.")}
         </p>
       ) : (
         <div className="rounded-lg border border-border bg-card">
@@ -230,74 +285,101 @@ export function WorkItemAgenda({
             <span>Mahkeme</span>
             <span>Dosya no</span>
             <span>Yapılacaklar</span>
-            <span>Özel not</span>
+            <span>Durum</span>
             <span>Görev</span>
             <span />
           </div>
           <ul>
-            {items.map((item) => (
-              <li key={item.id} className={COL}>
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
-                    Müvekkil
-                  </p>
-                  <p className="text-sm font-semibold">{item.clientName || "—"}</p>
-                  {item.ownerRole === "INTERN" ? (
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      Stajyer · {item.ownerName}
+            {items.map((item) => {
+              const isOwner = !currentUserId || item.ownerId === currentUserId
+              const done = Boolean(item.completedAt)
+              return (
+                <li
+                  key={item.id}
+                  className={cn(COL, done && "bg-muted/30 opacity-80")}
+                >
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                      Müvekkil
                     </p>
-                  ) : null}
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
-                    Mahkeme
-                  </p>
-                  <Link href={`/is-listesi/${item.id}`} className="text-sm font-bold hover:underline">
-                    {item.courtName}
-                  </Link>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
-                    Dosya
-                  </p>
-                  <p className="font-mono text-xs">{item.fileNumber}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
-                    Yapılacaklar
-                  </p>
-                  <p className="text-sm font-medium">{item.workToDo}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
-                    Not
-                  </p>
-                  <p className="text-sm text-muted-foreground">{item.notes || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
-                    Görev
-                  </p>
-                  <p className="text-sm tabular-nums text-muted-foreground">{item.taskCount}</p>
-                </div>
-                <div className="flex flex-wrap gap-1 md:justify-end">
-                  <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
-                    <Link href={`/is-listesi/${item.id}`}>Aç</Link>
-                  </Button>
-                  {canAssign ? (
+                    <p className="text-sm font-semibold">{item.clientName || "—"}</p>
+                    {showOwner || item.ownerRole === "INTERN" ? (
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        {item.ownerRole === "INTERN" ? "Stajyer" : "Sahip"} · {item.ownerName}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                      Mahkeme
+                    </p>
+                    <Link
+                      href={`/is-listesi/${item.id}`}
+                      className="text-sm font-bold hover:underline"
+                    >
+                      {item.courtName}
+                    </Link>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                      Dosya
+                    </p>
+                    <p className="font-mono text-xs">{item.fileNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                      Yapılacaklar
+                    </p>
+                    <p className="text-sm font-medium">{item.workToDo}</p>
+                    {item.notes ? (
+                      <p className="mt-0.5 text-xs text-muted-foreground">{item.notes}</p>
+                    ) : null}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                      Durum
+                    </p>
+                    {done ? (
+                      <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                        Tamamlandı
+                      </p>
+                    ) : item.latestTaskStatusLabel ? (
+                      <div>
+                        <p className="text-sm font-semibold">{item.latestTaskStatusLabel}</p>
+                        {item.latestTaskAssignee ? (
+                          <p className="text-[11px] text-muted-foreground">
+                            {item.latestTaskAssignee}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Kişisel iş</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase md:hidden">
+                      Görev
+                    </p>
+                    <p className="text-sm tabular-nums text-muted-foreground">{item.taskCount}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-1 md:justify-end">
                     <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
-                      <Link href={`/is-listesi/${item.id}/gorev`}>
-                        <UserPlus className="size-3.5" />
-                        Stajyere ata
-                      </Link>
+                      <Link href={`/is-listesi/${item.id}`}>Aç</Link>
                     </Button>
-                  ) : null}
-                  {!currentUserId || item.ownerId === currentUserId ? (
-                    <DeleteButton id={item.id} />
-                  ) : null}
-                </div>
-              </li>
-            ))}
+                    {isOwner ? <CompleteToggle id={item.id} completed={done} /> : null}
+                    {canAssign && isOwner && !done ? (
+                      <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
+                        <Link href={`/is-listesi/${item.id}/gorev`}>
+                          <UserPlus className="size-3.5" />
+                          Stajyere ata
+                        </Link>
+                      </Button>
+                    ) : null}
+                    {isOwner ? <DeleteButton id={item.id} /> : null}
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}

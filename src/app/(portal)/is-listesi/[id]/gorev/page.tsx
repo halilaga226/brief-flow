@@ -4,6 +4,7 @@ import { getDriveStatus } from "@/lib/drive"
 import { addDaysKey, istanbulDayKey } from "@/lib/format"
 import { requireUser } from "@/lib/session"
 import { canAssignTask } from "@/lib/workflow"
+import { listClientsForPicker } from "@/server/clients"
 import { listAssignees } from "@/server/tasks"
 import { getWorkItem } from "@/server/work-items"
 import type { Metadata } from "next"
@@ -29,9 +30,12 @@ export default async function AssignFromWorkItemPage({
     )
   }
 
-  const item = await getWorkItem(user, id)
-  const people = await listAssignees(user)
-  const drive = await getDriveStatus()
+  const [item, people, drive, clients] = await Promise.all([
+    getWorkItem(user, id),
+    listAssignees(user),
+    getDriveStatus(),
+    listClientsForPicker(user),
+  ])
   const defaultDue = addDaysKey(istanbulDayKey(new Date()), 3)
   const description = [
     `Mahkeme: ${item.courtName}`,
@@ -53,7 +57,8 @@ export default async function AssignFromWorkItemPage({
         </Link>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Stajyere görev ata</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {item.clientName} · {item.fileNumber} — dosya kaydı iş listesinde kalır.
+          {item.clientName} · {item.fileNumber} — dosya kaydı sizin listenizde kalır; stajyer
+          görev olarak alır.
         </p>
       </div>
       <div className="rounded-2xl border border-border bg-card p-4 md:p-6">
@@ -64,10 +69,12 @@ export default async function AssignFromWorkItemPage({
             people={people}
             defaultDue={defaultDue}
             drive={drive}
+            clients={clients}
             prefill={{
               workItemId: item.id,
               title: item.workToDo,
               clientName: item.clientName,
+              clientId: item.clientId ?? undefined,
               fileNumber: item.fileNumber,
               description,
             }}

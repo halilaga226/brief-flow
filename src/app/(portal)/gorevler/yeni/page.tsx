@@ -4,6 +4,7 @@ import { getDriveStatus } from "@/lib/drive"
 import { addDaysKey, istanbulDayKey } from "@/lib/format"
 import { requireUser } from "@/lib/session"
 import { canCreateTask } from "@/lib/workflow"
+import { listClientsForPicker } from "@/server/clients"
 import { getTask, listAssignees } from "@/server/tasks"
 import type { Metadata } from "next"
 import Link from "next/link"
@@ -28,21 +29,36 @@ export default async function NewTaskPage({
   }
 
   const params = await searchParams
-  const people = await listAssignees(user)
-  const drive = await getDriveStatus()
+  const [people, drive, clients] = await Promise.all([
+    listAssignees(user),
+    getDriveStatus(),
+    listClientsForPicker(user),
+  ])
   const defaultDue = addDaysKey(istanbulDayKey(new Date()), 3)
   const source = params.from ? await getTask(user.id, user.role, params.from) : null
+
+  const matchedClient =
+    params.client
+      ? clients.find(
+          (c) => c.name.localeCompare(params.client!, "tr", { sensitivity: "accent" }) === 0,
+        )
+      : null
 
   const prefill = source
     ? {
         title: source.title,
         clientName: source.clientName,
+        clientId: clients.find(
+          (c) =>
+            c.name.localeCompare(source.clientName, "tr", { sensitivity: "accent" }) === 0,
+        )?.id,
         fileNumber: source.fileNumber,
         description: source.description,
       }
     : params.client || params.file
       ? {
           clientName: params.client ?? "",
+          clientId: matchedClient?.id,
           fileNumber: params.file ?? "",
         }
       : undefined
@@ -50,10 +66,17 @@ export default async function NewTaskPage({
   return (
     <div className="mx-auto grid max-w-3xl gap-5">
       <div>
-        <Link href="/is-listesi" className="text-sm font-semibold text-muted-foreground hover:text-foreground">
+        <Link
+          href="/is-listesi"
+          className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+        >
           İş listesi
         </Link>
         <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Görev olarak ata</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Müvekkil seçerek stajyere veya meslektaşa görev verin. Kişisel iş eklemek için «İş
+          listesi → İş ekle» kullanın.
+        </p>
       </div>
       <div className="glass rounded-2xl p-4 md:p-6">
         {people.length === 0 ? (
@@ -63,6 +86,7 @@ export default async function NewTaskPage({
             people={people}
             defaultDue={defaultDue}
             drive={drive}
+            clients={clients}
             prefill={prefill}
           />
         )}

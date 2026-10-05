@@ -122,6 +122,7 @@ model Client {
   owner     User         @relation(fields: [ownerId], references: [id])
   caseFiles CaseFile[]
   notes     ClientNote[]
+  workItems WorkItem[]
 
   @@unique([ownerId, name])
   @@index([ownerId])
@@ -165,23 +166,28 @@ model CaseFile {
 }
 
 model WorkItem {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   clientName    String
+  clientId      String?
   opposingParty String
   courtName     String
   fileNumber    String
   courtFile     String
   workToDo      String
-  notes         String   @default("")
+  notes         String    @default("")
   ownerId       String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   owner   User            @relation(fields: [ownerId], references: [id])
+  client  Client?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
   tasks   Task[]
   entries WorkItemEntry[]
 
   @@index([ownerId])
+  @@index([clientId])
+  @@index([completedAt])
 }
 
 model WorkItemEntry {

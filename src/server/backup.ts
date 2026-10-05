@@ -273,6 +273,7 @@ export async function restoreOfficeBackup(
           create: {
             id: row.id,
             clientName: row.clientName,
+            clientId: row.clientId ?? null,
             opposingParty: row.opposingParty,
             courtName: row.courtName,
             fileNumber: row.fileNumber,
@@ -280,11 +281,13 @@ export async function restoreOfficeBackup(
             workToDo: row.workToDo,
             notes: row.notes ?? "",
             ownerId: row.ownerId,
+            completedAt: asDate(row.completedAt),
             createdAt: asDate(row.createdAt) ?? new Date(),
             updatedAt: asDate(row.updatedAt) ?? new Date(),
           },
           update: {
             clientName: row.clientName,
+            clientId: row.clientId ?? null,
             opposingParty: row.opposingParty,
             courtName: row.courtName,
             fileNumber: row.fileNumber,
@@ -292,6 +295,7 @@ export async function restoreOfficeBackup(
             workToDo: row.workToDo,
             notes: row.notes ?? "",
             ownerId: row.ownerId,
+            completedAt: asDate(row.completedAt),
           },
         })
       }

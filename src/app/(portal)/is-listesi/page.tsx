@@ -39,13 +39,14 @@ export default async function WorkListPage() {
     })
 
   const reviewCount = myTasks.filter((task) => task.status === "INCELEME_BEKLIYOR").length
+  const openPersonal = items.filter((item) => !item.completedAt).length
 
   return (
     <div className="mx-auto w-full max-w-[80rem] space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            İş listesi
+            İş listem
             {reviewCount > 0 ? (
               <span className="ml-2 text-base font-medium text-orange-600">
                 ({reviewCount} inceleme)
@@ -54,8 +55,8 @@ export default async function WorkListPage() {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {canAssign
-              ? "İş ekleyin, listede tutun; buradan stajyere görev atayın. Stajyer gönderince görevler üste gelir."
-              : "Size atanan görevler. Avukata gönderince listeden düşer."}
+              ? "Kişisel listeniz — iş ekleyin, kendiniz tamamlayın. Stajyere atama isteğe bağlıdır. Stajyer listeleri «Stajyer işleri»nde."
+              : "Kişisel iş listeniz ve size atanan görevler. Avukata gönderince görev listeden düşer."}
           </p>
         </div>
         {canManageFiles ? (
@@ -72,14 +73,16 @@ export default async function WorkListPage() {
         <section className="space-y-3" id="is-ekle">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div>
-              <h2 className="text-base font-semibold">Dosya kayıtları</h2>
+              <h2 className="text-base font-semibold">Kişisel işlerim</h2>
               <p className="text-sm text-muted-foreground">
                 {canAssign
-                  ? "İş burada kalır. «Ata» ile stajyere görev verirsiniz."
-                  : "Kendi dosya kayıtlarınız."}
+                  ? "Müvekkil seçerek ekleyin. Atama zorunlu değil — «Tamamla» veya isteğe bağlı «Stajyere ata»."
+                  : "Müvekkil seçerek kendi işlerinizi ekleyin ve takip edin."}
               </p>
             </div>
-            <span className="text-sm text-muted-foreground tabular-nums">{items.length}</span>
+            <span className="text-sm text-muted-foreground tabular-nums">
+              {openPersonal} açık / {items.length}
+            </span>
           </div>
           <WorkItemAgenda
             items={items}
@@ -93,7 +96,7 @@ export default async function WorkListPage() {
 
       <section className="space-y-3">
         <h2 className="text-base font-semibold">
-          {canAssign ? "Üzerimdeki / inceleme" : "Görevlerim"}
+          {canAssign ? "Üzerimdeki / inceleme görevleri" : "Görevlerim"}
         </h2>
         <TaskWorkList
           tasks={myTasks}

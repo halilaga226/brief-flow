@@ -48,7 +48,11 @@ async function main() {
   await prisma.taskLog.deleteMany()
   await prisma.taskFile.deleteMany()
   await prisma.task.deleteMany()
+  await prisma.workItemEntry.deleteMany()
   await prisma.workItem.deleteMany()
+  await prisma.clientNote.deleteMany()
+  await prisma.caseFile.deleteMany()
+  await prisma.client.deleteMany()
   await prisma.user.deleteMany()
 
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10)
@@ -68,6 +72,108 @@ async function main() {
   const mehmet = "user_mehmet"
   const elif = "user_elif"
   const can = "user_can"
+
+  const clientDeniz = await prisma.client.create({
+    data: {
+      id: "client_deniz",
+      name: "Deniz Acar",
+      nameKey: "deniz acar",
+      ownerId: ayse,
+      caseFiles: {
+        create: {
+          id: "case_deniz_184",
+          fileNumber: "2026/184 Esas",
+          courtName: "İstanbul 5. İş Mahkemesi",
+        },
+      },
+    },
+  })
+  const clientAda = await prisma.client.create({
+    data: {
+      id: "client_ada",
+      name: "Ada Lojistik Ltd. Şti.",
+      nameKey: "ada lojistik ltd sti",
+      ownerId: ayse,
+      caseFiles: {
+        create: {
+          id: "case_ada_12",
+          fileNumber: "2026/12 Danışmanlık",
+          courtName: "İstanbul Nöbetçi Noterliği",
+        },
+      },
+    },
+  })
+  await prisma.client.create({
+    data: {
+      id: "client_selin",
+      name: "Selin Kara",
+      nameKey: "selin kara",
+      ownerId: mehmet,
+      caseFiles: {
+        create: {
+          id: "case_selin_91",
+          fileNumber: "2026/91 Esas",
+          courtName: "Ankara 2. Asliye Hukuk",
+        },
+      },
+    },
+  })
+
+  await prisma.workItem.create({
+    data: {
+      id: "work_ayse_self",
+      clientName: clientDeniz.name,
+      clientId: clientDeniz.id,
+      opposingParty: "Eski işveren A.Ş.",
+      courtName: "İstanbul 5. İş Mahkemesi",
+      fileNumber: "2026/184 Esas",
+      courtFile: "2026/184 Esas",
+      workToDo: "Duruşma hazırlığı — tanık listesini kontrol et",
+      notes: "Kendim yapacağım; stajyere atamayacağım.",
+      ownerId: ayse,
+      createdAt: ago(2),
+      updatedAt: ago(1),
+    },
+  })
+  await prisma.workItem.create({
+    data: {
+      id: "work_elif_self",
+      clientName: clientAda.name,
+      clientId: clientAda.id,
+      opposingParty: "Belirtilmedi",
+      courtName: "İstanbul Nöbetçi Noterliği",
+      fileNumber: "2026/12 Danışmanlık",
+      courtFile: "2026/12 Danışmanlık",
+      workToDo: "Vekaletname suretlerini dosyaya ekle",
+      notes: "Stajyerin kendi listesindeki kişisel iş.",
+      ownerId: elif,
+      createdAt: ago(5),
+      updatedAt: ago(3),
+      entries: {
+        create: {
+          content: "Noterden suret talebi yapıldı.",
+          createdById: elif,
+          createdAt: ago(3),
+        },
+      },
+    },
+  })
+  await prisma.workItem.create({
+    data: {
+      id: "work_can_self",
+      clientName: "Selin Kara",
+      clientId: "client_selin",
+      opposingParty: "Belirtilmedi",
+      courtName: "Ankara 2. Asliye Hukuk",
+      fileNumber: "2026/91 Esas",
+      courtFile: "2026/91 Esas",
+      workToDo: "Tebligat evrakını tarayıp klasöre koy",
+      notes: "",
+      ownerId: can,
+      createdAt: ago(8),
+      updatedAt: ago(4),
+    },
+  })
 
   await prisma.task.create({
     data: {

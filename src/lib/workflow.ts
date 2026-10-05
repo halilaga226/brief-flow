@@ -215,8 +215,20 @@ export function canCreateTask(role: Role) {
 }
 
 /** Dosya kaydı (iş ekle) — stajyer dahil herkes. */
+/** Dosya kaydı (iş ekle) — stajyer dahil herkes. */
 export function canManageWorkItems(_role: Role) {
   return true
+}
+
+/** İş kaydı gizliliği: sahip + admin; avukat stajyer listesini görebilir. */
+export function canViewWorkItem(
+  item: { ownerId: string; ownerRole?: Role },
+  userId: string,
+  role: Role,
+) {
+  if (isAdmin(role) || item.ownerId === userId) return true
+  if (role === "LAWYER" && item.ownerRole === "INTERN") return true
+  return false
 }
 
 export function canAccessWorkList(_role: Role) {

@@ -16,13 +16,16 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import type { ColleagueDTO } from "@/lib/dto"
 import { roleLabel } from "@/lib/workflow"
-import { useActionState, useState } from "react"
+import type { ClientPickerDTO } from "@/server/clients"
+import { useActionState, useMemo, useState } from "react"
 
 export type TaskPrefill = {
   workItemId?: string
   title?: string
   clientName?: string
+  clientId?: string
   fileNumber?: string
+  caseFileId?: string
   description?: string
 }
 
@@ -31,18 +34,39 @@ export function NewTaskForm({
   defaultDue,
   drive,
   prefill,
+  clients = [],
 }: {
   people: ColleagueDTO[]
   defaultDue: string
   drive: { mode: "google" | "mock"; reason: string | null }
   prefill?: TaskPrefill
+  clients?: ClientPickerDTO[]
 }) {
   const fallback = people.find((person) => person.role === "INTERN")?.id ?? people[0]?.id ?? ""
   const [assigneeId, setAssigneeId] = useState(fallback)
+  const [clientId, setClientId] = useState(prefill?.clientId ?? "")
+  const [caseFileId, setCaseFileId] = useState(prefill?.caseFileId ?? "")
   const [state, action, pending] = useActionState(createTaskAction, null)
   const lawyers = people.filter((person) => person.role === "LAWYER")
   const interns = people.filter((person) => person.role === "INTERN")
   const admins = people.filter((person) => person.role === "ADMIN")
+
+  const selectedClient = useMemo(
+    () => clients.find((c) => c.id === clientId) ?? null,
+    [clients, clientId],
+  )
+  const selectedFile = useMemo(
+    () => selectedClient?.caseFiles.find((f) => f.id === caseFileId) ?? null,
+    [selectedClient, caseFileId],
+  )
+
+  const usePicker = clients.length > 0
+  const clientNameValue = usePicker
+    ? (selectedClient?.name ?? prefill?.clientName ?? "")
+    : (prefill?.clientName ?? "")
+  const fileNumberValue = usePicker
+    ? (selectedFile?.fileNumber || prefill?.fileNumber || "")
+    : (prefill?.fileNumber ?? "")
 
   return (
     <form action={action} className="grid gap-4">
@@ -67,30 +91,88 @@ export function NewTaskForm({
           placeholder="İşe iade dava dilekçesi"
         />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-1.5">
-          <Label htmlFor="clientName">Müvekkil</Label>
-          <Input
-            id="clientName"
-            name="clientName"
-            required
-            className="h-10"
-            defaultValue={prefill?.clientName ?? ""}
-            placeholder="Deniz Acar"
-          />
+      {usePicker ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-1.5 sm:col-span-2">
+            <Label htmlFor="clientId">Müvekkil</Label>
+            <select
+              id="clientId"
+              name="clientId"
+              value={clientId}
+              onChange={(e) => {
+                setClientId(e.target.value)
+                setCaseFileId("")
+              }}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              required
+            >
+              <option value="">Müvekkil seçin…</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
+            <input type="hidden" name="clientName" value={clientNameValue} />
+          </div>
+          <div className="grid gap-1.5 sm:col-span-2">
+            <Label htmlFor="caseFileId">Dosya (varsa)</Label>
+            <select
+              id="caseFileId"
+              name="caseFileId"
+              value={caseFileId}
+              onChange={(e) => setCaseFileId(e.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              disabled={!selectedClient}
+            >
+              <option value="">Dosya seçilmedi — aşağıya yazın</option>
+              {(selectedClient?.caseFiles ?? []).map((file) => (
+                <option key={file.id} value={file.id}>
+                  {file.fileNumber}
+                  {file.courtName ? ` · ${file.courtName}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-1.5 sm:col-span-2">
+            <Label htmlFor="fileNumber">Dosya no</Label>
+            <Input
+              id="fileNumber"
+              name="fileNumber"
+              required
+              className="h-10"
+              key={`fn-${caseFileId || clientId || "x"}`}
+              defaultValue={fileNumberValue}
+              placeholder="2026/184 Esas"
+            />
+          </div>
         </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="fileNumber">Dosya no</Label>
-          <Input
-            id="fileNumber"
-            name="fileNumber"
-            required
-            className="h-10"
-            defaultValue={prefill?.fileNumber ?? ""}
-            placeholder="2026/184 Esas"
-          />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor="clientName">Müvekkil</Label>
+            <Input
+              id="clientName"
+              name="clientName"
+              required
+              className="h-10"
+              defaultValue={prefill?.clientName ?? ""}
+              placeholder="Deniz Acar"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="fileNumber">Dosya no</Label>
+            <Input
+              id="fileNumber"
+              name="fileNumber"
+              required
+              className="h-10"
+              defaultValue={prefill?.fileNumber ?? ""}
+              placeholder="2026/184 Esas"
+            />
+          </div>
         </div>
-      </div>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-1.5">
           <Label htmlFor="dueDate">Son teslim</Label>

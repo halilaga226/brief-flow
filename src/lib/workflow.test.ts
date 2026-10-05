@@ -42,6 +42,30 @@ describe("privacy and roles", () => {
     assert.equal(canCreateTask("ADMIN"), true)
     assert.equal(canCreateTask("INTERN"), false)
   })
+
+  it("keeps work items private except lawyer view of intern lists", async () => {
+    const { canViewWorkItem } = await import("./workflow")
+    assert.equal(
+      canViewWorkItem({ ownerId: intern, ownerRole: "INTERN" }, intern, "INTERN"),
+      true,
+    )
+    assert.equal(
+      canViewWorkItem({ ownerId: intern, ownerRole: "INTERN" }, lawyer, "LAWYER"),
+      true,
+    )
+    assert.equal(
+      canViewWorkItem({ ownerId: lawyer, ownerRole: "LAWYER" }, intern, "INTERN"),
+      false,
+    )
+    assert.equal(
+      canViewWorkItem({ ownerId: lawyer, ownerRole: "LAWYER" }, otherLawyer, "LAWYER"),
+      false,
+    )
+    assert.equal(
+      canViewWorkItem({ ownerId: lawyer, ownerRole: "LAWYER" }, "admin", "ADMIN"),
+      true,
+    )
+  })
 })
 
 describe("state machine", () => {
