@@ -74,7 +74,7 @@ function CreateWorkItemForm({
       {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-1 sm:col-span-2">
-          <Label htmlFor="clientId">Müvekkil</Label>
+          <Label htmlFor="clientId">Müvekkil (isteğe bağlı)</Label>
           {clients.length > 0 ? (
             <>
               <select
@@ -86,9 +86,8 @@ function CreateWorkItemForm({
                   setCaseFileId("")
                 }}
                 className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                required
               >
-                <option value="">Müvekkil seçin…</option>
+                <option value="">Müvekkil yok / sonra ekle</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.name}
@@ -101,9 +100,8 @@ function CreateWorkItemForm({
             <Input
               id="clientName"
               name="clientName"
-              required
               className="h-9"
-              placeholder="Müvekkil adı"
+              placeholder="Müvekkil adı (opsiyonel)"
             />
           )}
         </div>
@@ -270,7 +268,7 @@ export function WorkItemAgenda({
         <p className="border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
           {emptyMessage ??
             (canCreate
-              ? "Listeniz boş — «İş ekle» ile müvekkil seçerek kendi işinizi ekleyin."
+              ? "Listeniz boş — «İş ekle» ile kendi işinizi ekleyin. Müvekkil bağlamak zorunlu değil."
               : "Bu listede henüz kayıt yok.")}
         </p>
       ) : (

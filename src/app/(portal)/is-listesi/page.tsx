@@ -76,8 +76,8 @@ export default async function WorkListPage() {
               <h2 className="text-base font-semibold">Kişisel işlerim</h2>
               <p className="text-sm text-muted-foreground">
                 {canAssign
-                  ? "Müvekkil seçerek ekleyin. Atama zorunlu değil — «Tamamla» veya isteğe bağlı «Stajyere ata»."
-                  : "Müvekkil seçerek kendi işlerinizi ekleyin ve takip edin."}
+                  ? "İsterseniz müvekkil bağlayın. Atama zorunlu değil — «Tamamla» veya isteğe bağlı «Stajyere ata»."
+                  : "Kendi işlerinizi ekleyin; müvekkil bağlamak isteğe bağlıdır."}
               </p>
             </div>
             <span className="text-sm text-muted-foreground tabular-nums">

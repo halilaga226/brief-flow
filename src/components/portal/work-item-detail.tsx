@@ -90,7 +90,7 @@ function EditWorkItemForm({
       {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-1 sm:col-span-2">
-          <Label htmlFor="edit-clientId">Müvekkil</Label>
+          <Label htmlFor="edit-clientId">Müvekkil (isteğe bağlı)</Label>
           {clients.length > 0 ? (
             <>
               <select
@@ -102,9 +102,8 @@ function EditWorkItemForm({
                   setCaseFileId("")
                 }}
                 className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                required
               >
-                <option value="">Müvekkil seçin…</option>
+                <option value="">Müvekkil yok / kaldır</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.name}
@@ -114,16 +113,20 @@ function EditWorkItemForm({
               <input
                 type="hidden"
                 name="clientName"
-                value={selectedClient?.name ?? item.clientName}
+                value={
+                  clientId === ""
+                    ? ""
+                    : (selectedClient?.name ?? item.clientName)
+                }
               />
             </>
           ) : (
             <Input
               id="edit-clientName"
               name="clientName"
-              required
               className="h-9"
               defaultValue={item.clientName}
+              placeholder="Müvekkil adı (opsiyonel)"
             />
           )}
         </div>
@@ -226,7 +229,7 @@ export function WorkItemDetail({
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">{item.courtName}</h1>
         <p className="mt-1 font-mono text-sm text-muted-foreground">{item.fileNumber}</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Müvekkil · {item.clientName}
+          {item.clientName ? `Müvekkil · ${item.clientName}` : "Müvekkil bağlanmamış"}
           {item.ownerRole === "INTERN" ? ` · Stajyer · ${item.ownerName}` : null}
           {item.completedAt ? " · Tamamlandı" : null}
         </p>

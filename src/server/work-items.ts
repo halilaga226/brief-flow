@@ -80,7 +80,10 @@ function validateWorkItem(input: {
   const opposingParty = cleanText(input.opposingParty) || "Belirtilmedi"
   const courtFile = cleanText(input.courtFile) || fileNumber
 
-  if (clientName.length < 2) return "Müvekkil seçin veya yazın."
+  // Müvekkil isteğe bağlı — bağlanmadan da kişisel iş eklenebilir
+  if (clientName.length > 0 && clientName.length < 2) {
+    return "Müvekkil adı en az 2 karakter olmalı."
+  }
   if (courtName.length < 2) return "Mahkeme adı gerekli."
   if (fileNumber.length < 2) return "Dosya no gerekli."
   if (workToDo.length < 3) return "Yapılacaklar en az 3 karakter olmalı."
@@ -363,7 +366,7 @@ export async function createWorkItem(
   const checked = validateWorkItem(input)
   if (typeof checked === "string") throw new WorkflowError(checked)
   let clientId = await resolveClientId(actor, input.clientId, checked.clientName)
-  if (!clientId) {
+  if (!clientId && checked.clientName) {
     // Serbest metin: mümkünse mevcut müvekkile bağla
     const match = await prisma.client.findFirst({
       where: {
