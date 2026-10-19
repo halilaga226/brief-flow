@@ -48,6 +48,8 @@ async function main() {
   await prisma.taskLog.deleteMany()
   await prisma.taskFile.deleteMany()
   await prisma.task.deleteMany()
+  await prisma.courthouseJob.deleteMany()
+  await prisma.courthouse.deleteMany()
   await prisma.workItemEntry.deleteMany()
   await prisma.workItem.deleteMany()
   await prisma.clientNote.deleteMany()
@@ -72,6 +74,36 @@ async function main() {
   const mehmet = "user_mehmet"
   const elif = "user_elif"
   const can = "user_can"
+
+  const anadolu = await prisma.courthouse.create({
+    data: {
+      id: "court_anadolu",
+      name: "İstanbul Anadolu Adliyesi",
+      city: "Kadıköy",
+      notes: "",
+    },
+  })
+  await prisma.courthouse.create({
+    data: {
+      id: "court_caglayan",
+      name: "İstanbul Adalet Sarayı (Çağlayan)",
+      city: "Şişli",
+    },
+  })
+  await prisma.courthouseJob.create({
+    data: {
+      id: "cjob_durusma",
+      courthouseId: anadolu.id,
+      kind: "GORUSME",
+      title: "İş mahkemesi duruşma takip",
+      description: "Saat 10:30 — duruşma salonunu teyit et, zabıt notu al.",
+      clientName: "Deniz Acar",
+      fileNumber: "2026/184 Esas",
+      dueDate: dueInDays(1),
+      assignerId: ayse,
+      assigneeId: elif,
+    },
+  })
 
   const clientDeniz = await prisma.client.create({
     data: {

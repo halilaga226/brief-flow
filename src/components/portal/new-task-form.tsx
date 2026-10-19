@@ -60,13 +60,18 @@ export function NewTaskForm({
     [selectedClient, caseFileId],
   )
 
-  const usePicker = clients.length > 0
-  const clientNameValue = usePicker
-    ? (selectedClient?.name ?? prefill?.clientName ?? "")
-    : (prefill?.clientName ?? "")
-  const fileNumberValue = usePicker
-    ? (selectedFile?.fileNumber || prefill?.fileNumber || "")
-    : (prefill?.fileNumber ?? "")
+  const fromWorkItem = Boolean(prefill?.workItemId)
+  const usePicker = clients.length > 0 && !fromWorkItem
+  const clientNameValue = fromWorkItem
+    ? (prefill?.clientName ?? "")
+    : usePicker
+      ? (selectedClient?.name ?? prefill?.clientName ?? "")
+      : (prefill?.clientName ?? "")
+  const fileNumberValue = fromWorkItem
+    ? (prefill?.fileNumber ?? "")
+    : usePicker
+      ? (selectedFile?.fileNumber || prefill?.fileNumber || "")
+      : (prefill?.fileNumber ?? "")
 
   return (
     <form action={action} className="grid gap-4">
@@ -91,7 +96,29 @@ export function NewTaskForm({
           placeholder="İşe iade dava dilekçesi"
         />
       </div>
-      {usePicker ? (
+      {fromWorkItem ? (
+        <div className="grid gap-2 rounded-xl border border-border bg-muted/40 px-3 py-3 text-sm">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            İş listesinden
+          </p>
+          <p>
+            <span className="text-muted-foreground">Müvekkil: </span>
+            {prefill?.clientName?.trim() ? prefill.clientName : "—"}
+          </p>
+          <p>
+            <span className="text-muted-foreground">Dosya no: </span>
+            {prefill?.fileNumber?.trim() ? prefill.fileNumber : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Müvekkil yeniden seçilmez; listedeki kayıt olduğu gibi iletilir.
+          </p>
+          <input type="hidden" name="clientName" value={clientNameValue} />
+          <input type="hidden" name="fileNumber" value={fileNumberValue || "—"} />
+          {prefill?.clientId ? (
+            <input type="hidden" name="clientId" value={prefill.clientId} />
+          ) : null}
+        </div>
+      ) : usePicker ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-1.5 sm:col-span-2">
             <Label htmlFor="clientId">Müvekkil</Label>

@@ -26,6 +26,8 @@ export type OfficeBackupPayload = {
   clientNotes: Awaited<ReturnType<typeof prisma.clientNote.findMany>>
   workItems: Awaited<ReturnType<typeof prisma.workItem.findMany>>
   workItemEntries: Awaited<ReturnType<typeof prisma.workItemEntry.findMany>>
+  courthouses: Awaited<ReturnType<typeof prisma.courthouse.findMany>>
+  courthouseJobs: Awaited<ReturnType<typeof prisma.courthouseJob.findMany>>
   tasks: Awaited<ReturnType<typeof prisma.task.findMany>>
   taskComments: Awaited<ReturnType<typeof prisma.taskComment.findMany>>
   taskLogs: Awaited<ReturnType<typeof prisma.taskLog.findMany>>
@@ -50,6 +52,8 @@ export async function buildOfficeBackupPayload(): Promise<OfficeBackupPayload> {
     clientNotes,
     workItems,
     workItemEntries,
+    courthouses,
+    courthouseJobs,
     tasks,
     taskComments,
     taskLogs,
@@ -77,6 +81,8 @@ export async function buildOfficeBackupPayload(): Promise<OfficeBackupPayload> {
     prisma.clientNote.findMany(),
     prisma.workItem.findMany(),
     prisma.workItemEntry.findMany(),
+    prisma.courthouse.findMany(),
+    prisma.courthouseJob.findMany(),
     prisma.task.findMany(),
     prisma.taskComment.findMany(),
     prisma.taskLog.findMany(),
@@ -94,6 +100,8 @@ export async function buildOfficeBackupPayload(): Promise<OfficeBackupPayload> {
     clientNotes: serializeDates(clientNotes) as unknown as OfficeBackupPayload["clientNotes"],
     workItems: serializeDates(workItems) as unknown as OfficeBackupPayload["workItems"],
     workItemEntries: serializeDates(workItemEntries) as unknown as OfficeBackupPayload["workItemEntries"],
+    courthouses: serializeDates(courthouses) as unknown as OfficeBackupPayload["courthouses"],
+    courthouseJobs: serializeDates(courthouseJobs) as unknown as OfficeBackupPayload["courthouseJobs"],
     tasks: serializeDates(tasks) as unknown as OfficeBackupPayload["tasks"],
     taskComments: serializeDates(taskComments) as unknown as OfficeBackupPayload["taskComments"],
     taskLogs: serializeDates(taskLogs) as unknown as OfficeBackupPayload["taskLogs"],
@@ -296,6 +304,60 @@ export async function restoreOfficeBackup(
             notes: row.notes ?? "",
             ownerId: row.ownerId,
             completedAt: asDate(row.completedAt),
+          },
+        })
+      }
+
+      for (const row of payload.courthouses ?? []) {
+        await tx.courthouse.upsert({
+          where: { id: row.id },
+          create: {
+            id: row.id,
+            name: row.name,
+            city: row.city ?? "",
+            notes: row.notes ?? "",
+            createdAt: asDate(row.createdAt) ?? new Date(),
+            updatedAt: asDate(row.updatedAt) ?? new Date(),
+          },
+          update: {
+            name: row.name,
+            city: row.city ?? "",
+            notes: row.notes ?? "",
+          },
+        })
+      }
+
+      for (const row of payload.courthouseJobs ?? []) {
+        await tx.courthouseJob.upsert({
+          where: { id: row.id },
+          create: {
+            id: row.id,
+            courthouseId: row.courthouseId,
+            kind: row.kind,
+            title: row.title,
+            description: row.description ?? "",
+            clientName: row.clientName ?? "",
+            fileNumber: row.fileNumber ?? "",
+            dueDate: asDate(row.dueDate),
+            assignerId: row.assignerId,
+            assigneeId: row.assigneeId ?? null,
+            completedAt: asDate(row.completedAt),
+            completedById: row.completedById ?? null,
+            createdAt: asDate(row.createdAt) ?? new Date(),
+            updatedAt: asDate(row.updatedAt) ?? new Date(),
+          },
+          update: {
+            courthouseId: row.courthouseId,
+            kind: row.kind,
+            title: row.title,
+            description: row.description ?? "",
+            clientName: row.clientName ?? "",
+            fileNumber: row.fileNumber ?? "",
+            dueDate: asDate(row.dueDate),
+            assignerId: row.assignerId,
+            assigneeId: row.assigneeId ?? null,
+            completedAt: asDate(row.completedAt),
+            completedById: row.completedById ?? null,
           },
         })
       }

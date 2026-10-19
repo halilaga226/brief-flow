@@ -58,7 +58,15 @@ export default async function InternWorkPage({
   const internTasks = tasks
     .filter((task) => task.assigneeRole === "INTERN")
     .filter((task) => (selectedId ? task.assigneeId === selectedId : true))
+    .filter((task) => task.status !== "TAMAMLANDI")
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  const internDoneTasks = tasks
+    .filter((task) => task.assigneeRole === "INTERN")
+    .filter((task) => (selectedId ? task.assigneeId === selectedId : true))
+    .filter((task) => task.status === "TAMAMLANDI")
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  const openWorkItems = workItems.filter((item) => !item.completedAt)
+  const doneWorkItems = workItems.filter((item) => item.completedAt)
 
   return (
     <div className="mx-auto w-full max-w-[80rem] space-y-5">
@@ -118,7 +126,7 @@ export default async function InternWorkPage({
                   </p>
                 </div>
                 <WorkItemAgenda
-                  items={workItems}
+                  items={openWorkItems}
                   canCreate={false}
                   canAssign={false}
                   currentUserId={user.id}
@@ -131,7 +139,7 @@ export default async function InternWorkPage({
                 <div>
                   <h2 className="text-base font-semibold">Atanan görevler / aşama</h2>
                   <p className="text-sm text-muted-foreground">
-                    Bu stajyere atanmış görevler — ne alemde, hangi aşamada.
+                    Bu stajyere atanmış açık görevler — ne alemde, hangi aşamada.
                   </p>
                 </div>
                 <TaskWorkList
@@ -141,6 +149,29 @@ export default async function InternWorkPage({
                   actOnlyOwnAssignments
                 />
               </section>
+
+              {doneWorkItems.length > 0 || internDoneTasks.length > 0 ? (
+                <section className="space-y-3">
+                  <h2 className="text-base font-semibold">Tamamlanan işler</h2>
+                  {doneWorkItems.length > 0 ? (
+                    <WorkItemAgenda
+                      items={doneWorkItems}
+                      canCreate={false}
+                      canAssign={false}
+                      currentUserId={user.id}
+                      showOwner
+                    />
+                  ) : null}
+                  {internDoneTasks.length > 0 ? (
+                    <TaskWorkList
+                      tasks={internDoneTasks}
+                      canAssign={canAssign}
+                      userId={user.id}
+                      actOnlyOwnAssignments
+                    />
+                  ) : null}
+                </section>
+              ) : null}
             </>
           ) : null}
         </>

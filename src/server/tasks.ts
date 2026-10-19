@@ -88,7 +88,14 @@ export async function listTasks(userId: string, role: SessionUser["role"]) {
   return tasks
     .map((task) => toTaskCard(task, userId, role))
     .filter((task) => {
-      if (task.status === "TAMAMLANDI" && role === "INTERN") return false
+      if (
+        task.status === "TAMAMLANDI" &&
+        role === "INTERN" &&
+        task.assigneeId !== userId &&
+        task.assignerId !== userId
+      ) {
+        return false
+      }
       // Avukat başka avukatın stajyer dışı işini görmesin (assignee LAWYER ve kendisi taraf değil)
       if (
         role === "LAWYER" &&
@@ -124,7 +131,14 @@ export async function getTask(userId: string, role: SessionUser["role"], taskId:
   ) {
     return null
   }
-  if (task.status === "TAMAMLANDI" && role === "INTERN") return null
+  if (
+    task.status === "TAMAMLANDI" &&
+    role === "INTERN" &&
+    task.assigneeId !== userId &&
+    task.assignerId !== userId
+  ) {
+    return null
+  }
   const detail = toTaskDetail(task, userId, role)
   const assignerDrive = await getAssignerDriveInfo(task.assignerId)
   return {
@@ -265,24 +279,16 @@ export async function createTask(
   if (!canCreateTask(actor.role)) {
     throw new WorkflowError("Yalnızca avukat veya yönetici görev atayabilir.")
   }
-  const problem = validateTaskDraft(input)
-  if (problem) throw new WorkflowError(problem)
   if (input.assigneeId === actor.id) {
     throw new WorkflowError("Görevi kendinize atayamazsınız.")
   }
   const assignee = await prisma.user.findUnique({ where: { id: input.assigneeId } })
   if (!assignee) throw new WorkflowError("Atanacak kişi bulunamadı.")
-  // Kabul yok — iş doğrudan atananın listesine düşer.
-  const acceptedAt = new Date()
-
-  const { resolveClientAndCaseFile } = await import("@/server/clients")
-  const resolved = await resolveClientAndCaseFile(
-    actor.id,
-    input.clientName,
-    input.fileNumber,
-  )
 
   let workItemId: string | null = null
+  let linkedClientId: string | null = null
+  let clientName = input.clientName
+  let fileNumber = input.fileNumber
   if (input.workItemId) {
     const workItem = await prisma.workItem.findUnique({ where: { id: input.workItemId } })
     if (!workItem) throw new WorkflowError("İş listesi kaydı bulunamadı.")
@@ -290,6 +296,46 @@ export async function createTask(
       throw new WorkflowError("Bu iş kaydından görev atayamazsınız.")
     }
     workItemId = workItem.id
+    linkedClientId = workItem.clientId
+    // İş listesindeki kayıt ne yazıyorsa onu ilet — müvekkil seçimi yok
+    clientName = workItem.clientName
+    fileNumber = workItem.fileNumber || workItem.courtFile
+  }
+
+  const problem = validateTaskDraft(
+    { ...input, clientName, fileNumber },
+    { fromWorkItem: Boolean(workItemId) },
+  )
+  if (problem) throw new WorkflowError(problem)
+  // Kabul yok — iş doğrudan atananın listesine düşer.
+  const acceptedAt = new Date()
+
+  const storedClientName = cleanText(clientName) || "Belirtilmedi"
+  const storedFileNumber = cleanText(fileNumber) || "—"
+  let resolved: { clientName: string; fileNumber: string; caseFileId: string | null } = {
+    clientName: storedClientName,
+    fileNumber: storedFileNumber,
+    caseFileId: null,
+  }
+  if (workItemId) {
+    if (linkedClientId && storedFileNumber !== "—") {
+      const caseFile = await prisma.caseFile.findFirst({
+        where: {
+          clientId: linkedClientId,
+          fileNumber: storedFileNumber,
+          deletedAt: null,
+        },
+        select: { id: true },
+      })
+      resolved = {
+        clientName: storedClientName,
+        fileNumber: storedFileNumber,
+        caseFileId: caseFile?.id ?? null,
+      }
+    }
+  } else {
+    const { resolveClientAndCaseFile } = await import("@/server/clients")
+    resolved = await resolveClientAndCaseFile(actor.id, storedClientName, storedFileNumber)
   }
 
   let stored: StoredFile | null = null

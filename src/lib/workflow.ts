@@ -239,6 +239,26 @@ export function canAssignTask(role: Role) {
   return role === "LAWYER" || role === "ADMIN"
 }
 
+export function canManageCourthouses(role: Role) {
+  return isAdmin(role)
+}
+
+export function canAssignCourthouseJob(role: Role) {
+  return role === "LAWYER" || role === "ADMIN"
+}
+
+export function canCompleteCourthouseJob(
+  job: { completedAt?: Date | string | null },
+  role: Role,
+) {
+  if (job.completedAt) return false
+  return role === "INTERN" || role === "LAWYER" || role === "ADMIN"
+}
+
+export function canReopenCourthouseJob(role: Role) {
+  return role === "LAWYER" || role === "ADMIN"
+}
+
 export function needsMyAction(
   task: { status: TaskStatus; assignerId: string; assigneeId: string },
   userId: string,
@@ -540,24 +560,28 @@ export function cleanText(value: string) {
   return value.replace(/\u0000/g, "").trim()
 }
 
-export function validateTaskDraft(input: {
-  title: string
-  clientName: string
-  fileNumber: string
-  description: string
-  dueDate: Date | null
-  assigneeId: string
-}) {
+export function validateTaskDraft(
+  input: {
+    title: string
+    clientName: string
+    fileNumber: string
+    description: string
+    dueDate: Date | null
+    assigneeId: string
+  },
+  options?: { fromWorkItem?: boolean },
+) {
   const title = cleanText(input.title)
   const clientName = cleanText(input.clientName)
   const fileNumber = cleanText(input.fileNumber)
   const description = cleanText(input.description)
+  const fromWorkItem = Boolean(options?.fromWorkItem)
 
   if (title.length < 3) return "Başlık en az 3 karakter olmalı."
   if (title.length > 160) return "Başlık 160 karakteri aşamaz."
-  if (clientName.length < 2) return "Müvekkil adını yazın."
+  if (!fromWorkItem && clientName.length < 2) return "Müvekkil adını yazın."
   if (clientName.length > 120) return "Müvekkil adı çok uzun."
-  if (fileNumber.length < 1) return "Dosya numarasını yazın."
+  if (!fromWorkItem && fileNumber.length < 1) return "Dosya numarasını yazın."
   if (fileNumber.length > 60) return "Dosya numarası çok uzun."
   if (description.length < 8) return "Talimat en az 8 karakter olmalı."
   if (description.length > 4000) return "Talimat 4000 karakteri aşamaz."
@@ -757,7 +781,8 @@ export function matchesFilter(
     case "gonderilecek":
       return task.status === "ONAYLANDI" || task.status === "GONDERIM_BEKLIYOR"
     default:
-      return true
+      // Aktif listede tamamlananlar durmasın — «Tamamlananlar» klasöründe
+      return task.status !== "TAMAMLANDI"
   }
 }
 

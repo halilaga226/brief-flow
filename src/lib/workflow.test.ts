@@ -4,6 +4,7 @@ import { dueTone } from "./format"
 import {
   canAcceptTask,
   canComplete,
+  canCompleteCourthouseJob,
   canCreateTask,
   canDeleteTask,
   canManageOps,
@@ -11,6 +12,7 @@ import {
   canQueueSend,
   canReview,
   canUploadDraft,
+  validateTaskDraft,
   fileHref,
   isOnAssigneeWorkList,
   isOnMyUnifiedWorkList,
@@ -41,6 +43,41 @@ describe("privacy and roles", () => {
     assert.equal(canCreateTask("LAWYER"), true)
     assert.equal(canCreateTask("ADMIN"), true)
     assert.equal(canCreateTask("INTERN"), false)
+  })
+
+  it("lets interns complete open courthouse jobs", () => {
+    assert.equal(canCompleteCourthouseJob({ completedAt: null }, "INTERN"), true)
+    assert.equal(canCompleteCourthouseJob({ completedAt: new Date() }, "INTERN"), false)
+    assert.equal(canCompleteCourthouseJob({ completedAt: null }, "LAWYER"), true)
+  })
+
+  it("copies work-item fields without requiring müvekkil", () => {
+    const due = new Date("2026-10-20T12:00:00.000Z")
+    assert.equal(
+      validateTaskDraft(
+        {
+          title: "Dilekçe",
+          clientName: "",
+          fileNumber: "",
+          description: "Listedeki iş olduğu gibi iletilir.",
+          dueDate: due,
+          assigneeId: intern,
+        },
+        { fromWorkItem: true },
+      ),
+      null,
+    )
+    assert.equal(
+      validateTaskDraft({
+        title: "Dilekçe",
+        clientName: "",
+        fileNumber: "2026/1",
+        description: "Listedeki iş olduğu gibi iletilir.",
+        dueDate: due,
+        assigneeId: intern,
+      }),
+      "Müvekkil adını yazın.",
+    )
   })
 
   it("keeps work items private except lawyer view of intern lists", async () => {
@@ -333,6 +370,34 @@ describe("files and filters", () => {
         lawyer,
       ),
       false,
+    )
+    assert.equal(
+      matchesFilter(
+        {
+          status: "TAMAMLANDI",
+          assignerId: lawyer,
+          assigneeId: intern,
+          dueTone: "done",
+          needsAction: false,
+        },
+        "tum",
+        lawyer,
+      ),
+      false,
+    )
+    assert.equal(
+      matchesFilter(
+        {
+          status: "TAMAMLANDI",
+          assignerId: lawyer,
+          assigneeId: intern,
+          dueTone: "done",
+          needsAction: false,
+        },
+        "tamam",
+        lawyer,
+      ),
+      true,
     )
   })
 })

@@ -15,6 +15,7 @@ import {
   FolderOpen,
   GraduationCap,
   Home,
+  Landmark,
   LogOut,
   Menu,
   Plus,
@@ -38,6 +39,9 @@ function isActive(pathname: string, href: string) {
   }
   if (href === "/stajyer-isleri") {
     return pathname === "/stajyer-isleri" || pathname.startsWith("/stajyer-isleri/")
+  }
+  if (href === "/adliye") {
+    return pathname === "/adliye" || pathname.startsWith("/adliye/")
   }
   if (href === "/muvekkiller") {
     return pathname === "/muvekkiller" || pathname.startsWith("/muvekkiller/")
@@ -63,6 +67,7 @@ function NavLinks({
   const links = [
     { href: "/ana", label: "Ana sayfa", icon: Home },
     { href: "/is-listesi", label: "İş listesi", icon: ClipboardList },
+    { href: "/adliye", label: "Adliyedeki işler", icon: Landmark },
     ...(canViewClients
       ? [{ href: "/muvekkiller", label: "Müvekkiller", icon: Briefcase }]
       : []),
@@ -125,6 +130,7 @@ export function AppShell({
   const mobileLinks = [
     { href: "/ana", label: "Ana", icon: Home },
     { href: "/is-listesi", label: "İşler", icon: ClipboardList },
+    { href: "/adliye", label: "Adliye", icon: Landmark },
     ...(canViewClients ? [{ href: "/muvekkiller", label: "Müvekkil", icon: Briefcase }] : []),
     ...(lawyer ? [{ href: "/stajyer-isleri", label: "Stajyer", icon: GraduationCap }] : []),
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },

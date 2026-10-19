@@ -13,6 +13,13 @@ Görev, inceleme ve evrak gönderim portalı. Müvekkil → dosya → iş hiyera
 - **Bana gelen** — size atanan aktif işler (avukat↔avukat dahil).
 - **Verdiğim** — sizin atadıklarınız; inceleme bekleyenler burada.
 - Avukata gönderilince iş atananın listesinden kalkar.
+- Tamamlanan işler aktif listede durmaz; **Tamamlanan işler** bölümüne düşer.
+
+## Adliyedeki işler
+
+- Yönetici **Adliye ekle** ile adliyeleri tanımlar.
+- Avukat/yönetici görüşme veya adliye işi atar. Stajyer adliyede **tüm açık işleri** görür ve **Tamamla** diyebilir.
+- Biten iş listeden kalkıp tamamlananlara geçer.
 
 ## Müvekkiller
 

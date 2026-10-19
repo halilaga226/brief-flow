@@ -39,7 +39,14 @@ export default async function WorkListPage() {
     })
 
   const reviewCount = myTasks.filter((task) => task.status === "INCELEME_BEKLIYOR").length
-  const openPersonal = items.filter((item) => !item.completedAt).length
+  const openItems = items.filter((item) => !item.completedAt)
+  const doneItems = items.filter((item) => item.completedAt)
+  const doneTasks = tasks.filter(
+    (task) =>
+      task.status === "TAMAMLANDI" &&
+      (task.assigneeId === user.id || task.assignerId === user.id),
+  )
+  const openPersonal = openItems.length
 
   return (
     <div className="mx-auto w-full max-w-[80rem] space-y-6">
@@ -81,11 +88,11 @@ export default async function WorkListPage() {
               </p>
             </div>
             <span className="text-sm text-muted-foreground tabular-nums">
-              {openPersonal} açık / {items.length}
+              {openPersonal} açık
             </span>
           </div>
           <WorkItemAgenda
-            items={items}
+            items={openItems}
             clients={clients}
             canCreate
             canAssign={canAssign}
@@ -105,6 +112,32 @@ export default async function WorkListPage() {
           mode="unified"
         />
       </section>
+
+      {doneItems.length > 0 || doneTasks.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="text-base font-semibold">Tamamlanan işler</h2>
+          <p className="text-sm text-muted-foreground">
+            Bitirdiğiniz kayıtlar aktif listeden kalkar; buradan yeniden açabilirsiniz.
+          </p>
+          {doneItems.length > 0 ? (
+            <WorkItemAgenda
+              items={doneItems}
+              canCreate={false}
+              canAssign={false}
+              currentUserId={user.id}
+              emptyMessage="Tamamlanan iş yok."
+            />
+          ) : null}
+          {doneTasks.length > 0 ? (
+            <TaskWorkList
+              tasks={doneTasks}
+              canAssign={canAssign}
+              userId={user.id}
+              mode="unified"
+            />
+          ) : null}
+        </section>
+      ) : null}
     </div>
   )
 }

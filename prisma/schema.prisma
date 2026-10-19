@@ -35,6 +35,11 @@ enum FileKind {
   DRAFT
 }
 
+enum CourthouseJobKind {
+  GORUSME
+  IS
+}
+
 enum LogType {
   CREATED
   ACCEPTED
@@ -82,6 +87,9 @@ model User {
   logs          TaskLog[]
   files         TaskFile[]
   notifications Notification[]
+  courthouseJobsAssigned  CourthouseJob[] @relation("CourthouseAssignee")
+  courthouseJobsCreated   CourthouseJob[] @relation("CourthouseAssigner")
+  courthouseJobsCompleted CourthouseJob[] @relation("CourthouseCompleter")
 }
 
 /// Büro geneli ayarlar (Drive servis hesabı vb.) — yalnızca Halil günceller
@@ -306,6 +314,49 @@ model Notification {
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([userId, read])
+}
+
+/// Büro adliyeleri — yalnızca yönetici ekler
+model Courthouse {
+  id        String   @id @default(cuid())
+  name      String
+  city      String   @default("")
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobs CourthouseJob[]
+
+  @@index([name])
+}
+
+/// Adliyede görüşme veya işlem — stajyerler tüm açık işleri görür ve tamamlayabilir
+model CourthouseJob {
+  id            String            @id @default(cuid())
+  courthouseId  String
+  kind          CourthouseJobKind @default(IS)
+  title         String
+  description   String            @default("")
+  clientName    String            @default("")
+  fileNumber    String            @default("")
+  dueDate       DateTime?
+  assignerId    String
+  assigneeId    String?
+  completedAt   DateTime?
+  completedById String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  courthouse  Courthouse @relation(fields: [courthouseId], references: [id], onDelete: Cascade)
+  assigner    User       @relation("CourthouseAssigner", fields: [assignerId], references: [id])
+  assignee    User?      @relation("CourthouseAssignee", fields: [assigneeId], references: [id])
+  completedBy User?      @relation("CourthouseCompleter", fields: [completedById], references: [id])
+
+  @@index([courthouseId])
+  @@index([assigneeId])
+  @@index([assignerId])
+  @@index([completedAt])
+  @@index([dueDate])
 }
 
 /// Tehlikeli toplu işlem öncesi yedek — geri yükleme için
