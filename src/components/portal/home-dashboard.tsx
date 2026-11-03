@@ -79,14 +79,19 @@ export function HomeDashboard({
     <div className="mx-auto grid max-w-6xl gap-5">
       <section className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{greeting}</h1>
-        {!canAssign ? (
+        <div className="flex flex-wrap gap-2">
           <Button asChild variant="secondary" className="font-semibold">
-            <Link href="/gorevler">
-              <FolderOpen />
-              Görevler
-            </Link>
+            <Link href="/sure-takibi">Süre takibi</Link>
           </Button>
-        ) : null}
+          {!canAssign ? (
+            <Button asChild variant="secondary" className="font-semibold">
+              <Link href="/gorevler">
+                <FolderOpen />
+                Görevler
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

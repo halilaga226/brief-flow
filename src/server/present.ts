@@ -10,6 +10,7 @@ import {
   canAcceptTask,
   canComplete,
   canDeleteTask,
+  canForwardToIntern,
   canManageOps,
   canMoveToCheckFolder,
   canQueueSend,
@@ -129,7 +130,13 @@ export function toTaskCard(
     clientCallStatus: record.clientCallStatus as ClientCallStatus,
     workItemId: record.workItemId ?? null,
     updatedAt: record.updatedAt.toISOString(),
+    createdAt: record.createdAt.toISOString(),
     completedAt: record.completedAt?.toISOString() ?? null,
+    canForwardToIntern: canForwardToIntern(
+      { ...record, assigneeRole: record.assignee.role },
+      userId,
+      role,
+    ),
     logs: [],
   }
 }

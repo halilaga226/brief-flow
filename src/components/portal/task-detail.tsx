@@ -86,6 +86,7 @@ export function TaskDetailView({
             canComplete={task.canComplete}
             canAccept={task.canAccept}
             canDelete={task.canDelete}
+            canForwardToIntern={task.canForwardToIntern}
             status={task.status}
             expensePaid={task.expensePaid}
             clientCallStatus={task.clientCallStatus}

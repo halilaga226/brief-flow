@@ -7,6 +7,7 @@ import {
   canComment,
   canComplete,
   canCreateTask,
+  canForwardToIntern,
   canDeleteTask,
   canManageOps,
   canMoveToCheckFolder,
@@ -402,6 +403,108 @@ export async function createTask(
     if (stored) await deleteDriveFile(stored)
     throw error
   }
+}
+
+async function ensureForwardedLogType() {
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TYPE "LogType" ADD VALUE IF NOT EXISTS 'FORWARDED'`,
+    )
+  } catch {
+    // already exists or no permission — create will surface a clear error
+  }
+}
+
+/** Atanan avukat, başka avukatın verdiği işi stajyere aktarır; esas avukata bildirim gider. */
+export async function forwardTaskToIntern(
+  actor: SessionUser,
+  taskId: string,
+  internId: string,
+) {
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (
+    !canForwardToIntern(
+      {
+        status: existing.status,
+        assignerId: existing.assignerId,
+        assigneeId: existing.assigneeId,
+        assigneeRole: existing.assignee.role,
+      },
+      actor.id,
+      actor.role,
+    )
+  ) {
+    throw new WorkflowError("Bu işi stajyere yalnızca size atanmış avukat aktarabilir.")
+  }
+  const intern = await prisma.user.findUnique({ where: { id: internId } })
+  if (!intern || intern.role !== "INTERN") {
+    throw new WorkflowError("Aktarılacak stajyer bulunamadı.")
+  }
+  if (intern.id === existing.assignerId || intern.id === actor.id) {
+    throw new WorkflowError("Geçersiz stajyer seçimi.")
+  }
+
+  await ensureForwardedLogType()
+  const origin = await prisma.user.findUnique({
+    where: { id: existing.assignerId },
+    select: { id: true, name: true },
+  })
+
+  await prisma.$transaction(async (tx) => {
+    const task = await tx.task.findUnique({ where: { id: taskId } })
+    if (
+      !task ||
+      !canForwardToIntern(
+        {
+          status: task.status,
+          assignerId: task.assignerId,
+          assigneeId: task.assigneeId,
+          assigneeRole: existing.assignee.role,
+        },
+        actor.id,
+        actor.role,
+      )
+    ) {
+      throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
+    }
+    await tx.task.update({
+      where: { id: taskId },
+      data: {
+        assigneeId: intern.id,
+        acceptedAt: new Date(),
+        status: "ATANDI",
+      },
+    })
+    await tx.taskLog.create({
+      data: {
+        taskId,
+        actorId: actor.id,
+        type: "FORWARDED",
+        fromStatus: task.status,
+        toStatus: "ATANDI",
+        note: `${actor.name} işi stajyer ${intern.name} adlı kişiye aktardı. Esas avukat: ${origin?.name ?? "—"}.`,
+      },
+    })
+    await tx.notification.create({
+      data: {
+        userId: intern.id,
+        taskId,
+        title: "Yeni iş atandı",
+        body: `${actor.name} size bir iş aktardı (esas avukat: ${origin?.name ?? "—"}): ${task.title}`,
+      },
+    })
+    if (origin && origin.id !== actor.id && origin.id !== intern.id) {
+      await tx.notification.create({
+        data: {
+          userId: origin.id,
+          taskId,
+          title: "İş stajyere aktarıldı",
+          body: `${actor.name} sizin atadığınız işi stajyer ${intern.name} adlı kişiye aktardı: ${task.title}`,
+        },
+      })
+    }
+  })
 }
 
 export async function uploadDraft(actor: SessionUser, taskId: string, file: File) {

@@ -53,7 +53,9 @@ export type TaskCardDTO = {
   clientCallStatus: ClientCallStatus
   workItemId: string | null
   updatedAt: string
+  createdAt: string
   completedAt: string | null
+  canForwardToIntern: boolean
   logs: TimelineEventDTO[]
 }
 

@@ -12,6 +12,7 @@ import {
   completeTask,
   createTask,
   deleteTask,
+  forwardTaskToIntern,
   markExpensePaid,
   moveToCheckFolder,
   queueForSend,
@@ -35,6 +36,7 @@ function revalidateTask(taskId: string) {
   revalidatePath("/is-listesi")
   revalidatePath("/muvekkiller")
   revalidatePath("/stajyer-isleri")
+  revalidatePath("/sure-takibi")
   revalidatePath(`/gorevler/${taskId}`)
 }
 
@@ -78,6 +80,21 @@ export async function createTaskAction(
   if (readText(formData, "workItemId")) {
     redirect("/is-listesi")
   }
+  redirect(`/gorevler/${taskId}`)
+}
+
+export async function forwardTaskToInternAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    await forwardTaskToIntern(user, taskId, readText(formData, "assigneeId"))
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateTask(taskId)
   redirect(`/gorevler/${taskId}`)
 }
 

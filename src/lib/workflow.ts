@@ -155,6 +155,8 @@ export function logLabel(type: string) {
   switch (type) {
     case "CREATED":
       return "Görev oluşturuldu"
+    case "FORWARDED":
+      return "Stajyere aktarıldı"
     case "ACCEPTED":
       return "İş kabul edildi"
     case "DRAFT_UPLOADED":
@@ -237,6 +239,25 @@ export function canAccessWorkList(_role: Role) {
 
 export function canAssignTask(role: Role) {
   return role === "LAWYER" || role === "ADMIN"
+}
+
+/** Avukata avukatın verdiği açık işi, atanan avukat stajyere aktarabilir. */
+export function canForwardToIntern(
+  task: {
+    status: TaskStatus
+    assignerId: string
+    assigneeId: string
+    assigneeRole?: Role
+  },
+  userId: string,
+  role: Role,
+) {
+  if (task.status !== "ATANDI" && task.status !== "REVIZE_ISTENDI") return false
+  if (task.assigneeId !== userId) return false
+  if (!(role === "LAWYER" || role === "ADMIN")) return false
+  if (task.assignerId === userId) return false
+  const holder = task.assigneeRole ?? role
+  return holder === "LAWYER" || holder === "ADMIN"
 }
 
 export function canManageCourthouses(role: Role) {

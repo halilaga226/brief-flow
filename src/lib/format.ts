@@ -89,6 +89,41 @@ export function formatBytes(size: number) {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`
 }
 
+export function calendarDaysBetween(fromIso: string, toIso: string) {
+  const a = istanbulDayKey(new Date(fromIso))
+  const b = istanbulDayKey(new Date(toIso))
+  const [ay, am, ad] = a.split("-").map(Number)
+  const [by, bm, bd] = b.split("-").map(Number)
+  const start = Date.UTC(ay, am - 1, ad)
+  const end = Date.UTC(by, bm - 1, bd)
+  return Math.round((end - start) / 86_400_000)
+}
+
+/** Son güne kalan gün; bugün 0, gecikmede negatif. */
+export function remainingDueDays(dueIso: string, now = new Date()) {
+  return calendarDaysBetween(now.toISOString(), dueIso)
+}
+
+export function elapsedWorkDays(createdIso: string, now = new Date()) {
+  return Math.max(0, calendarDaysBetween(createdIso, now.toISOString()))
+}
+
+export function remainingDueLabel(dueIso: string, status?: TaskStatus, now = new Date()) {
+  if (status === "TAMAMLANDI") return "Tamamlandı"
+  const days = remainingDueDays(dueIso, now)
+  if (days < 0) return `${Math.abs(days)} gün gecikti`
+  if (days === 0) return "Bugün son gün"
+  if (days === 1) return "1 gün kaldı"
+  return `${days} gün kaldı`
+}
+
+export function elapsedWorkLabel(createdIso: string, now = new Date()) {
+  const days = elapsedWorkDays(createdIso, now)
+  if (days === 0) return "Bugün açıldı"
+  if (days === 1) return "1 gündür açık"
+  return `${days} gündür açık`
+}
+
 export function parseDueDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
   const [year, month, day] = value.split("-").map(Number)

@@ -15,6 +15,14 @@ Görev, inceleme ve evrak gönderim portalı. Müvekkil → dosya → iş hiyera
 - Avukata gönderilince iş atananın listesinden kalkar.
 - Tamamlanan işler aktif listede durmaz; **Tamamlanan işler** bölümüne düşer.
 
+## Süre takibi
+
+Sol menü **Süre takibi**: son gün, kalan süre ve işin ne kadar süredir açık olduğu. Geciken / bugün / 3 gün / ilerisi.
+
+## Avukattan stajyere aktarım
+
+Bir avukat başka avukata iş verdiyse, **atanan avukat** «Stajyere aktar» ile işi stajyere geçirebilir. Esas (ilk atayan) avukata bildirim gider; inceleme yine esas avukata döner.
+
 ## Adliyedeki işler
 
 - Yönetici **Adliye ekle** ile adliyeleri tanımlar.

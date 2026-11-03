@@ -17,6 +17,7 @@ import {
   Home,
   Landmark,
   LogOut,
+  CalendarClock,
   Menu,
   Plus,
   Scale,
@@ -42,6 +43,9 @@ function isActive(pathname: string, href: string) {
   }
   if (href === "/adliye") {
     return pathname === "/adliye" || pathname.startsWith("/adliye/")
+  }
+  if (href === "/sure-takibi") {
+    return pathname === "/sure-takibi" || pathname.startsWith("/sure-takibi/")
   }
   if (href === "/muvekkiller") {
     return pathname === "/muvekkiller" || pathname.startsWith("/muvekkiller/")
@@ -77,6 +81,7 @@ function NavLinks({
           { href: "/silinenler", label: "Silinenler", icon: Trash2 },
         ]
       : []),
+    { href: "/sure-takibi", label: "Süre takibi", icon: CalendarClock },
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(canManage ? [{ href: "/kullanicilar", label: "Kullanıcılar", icon: Users }] : []),
     { href: "/ayarlar", label: "Ayarlar", icon: Settings },
@@ -133,6 +138,7 @@ export function AppShell({
     { href: "/adliye", label: "Adliye", icon: Landmark },
     ...(canViewClients ? [{ href: "/muvekkiller", label: "Müvekkil", icon: Briefcase }] : []),
     ...(lawyer ? [{ href: "/stajyer-isleri", label: "Stajyer", icon: GraduationCap }] : []),
+    { href: "/sure-takibi", label: "Süre", icon: CalendarClock },
     { href: "/gorevler", label: "Görevler", icon: FolderOpen },
     ...(manager && !lawyer ? [{ href: "/kullanicilar", label: "Kullanıcı", icon: Users }] : []),
     { href: "/ayarlar", label: "Ayarlar", icon: Settings },

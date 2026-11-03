@@ -18,7 +18,7 @@ type LiveAlert = NotificationDTO & { tone: AlertTone }
 
 function toneFor(title: string): AlertTone {
   const t = title.toLocaleLowerCase("tr")
-  if (t.includes("yeni iş") || t.includes("atandı") || t.includes("kabul")) return "sky"
+  if (t.includes("yeni iş") || t.includes("atandı") || t.includes("kabul") || t.includes("aktarıldı")) return "sky"
   if (t.includes("revizyon") || t.includes("revize")) return "rose"
   if (t.includes("onay") || t.includes("tamamland")) return "emerald"
   if (t.includes("gönderim") || t.includes("gonderim")) return "violet"

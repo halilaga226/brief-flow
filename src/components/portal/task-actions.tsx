@@ -37,7 +37,9 @@ import {
   PhoneOff,
   RotateCcw,
   Send,
+  UserPlus,
 } from "lucide-react"
+import Link from "next/link"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 
@@ -391,6 +393,7 @@ export function TaskActions({
   canComplete,
   canAccept,
   canDelete,
+  canForwardToIntern,
   status,
   expensePaid,
   clientCallStatus,
@@ -410,6 +413,7 @@ export function TaskActions({
   canComplete: boolean
   canAccept: boolean
   canDelete: boolean
+  canForwardToIntern?: boolean
   status: string
   expensePaid: boolean
   clientCallStatus: ClientCallStatus
@@ -427,6 +431,14 @@ export function TaskActions({
     >
       <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Sıradaki adım</p>
       <p className="mt-1 text-sm font-medium leading-relaxed text-foreground">{nextStep}</p>
+      {canForwardToIntern ? (
+        <Button asChild className="mt-3 font-semibold">
+          <Link href={`/gorevler/${taskId}/aktar`}>
+            <UserPlus />
+            Stajyere aktar
+          </Link>
+        </Button>
+      ) : null}
       {canAccept ? (
         <div className="mt-3">
           <AcceptTaskButton taskId={taskId} />

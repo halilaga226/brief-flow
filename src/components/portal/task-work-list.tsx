@@ -279,7 +279,14 @@ export function TaskWorkList({
                   )}
                 </div>
                 <div className="flex items-center gap-1 md:justify-end">
-                  {canAssign && canAct(task) ? (
+                  {task.canForwardToIntern ? (
+                    <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
+                      <Link href={`/gorevler/${task.id}/aktar`}>
+                        <UserPlus className="size-3.5" />
+                        Stajyere aktar
+                      </Link>
+                    </Button>
+                  ) : canAssign && canAct(task) ? (
                     <Button asChild size="sm" variant="ghost" className="h-8 px-2 font-semibold">
                       <Link href={`/gorevler/yeni?from=${task.id}`}>
                         <UserPlus className="size-3.5" />

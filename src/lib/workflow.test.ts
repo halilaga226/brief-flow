@@ -6,6 +6,7 @@ import {
   canComplete,
   canCompleteCourthouseJob,
   canCreateTask,
+  canForwardToIntern,
   canDeleteTask,
   canManageOps,
   canMoveToCheckFolder,
@@ -43,6 +44,22 @@ describe("privacy and roles", () => {
     assert.equal(canCreateTask("LAWYER"), true)
     assert.equal(canCreateTask("ADMIN"), true)
     assert.equal(canCreateTask("INTERN"), false)
+  })
+
+  it("lets an assigned lawyer forward another lawyer's job to an intern", () => {
+    const task = {
+      status: "ATANDI" as const,
+      assignerId: lawyer,
+      assigneeId: otherLawyer,
+      assigneeRole: "LAWYER" as const,
+    }
+    assert.equal(canForwardToIntern(task, otherLawyer, "LAWYER"), true)
+    assert.equal(canForwardToIntern(task, lawyer, "LAWYER"), false)
+    assert.equal(canForwardToIntern(task, intern, "INTERN"), false)
+    assert.equal(
+      canForwardToIntern({ ...task, status: "INCELEME_BEKLIYOR" }, otherLawyer, "LAWYER"),
+      false,
+    )
   })
 
   it("lets interns complete open courthouse jobs", () => {
