@@ -1,5 +1,5 @@
 import type { SessionUser } from "@/lib/dto"
-import { internRank, parsePoints, type InternBoardRow, type QuestDTO } from "@/lib/xp"
+import { internRank, parsePoints, XP_PER_TASK, type InternBoardRow, type QuestDTO } from "@/lib/xp"
 import { prisma } from "@/lib/prisma"
 import { canCreateTask, canViewTask, isAdmin, WorkflowError } from "@/lib/workflow"
 import { ensureXpSchema } from "@/server/ensure-xp-schema"
@@ -41,7 +41,16 @@ export async function listInternBoard(actor: SessionUser): Promise<InternBoardRo
   if (interns.length === 0) return []
 
   const internIds = interns.map((row) => row.id)
-  const [jobScores, questScores, bonusScores] = await Promise.all([
+  const [completedJobs, jobScores, questScores, bonusScores] = await Promise.all([
+    prisma.task.groupBy({
+      by: ["assigneeId"],
+      where: {
+        assigneeId: { in: internIds },
+        deletedAt: null,
+        status: "TAMAMLANDI",
+      },
+      _count: { _all: true },
+    }),
     prisma.taskScore.groupBy({
       by: ["internId"],
       where: { internId: { in: internIds } },
@@ -62,6 +71,7 @@ export async function listInternBoard(actor: SessionUser): Promise<InternBoardRo
     }),
   ])
 
+  const doneMap = new Map(completedJobs.map((row) => [row.assigneeId, row._count._all]))
   const jobMap = new Map(jobScores.map((row) => [row.internId, row]))
   const questMap = new Map(questScores.map((row) => [row.internId, row]))
   const bonusMap = new Map(bonusScores.map((row) => [row.internId, row]))
@@ -71,7 +81,12 @@ export async function listInternBoard(actor: SessionUser): Promise<InternBoardRo
       const jobs = jobMap.get(intern.id)
       const quests = questMap.get(intern.id)
       const bonus = bonusMap.get(intern.id)
-      const xp = (jobs?._sum.points ?? 0) + (quests?._sum.points ?? 0) + (bonus?._sum.points ?? 0)
+      const doneCount = doneMap.get(intern.id) ?? 0
+      const xp =
+        doneCount * XP_PER_TASK +
+        (jobs?._sum.points ?? 0) +
+        (quests?._sum.points ?? 0) +
+        (bonus?._sum.points ?? 0)
       const rank = internRank(xp)
       return {
         id: intern.id,
@@ -83,7 +98,7 @@ export async function listInternBoard(actor: SessionUser): Promise<InternBoardRo
         into: rank.into,
         need: rank.need,
         progress: rank.progress,
-        jobCount: jobs?._count._all ?? 0,
+        jobCount: doneCount,
         questCount: quests?._count._all ?? 0,
         bonusCount: bonus?._count._all ?? 0,
         isYou: intern.id === actor.id,

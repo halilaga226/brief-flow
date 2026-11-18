@@ -1,17 +1,27 @@
 export const XP_PER_LEVEL = 25
+export const XP_PER_TASK = 5
 export const MIN_POINTS = 1
 export const MAX_POINTS = 10
 
 export const RANK_TITLES = [
-  "Kalem çırağı",
-  "Dilekçe yazarı",
-  "Dosya bekçisi",
-  "Araştırma avcısı",
-  "Duruşma asistanı",
+  "Stajyer",
+  "Kalem stajyeri",
+  "Evrak stajyeri",
+  "Dosya takip stajyeri",
+  "Tebligat stajyeri",
+  "Dilekçe stajyeri",
+  "UYAP stajyeri",
+  "Adliye stajyeri",
+  "Duruşma stajyeri",
   "Kıdemli stajyer",
-  "Büro kahramanı",
-  "Yargının yıldızı",
+  "Stajyer avukat",
+  "Avukat yardımcısı",
+  "Kıdemli avukat yardımcısı",
+  "Büro avukatı",
+  "Kıdemli avukat",
 ] as const
+
+export const LEVEL_COUNT = RANK_TITLES.length
 
 export const RANK_LADDER = RANK_TITLES.map((title, index) => {
   const fromXp = index * XP_PER_LEVEL
@@ -37,8 +47,10 @@ export type InternRank = {
 
 export function internRank(xp: number): InternRank {
   const safe = Math.max(0, Math.floor(xp) || 0)
-  const level = Math.floor(safe / XP_PER_LEVEL) + 1
-  const into = safe % XP_PER_LEVEL
+  const uncapped = Math.floor(safe / XP_PER_LEVEL) + 1
+  const level = Math.min(uncapped, LEVEL_COUNT)
+  const atCap = uncapped >= LEVEL_COUNT
+  const into = atCap ? XP_PER_LEVEL : safe % XP_PER_LEVEL
   const titleIndex = Math.min(level - 1, RANK_TITLES.length - 1)
   const nextTitle = level < RANK_TITLES.length ? RANK_TITLES[level] : null
   return {
@@ -46,10 +58,10 @@ export function internRank(xp: number): InternRank {
     xp: safe,
     into,
     need: XP_PER_LEVEL,
-    remaining: XP_PER_LEVEL - into,
+    remaining: atCap ? 0 : XP_PER_LEVEL - into,
     title: RANK_TITLES[titleIndex],
     nextTitle,
-    progress: into / XP_PER_LEVEL,
+    progress: atCap ? 1 : into / XP_PER_LEVEL,
   }
 }
 

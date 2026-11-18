@@ -20,7 +20,7 @@ export default async function StajyerIlerlemePage() {
         </p>
         <h1 className="text-3xl font-semibold tracking-tight">Stajyer ilerlemesi</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Lig, araştırma görevleri ve ek puan tek yerde. Tüm avukatlar sıralamayı görür ve XP verebilir.
+          Tamamlanan her görev +5 XP. Lig ve araştırma tek yerde; avukatlar ek puan verebilir.
         </p>
       </div>
       <InternGameBoard rows={board} canAssign={canAssign} />

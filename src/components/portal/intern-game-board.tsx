@@ -1,7 +1,6 @@
 "use client"
 
 import { awardBonusXpAction } from "@/actions/xp"
-import { RankLadder } from "@/components/portal/rank-ladder"
 import { useActionResult } from "@/components/portal/use-action-result"
 import { announceXpDrop } from "@/components/portal/xp-orc-drop"
 import { Button } from "@/components/ui/button"
@@ -94,7 +93,7 @@ export function InternGameBoard({
           Stajyer ilerlemesi
         </h2>
         <p className="mt-1 max-w-2xl text-sm text-amber-100/75">
-          Avukatlar tamamlanan işe, araştırmaya ve buradan ek puana XP verir. Tüm avukatlar sıralamayı görür.
+          Her tamamlanan görev +5 XP. Avukatlar araştırmaya ve buradan ek puana da XP verebilir.
         </p>
       </div>
 
@@ -116,15 +115,11 @@ export function InternGameBoard({
           <p className="mt-1.5 text-xs font-medium text-amber-100/85">
             Bu seviyede {you.into} / {you.need} XP
             {youRank?.nextTitle
-              ? ` · ${youRank.nextTitle} için ${youRank.remaining} XP`
-              : " · son unvan bandındasınız"}
+              ? ` · sonraki unvan için ${youRank.remaining} XP`
+              : " · son seviyedesiniz"}
           </p>
         </div>
       ) : null}
-
-      <div className="mt-5">
-        <RankLadder currentLevel={you?.level} />
-      </div>
 
       {rows.length === 0 ? (
         <p className="mt-6 text-sm text-amber-100/70">Henüz stajyer kaydı yok.</p>

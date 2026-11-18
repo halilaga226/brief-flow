@@ -4,34 +4,37 @@ import { quoteForDate } from "./legal-quotes"
 import { internRank, parsePoints, parseXpGain, RANK_LADDER } from "./xp"
 
 describe("intern rank", () => {
-  it("starts as kalem çırağı at zero xp", () => {
+  it("starts as stajyer at zero xp", () => {
     const rank = internRank(0)
     assert.equal(rank.level, 1)
-    assert.equal(rank.title, "Kalem çırağı")
+    assert.equal(rank.title, "Stajyer")
     assert.equal(rank.into, 0)
   })
 
   it("levels every 25 xp", () => {
     assert.equal(internRank(24).level, 1)
     assert.equal(internRank(25).level, 2)
-    assert.equal(internRank(25).title, "Dilekçe yazarı")
+    assert.equal(internRank(25).title, "Kalem stajyeri")
     assert.equal(internRank(50).level, 3)
+    assert.equal(internRank(50).title, "Evrak stajyeri")
   })
 
-  it("caps title at the last rank", () => {
+  it("caps title at kıdemli avukat", () => {
     const rank = internRank(500)
-    assert.equal(rank.title, "Yargının yıldızı")
-    assert.ok(rank.level > 8)
+    assert.equal(rank.level, 15)
+    assert.equal(rank.title, "Kıdemli avukat")
     assert.equal(rank.nextTitle, null)
+    assert.equal(rank.remaining, 0)
+    assert.equal(rank.progress, 1)
   })
 
-  it("lists eight titles with 25 XP bands", () => {
-    assert.equal(RANK_LADDER.length, 8)
+  it("lists fifteen titles with 25 XP bands", () => {
+    assert.equal(RANK_LADDER.length, 15)
     assert.equal(RANK_LADDER[0].fromXp, 0)
     assert.equal(RANK_LADDER[0].toXp, 24)
     assert.equal(RANK_LADDER[1].fromXp, 25)
-    assert.equal(RANK_LADDER[7].fromXp, 175)
-    assert.equal(RANK_LADDER[7].toXp, null)
+    assert.equal(RANK_LADDER[14].fromXp, 350)
+    assert.equal(RANK_LADDER[14].toXp, null)
   })
 })
 

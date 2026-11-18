@@ -36,6 +36,7 @@ import {
   toTaskCard,
   toTaskDetail,
 } from "@/server/present"
+import { XP_PER_TASK } from "@/lib/xp"
 
 export async function visibleTask(taskId: string, actor: SessionUser) {
   const task = await prisma.task.findUnique({
@@ -867,6 +868,16 @@ export async function completeTask(actor: SessionUser, taskId: string, rawCode: 
         body: `${actor.name} evrak kodunu işledi: ${task.title}`,
       },
     })
+    if (existing.assignee.role === "INTERN") {
+      await tx.notification.create({
+        data: {
+          userId: task.assigneeId,
+          taskId,
+          title: `+${XP_PER_TASK} XP kazandınız`,
+          body: `Tamamlanan görev: ${task.title}`,
+        },
+      })
+    }
   })
 }
 
@@ -1021,8 +1032,14 @@ export async function completeDirectly(
       data: {
         userId: task.assigneeId,
         taskId,
-        title: "İş tamamlandı",
-        body: `${actor.name} işi tamamlananlara aldı: ${task.title}`,
+        title:
+          existing.assignee.role === "INTERN"
+            ? `+${XP_PER_TASK} XP kazandınız`
+            : "İş tamamlandı",
+        body:
+          existing.assignee.role === "INTERN"
+            ? `${actor.name} işi tamamladı: ${task.title}`
+            : `${actor.name} işi tamamlananlara aldı: ${task.title}`,
       },
     })
   })
