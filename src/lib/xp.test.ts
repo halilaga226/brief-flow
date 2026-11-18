@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import { quoteForDate } from "./legal-quotes"
+import { clampVolume } from "./christmas-tunes"
 import { internRank, parsePoints, parseXpGain, RANK_LADDER } from "./xp"
 
 describe("intern rank", () => {
@@ -35,6 +36,14 @@ describe("intern rank", () => {
     assert.equal(RANK_LADDER[1].fromXp, 25)
     assert.equal(RANK_LADDER[14].fromXp, 350)
     assert.equal(RANK_LADDER[14].toXp, null)
+  })
+})
+
+describe("holiday volume", () => {
+  it("clamps the music bar to 0–1", () => {
+    assert.equal(clampVolume(-2), 0)
+    assert.equal(clampVolume(0.4), 0.4)
+    assert.equal(clampVolume(3), 1)
   })
 })
 

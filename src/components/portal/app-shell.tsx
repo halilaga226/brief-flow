@@ -1,6 +1,7 @@
 "use client"
 
 import { signOutAction } from "@/actions/auth"
+import { HolidayPageTransition } from "@/components/portal/holiday-page-transition"
 import { NotificationBell } from "@/components/portal/notification-bell"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
@@ -247,7 +248,7 @@ export function AppShell({
           <NotificationBell items={notifications} />
         </header>
         <main id="icerik" className="min-w-0 px-3 py-5 pb-24 sm:px-4 md:px-8 md:py-8 md:pb-8">
-          {children}
+          <HolidayPageTransition>{children}</HolidayPageTransition>
         </main>
 
         <nav

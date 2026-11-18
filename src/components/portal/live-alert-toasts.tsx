@@ -9,7 +9,7 @@ import Link from "next/link"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 const SEEN_KEY = "brief-flow:seen-live-alerts-v2"
-const POLL_MS = 6_000
+const POLL_MS = 12_000
 const AUTO_DISMISS_MS = 12_000
 const DEMO_EVENT = "brief-flow:demo-alert"
 
