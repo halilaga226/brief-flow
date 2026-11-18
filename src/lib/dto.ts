@@ -105,6 +105,7 @@ export type TaskDetailDTO = TaskCardDTO & {
   canManageOps: boolean
   canQueueSend: boolean
   canComplete: boolean
+  canSelfComplete: boolean
   canAccept: boolean
   nextStep: string
   latestDraft: { name: string; href: string | null; external: boolean } | null

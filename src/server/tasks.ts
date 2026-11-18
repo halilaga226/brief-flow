@@ -7,6 +7,7 @@ import {
   canComment,
   canComplete,
   canCreateTask,
+  canInternSelfComplete,
   canForwardToIntern,
   canDeleteTask,
   canManageOps,
@@ -629,6 +630,86 @@ export async function sendToLawyer(actor: SessionUser, taskId: string, rawNote: 
       },
     })
   })
+}
+
+/** Stajyer işi avukata sormadan kendisi kapatır. */
+export async function internSelfComplete(actor: SessionUser, taskId: string, rawNote: string) {
+  const noteResult = validateNote(rawNote, "Yapılanlar notu")
+  if (!noteResult.ok) throw new WorkflowError(noteResult.error)
+  const existing = await visibleTask(taskId, actor)
+  if (!existing) throw new WorkflowError("Görev bulunamadı.")
+  if (!canInternSelfComplete(existing, actor.id, actor.role)) {
+    throw new WorkflowError("Bu işi yalnızca atanan stajyer bitirebilir.")
+  }
+
+  const internXpBefore = await internXpTotal(existing.assigneeId)
+
+  await prisma.$transaction(async (tx) => {
+    const task = await tx.task.findUnique({ where: { id: taskId } })
+    if (!task || !canInternSelfComplete({ ...task, assigneeId: task.assigneeId }, actor.id, actor.role)) {
+      throw new WorkflowError("Görevin durumu değişmiş. Sayfayı yenileyin.")
+    }
+    await tx.task.update({
+      where: { id: taskId },
+      data: {
+        status: "TAMAMLANDI",
+        completedAt: new Date(),
+        trackingCode: task.trackingCode || "STAJYER-BITIRDI",
+        description: [
+          task.description?.trim() || "",
+          "",
+          `---`,
+          `Stajyer bitirdi (${actor.name} · ${new Date().toLocaleString("tr-TR")}):`,
+          noteResult.note,
+        ]
+          .filter((line, i, arr) => !(line === "" && arr[i - 1] === ""))
+          .join("\n")
+          .trim(),
+      },
+    })
+    if (task.workItemId) {
+      await tx.workItemEntry.create({
+        data: {
+          workItemId: task.workItemId,
+          content: `Stajyer işi bitirdi: ${noteResult.note}`,
+          createdById: actor.id,
+        },
+      })
+      await tx.workItem.update({
+        where: { id: task.workItemId },
+        data: { updatedAt: new Date() },
+      })
+    }
+    await tx.taskLog.create({
+      data: {
+        taskId,
+        actorId: actor.id,
+        type: "COMPLETED_DIRECT",
+        fromStatus: task.status,
+        toStatus: "TAMAMLANDI",
+        note: noteResult.note,
+      },
+    })
+    await tx.notification.create({
+      data: {
+        userId: task.assignerId,
+        taskId,
+        title: "Stajyer işi bitirdi",
+        body: `${actor.name} işi kendisi tamamladı: ${task.title}`,
+      },
+    })
+    await tx.notification.create({
+      data: {
+        userId: task.assigneeId,
+        taskId,
+        title: `+${XP_PER_TASK} XP kazandınız`,
+        body: `Tamamlanan görev: ${task.title}`,
+      },
+    })
+  })
+  return {
+    levelUp: await notifyInternLevelUp(existing.assigneeId, taskId, internXpBefore),
+  }
 }
 
 /** @deprecated — sendToLawyer kullanın */

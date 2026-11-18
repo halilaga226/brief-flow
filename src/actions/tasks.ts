@@ -21,6 +21,7 @@ import {
   setTaskListColor,
   uploadDraft,
   markDraftSent,
+  internSelfComplete,
   sendToLawyer,
 } from "@/server/tasks"
 import { clearDemoData, restoreAllSoftDeleted, restoreDataSnapshot } from "@/server/admin"
@@ -146,6 +147,29 @@ export async function sendToLawyerAction(
   revalidateTask(taskId)
   revalidatePath("/is-listesi")
   return { ok: true, message: "İş avukata gönderildi." }
+}
+
+export async function internSelfCompleteAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const taskId = readText(formData, "taskId")
+  try {
+    const result = await internSelfComplete(user, taskId, readText(formData, "note"))
+    revalidateTask(taskId)
+    revalidatePath("/is-listesi")
+    revalidatePath("/stajyer-ilerleme")
+    if (result.levelUp) {
+      return {
+        ok: true,
+        message: `Seviye atladınız. Yeni unvan: ${result.levelUp.rankTitle} (Sv. ${result.levelUp.level})`,
+      }
+    }
+  } catch (error) {
+    return actionError(error)
+  }
+  return { ok: true, message: "İş tamamlandı." }
 }
 
 export async function requestRevisionAction(

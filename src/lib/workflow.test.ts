@@ -12,6 +12,7 @@ import {
   canMoveToCheckFolder,
   canQueueSend,
   canReview,
+  canInternSelfComplete,
   canUploadDraft,
   validateTaskDraft,
   fileHref,
@@ -144,6 +145,33 @@ describe("state machine", () => {
     )
     assert.equal(
       canUploadDraft({ status: "ATANDI", assigneeId: intern, acceptedAt: null }, lawyer),
+      false,
+    )
+  })
+
+  it("lets an intern finish the job or send it for approval", () => {
+    assert.equal(
+      canInternSelfComplete({ status: "ATANDI", assigneeId: intern }, intern, "INTERN"),
+      true,
+    )
+    assert.equal(
+      canInternSelfComplete({ status: "REVIZE_ISTENDI", assigneeId: intern }, intern, "INTERN"),
+      true,
+    )
+    assert.equal(
+      canInternSelfComplete({ status: "ATANDI", assigneeId: intern }, intern, "LAWYER"),
+      false,
+    )
+    assert.equal(
+      canInternSelfComplete({ status: "ATANDI", assigneeId: intern }, lawyer, "INTERN"),
+      false,
+    )
+    assert.equal(
+      canInternSelfComplete(
+        { status: "INCELEME_BEKLIYOR", assigneeId: intern },
+        intern,
+        "INTERN",
+      ),
       false,
     )
   })

@@ -85,6 +85,7 @@ export function TaskDetailView({
             canManageOps={task.canManageOps}
             canQueueSend={task.canQueueSend}
             canComplete={task.canComplete}
+            canSelfComplete={task.canSelfComplete}
             canAccept={task.canAccept}
             canDelete={task.canDelete}
             canForwardToIntern={task.canForwardToIntern}

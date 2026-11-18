@@ -16,6 +16,7 @@ import {
   canQueueSend,
   canReview,
   canTriageIncoming,
+  canInternSelfComplete,
   canUploadDraft,
   fileHref,
   isAdmin,
@@ -197,6 +198,7 @@ export function toTaskDetail(
     canManageOps: canManageOps(record, userId, role),
     canQueueSend: canQueueSend(record, userId, role),
     canComplete: canComplete(record, userId, role),
+    canSelfComplete: canInternSelfComplete(record, userId, role),
     canAccept: canAcceptTask(record, userId, role),
     canDelete: canDeleteTask(record, userId, role),
     nextStep: nextStepCopy({
@@ -204,6 +206,7 @@ export function toTaskDetail(
           myTurn,
           expensePaid: record.expensePaid,
           clientCallStatus: record.clientCallStatus as ClientCallStatus,
+          canSelfComplete: canInternSelfComplete(record, userId, role),
         }),
     latestDraft: latest
       ? { name: latest.name, href: latest.href, external: latest.external }

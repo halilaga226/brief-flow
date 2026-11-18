@@ -4,6 +4,7 @@ import {
   approveTaskAction,
   completeDirectlyAction,
   completeTaskAction,
+  internSelfCompleteAction,
   markExpenseAction,
   moveToCheckFolderAction,
   queueSendAction,
@@ -44,30 +45,43 @@ import Link from "next/link"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 
-function SendToLawyerForm({ taskId }: { taskId: string }) {
+function SendToLawyerForm({
+  taskId,
+  internChoice = false,
+}: {
+  taskId: string
+  internChoice?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(sendToLawyerAction, null)
   useActionResult(state, () => setOpen(false))
   return (
-    <div className="mt-3 grid gap-3">
-      <p className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm leading-relaxed text-muted-foreground">
-        İşi bitirdiğinizde avukata gönderin. Siteye veya Drive’a taslak yüklemeniz gerekmez; yaptığınız
-        işi kısaca yazmanız yeterlidir.
-      </p>
+    <div className={internChoice ? "grid gap-2" : "mt-3 grid gap-3"}>
+      {internChoice ? null : (
+        <p className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm leading-relaxed text-muted-foreground">
+          İşi bitirdiğinizde avukata gönderin. Siteye veya Drive’a taslak yüklemeniz gerekmez; yaptığınız
+          işi kısaca yazmanız yeterlidir.
+        </p>
+      )}
       <Button
         type="button"
-        className="bg-primary font-semibold"
+        className={internChoice ? "font-semibold" : "bg-primary font-semibold"}
+        variant={internChoice ? "outline" : "default"}
         onClick={() => setOpen(true)}
       >
         <Send />
-        Avukata gönder
+        {internChoice ? "Onaya gönder" : "Avukata gönder"}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-semibold">Avukata gönder</DialogTitle>
+            <DialogTitle className="font-semibold">
+              {internChoice ? "Onaya gönder" : "Avukata gönder"}
+            </DialogTitle>
             <DialogDescription>
-              Yapılanları yazın. Bu not avukata gider; iş sizin listeden kalkıp avukatın listesine düşer.
+              {internChoice
+                ? "Avukat incelesin. Notunuz ona gider; iş sizin listeden kalkar."
+                : "Yapılanları yazın. Bu not avukata gider; iş sizin listeden kalkıp avukatın listesine düşer."}
             </DialogDescription>
           </DialogHeader>
           <form action={action} className="grid gap-3">
@@ -90,6 +104,66 @@ function SendToLawyerForm({ taskId }: { taskId: string }) {
           </form>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+function InternFinishForm({ taskId }: { taskId: string }) {
+  const [open, setOpen] = useState(false)
+  const [state, action, pending] = useActionState(internSelfCompleteAction, null)
+  useActionResult(state, () => {
+    setOpen(false)
+    if (state?.message) maybeAnnounceLevelUp(state.message)
+  })
+  return (
+    <>
+      <Button type="button" className="bg-emerald-700 font-semibold text-white hover:bg-emerald-600" onClick={() => setOpen(true)}>
+        <CheckCircle2 />
+        Bitir
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-semibold">İşi bitir</DialogTitle>
+            <DialogDescription>
+              Avukat onayı beklemeden kapatırsınız. Kısa not yeter; +5 XP işlenir.
+            </DialogDescription>
+          </DialogHeader>
+          <form action={action} className="grid gap-3">
+            <input type="hidden" name="taskId" value={taskId} />
+            <Textarea
+              name="note"
+              required
+              minLength={8}
+              rows={5}
+              placeholder="Ne yaptınız? İş neden bitti?"
+            />
+            {state?.error ? (
+              <p className="text-sm font-medium text-destructive">{state.error}</p>
+            ) : null}
+            <DialogFooter>
+              <Button type="submit" disabled={pending} className="bg-emerald-700 font-semibold text-white hover:bg-emerald-600">
+                {pending ? "Kapatılıyor…" : "İşi bitir"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+function InternCloseOptions({ taskId }: { taskId: string }) {
+  return (
+    <div className="mt-3 grid gap-3">
+      <p className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm leading-relaxed text-muted-foreground">
+        İşi kendiniz <span className="font-semibold text-foreground">Bitir</span> ile kapatın veya avukat
+        baksın diye <span className="font-semibold text-foreground">Onaya gönder</span>.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <InternFinishForm taskId={taskId} />
+        <SendToLawyerForm taskId={taskId} internChoice />
+      </div>
     </div>
   )
 }
@@ -398,6 +472,7 @@ export function TaskActions({
   canManageOps,
   canQueueSend,
   canComplete,
+  canSelfComplete,
   canAccept,
   canDelete,
   canForwardToIntern,
@@ -418,6 +493,7 @@ export function TaskActions({
   canManageOps: boolean
   canQueueSend: boolean
   canComplete: boolean
+  canSelfComplete: boolean
   canAccept: boolean
   canDelete: boolean
   canForwardToIntern?: boolean
@@ -468,7 +544,11 @@ export function TaskActions({
           )}
         </p>
       ) : null}
-      {canUpload ? <SendToLawyerForm taskId={taskId} /> : null}
+      {canSelfComplete ? (
+        <InternCloseOptions taskId={taskId} />
+      ) : canUpload ? (
+        <SendToLawyerForm taskId={taskId} />
+      ) : null}
       {canTriage ? <TriageControls taskId={taskId} status={status} /> : null}
       {!canTriage && canMoveToCheck && status === "TAMAMLANDI" ? (
         <MoveCompletedToCheck taskId={taskId} />

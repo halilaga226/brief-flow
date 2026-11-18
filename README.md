@@ -5,7 +5,7 @@ Görev, inceleme ve evrak gönderim portalı. Müvekkil → dosya → iş hiyera
 ## Roller
 
 - **Avukat** müvekkil/dosya yönetir, görev atar, gelen işi inceler. Stajyer işlerini ayrı sekmeden görür; yalnızca kendi atadığı işlere müdahale eder. Ayarlar’dan kendi Drive klasörünü bağlayabilir.
-- **Stajyer** müvekkilleri görüntüleyebilir ve müvekkil notu ekleyebilir; müvekkil/dosya düzenleyemez. Atanan işi doğrudan listesinde görür. Bitince **Avukata gönder** + not yazar; iş listesinden düşer, atayan avukata gider.
+- **Stajyer** müvekkilleri görüntüleyebilir ve müvekkil notu ekleyebilir; müvekkil/dosya düzenleyemez. Atanan işi doğrudan listesinde görür. Bitince **Bitir** ile kendisi kapatabilir veya **Onaya gönder** ile avukata iletebilir.
 - **Yönetici** tüm işleri görür, kullanıcı ekler, örnek veriyi sıfırlar.
 
 ## İş listesi
@@ -45,7 +45,7 @@ Sol menü **Müvekkiller**: müvekkil → dosya → o dosyadaki tüm işler. Gö
 ## Görev döngüsü
 
 1. `ATANDI` — atama; iş hemen atananın listesine düşer.
-2. `INCELEME_BEKLIYOR` — yürüten **Avukata gönder** + yapılanlar notu.
+2. `INCELEME_BEKLIYOR` — yürüten **Onaya gönder** + yapılanlar notu. Stajyer **Bitir** derse iş doğrudan `TAMAMLANDI` olur.
 3. `KONTROL_EDILECEK` — avukat gelen işi **Kontrol edilecekler** klasörüne alır (tamamlananlardan ayrı).
 4. `REVIZE_ISTENDI` — avukat notla geri yollar.
 5. `ONAYLANDI` — masraf / arama / gönderime alma.

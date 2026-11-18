@@ -318,6 +318,17 @@ export function canUploadDraft(
 /** @deprecated use canUploadDraft — aynı kapı, «Avukata gönder» için */
 export const canSendToLawyer = canUploadDraft
 
+/** Stajyer atanan işi avukata sormadan kendisi kapatabilir. */
+export function canInternSelfComplete(
+  task: { status: TaskStatus; assigneeId: string },
+  userId: string,
+  role: Role,
+) {
+  if (role !== "INTERN") return false
+  if (task.assigneeId !== userId) return false
+  return task.status === "ATANDI" || task.status === "REVIZE_ISTENDI"
+}
+
 export function canAcceptTask(
   _task: { assigneeId: string; acceptedAt?: Date | string | null; status: TaskStatus },
   _userId: string,
@@ -526,6 +537,7 @@ export function nextStepCopy(input: {
   myTurn: boolean
   expensePaid?: boolean
   clientCallStatus?: ClientCallStatus
+  canSelfComplete?: boolean
 }) {
   if (input.status === "TAMAMLANDI") {
     return "Gönderim kodu işlendi. Bu iş kapanmış durumda."
@@ -544,10 +556,14 @@ export function nextStepCopy(input: {
   }
   if (input.myTurn) {
     if (input.status === "ATANDI") {
-      return "İşi tamamlayın; ardından «Avukata gönder» ile yaptıklarınızı yazıp iletin."
+      return input.canSelfComplete
+        ? "İşi «Bitir» ile kendiniz kapatın veya «Onaya gönder» ile avukata iletin."
+        : "İşi tamamlayın; ardından «Avukata gönder» ile yaptıklarınızı yazıp iletin."
     }
     if (input.status === "REVIZE_ISTENDI") {
-      return "Revizyon notuna göre düzeltin; sonra «Avukata gönder» ile yeniden iletin."
+      return input.canSelfComplete
+        ? "Revizyonu uygulayın; sonra «Bitir» veya «Onaya gönder»."
+        : "Revizyon notuna göre düzeltin; sonra «Avukata gönder» ile yeniden iletin."
     }
     if (input.status === "GONDERIM_BEKLIYOR") {
       return "Onaylı evrakı UYAP, PTT veya ilgili merciye iletin. Barkod ya da evrak kodu olmadan iş kapanmaz."
