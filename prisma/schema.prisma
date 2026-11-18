@@ -96,6 +96,8 @@ model User {
   questsCreated           InternQuest[]
   questAnswers            InternQuestAnswer[]   @relation("QuestIntern")
   questGrades             InternQuestAnswer[]   @relation("QuestScorer")
+  internBonuses           InternBonus[]         @relation("InternBonuses")
+  givenBonuses            InternBonus[]         @relation("LawyerBonuses")
 }
 
 /// Büro geneli ayarlar (Drive servis hesabı vb.) — yalnızca Halil günceller
@@ -374,6 +376,21 @@ model InternQuestAnswer {
   scoredBy User?       @relation("QuestScorer", fields: [scoredById], references: [id])
 
   @@unique([questId, internId])
+  @@index([internId])
+}
+
+/// Avukatın stajyere iş/araştırma dışında verdiği ek XP
+model InternBonus {
+  id        String   @id @default(cuid())
+  internId  String
+  lawyerId  String
+  points    Int
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  intern User @relation("InternBonuses", fields: [internId], references: [id], onDelete: Cascade)
+  lawyer User @relation("LawyerBonuses", fields: [lawyerId], references: [id])
+
   @@index([internId])
 }
 

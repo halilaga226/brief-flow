@@ -26,7 +26,7 @@ async function applyXpMigration() {
       SELECT table_name
       FROM information_schema.tables
       WHERE table_schema = 'public'
-        AND table_name IN ('TaskScore', 'InternQuest', 'InternQuestAnswer')
+        AND table_name IN ('TaskScore', 'InternQuest', 'InternQuestAnswer', 'InternBonus')
     `
     const names = new Set(existing.map((row) => row.table_name))
     const nullability = await client.$queryRaw<Array<{ is_nullable: string }>>`
@@ -41,10 +41,6 @@ async function applyXpMigration() {
         `ALTER TABLE "Notification" ALTER COLUMN "taskId" DROP NOT NULL`,
       )
     }
-    if (names.has("TaskScore") && names.has("InternQuest") && names.has("InternQuestAnswer")) {
-      return
-    }
-
     if (!names.has("TaskScore")) {
       await client.$executeRawUnsafe(`
         CREATE TABLE IF NOT EXISTS "TaskScore" (
@@ -102,6 +98,23 @@ async function applyXpMigration() {
       `)
       await client.$executeRawUnsafe(
         `CREATE UNIQUE INDEX IF NOT EXISTS "InternQuestAnswer_questId_internId_key" ON "InternQuestAnswer"("questId", "internId")`,
+      )
+    }
+
+    if (!names.has("InternBonus")) {
+      await client.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "InternBonus" (
+          "id" TEXT NOT NULL,
+          "internId" TEXT NOT NULL,
+          "lawyerId" TEXT NOT NULL,
+          "points" INTEGER NOT NULL,
+          "note" TEXT NOT NULL DEFAULT '',
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT "InternBonus_pkey" PRIMARY KEY ("id")
+        )
+      `)
+      await client.$executeRawUnsafe(
+        `CREATE INDEX IF NOT EXISTS "InternBonus_internId_idx" ON "InternBonus"("internId")`,
       )
     }
   } finally {

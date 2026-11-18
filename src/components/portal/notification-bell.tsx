@@ -53,7 +53,7 @@ export function NotificationBell({ items }: { items: NotificationDTO[] }) {
             {items.map((item) => (
               <li key={item.id} className="border-b last:border-b-0">
                 <Link
-                  href={item.taskId ? `/gorevler/${item.taskId}` : "/arastirma"}
+                  href={item.taskId ? `/gorevler/${item.taskId}` : "/stajyer-ilerleme"}
                   className="block px-3 py-2.5 hover:bg-muted"
                   onClick={() => setOpen(false)}
                 >

@@ -19,7 +19,7 @@ Görev, inceleme ve evrak gönderim portalı. Müvekkil → dosya → iş hiyera
 
 Sağ alttaki **Yılbaşı** panelinden kar teması, Noel Baba ve arka plan tınıları (Jingle Bells / Mutlu Yıllar / Deck the Halls) açılır. Her gün bir hukuk özlü sözü bildirim olarak çıkar.
 
-Ana sayfa ve **Araştırma** sekmesinde stajyer ligi vardır. Avukat tamamlanan stajyer işine 1–10 XP verir; araştırma konuları açıp stajyer yanıtlar, avukat yanıtı puanlar.
+**Stajyer ilerlemesi** sekmesinde lig, araştırma görevleri ve ek puan vardır. Tüm avukatlar sıralamayı görür; tamamlanan işe, araştırmaya veya doğrudan ek XP verebilir.
 
 ## Süre takibi
 

@@ -7,6 +7,7 @@ import {
   answerQuest,
   closeQuest,
   createQuest,
+  awardBonusXp,
   scoreCompletedTask,
   scoreQuestAnswer,
 } from "@/server/xp"
@@ -25,6 +26,7 @@ function readText(formData: FormData, key: string) {
 function revalidateXp(taskId?: string) {
   revalidatePath("/ana")
   revalidatePath("/arastirma")
+  revalidatePath("/stajyer-ilerleme")
   revalidatePath("/stajyer-isleri")
   if (taskId) revalidatePath(`/gorevler/${taskId}`)
 }
@@ -89,6 +91,25 @@ export async function scoreQuestAnswerAction(
   }
   revalidateXp()
   return { ok: true, message: "Yanıta XP verildi." }
+}
+
+export async function awardBonusXpAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  try {
+    await awardBonusXp(
+      user,
+      readText(formData, "internId"),
+      readText(formData, "points"),
+      readText(formData, "note"),
+    )
+  } catch (error) {
+    return actionError(error)
+  }
+  revalidateXp()
+  return { ok: true, message: "Ek XP stajyere işlendi." }
 }
 
 export async function closeQuestAction(

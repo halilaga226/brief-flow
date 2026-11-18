@@ -16,13 +16,38 @@ import { cn } from "@/lib/utils"
 import { Music, Music2, Snowflake, VolumeX } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
-const FLAKES = Array.from({ length: 36 }, (_, i) => i)
+const FLAKES = Array.from({ length: 18 }, (_, i) => i)
+const LIGHTS = Array.from({ length: 28 }, (_, i) => i)
+const BULB = ["yilbasi-bulb-red", "yilbasi-bulb-gold", "yilbasi-bulb-green", "yilbasi-bulb-ice"] as const
+
+type SantaPass = {
+  id: number
+  from: "left" | "right" | "top"
+  top: number
+  left: number
+  dur: number
+  size: number
+  opacity: number
+}
+
+function nextSanta(id: number): SantaPass {
+  const from = (["left", "right", "top"] as const)[Math.floor(Math.random() * 3)]
+  return {
+    id,
+    from,
+    top: from === "top" ? -8 : 8 + Math.random() * 78,
+    left: from === "left" ? -10 : from === "right" ? 108 : 10 + Math.random() * 80,
+    dur: 11 + Math.random() * 7,
+    size: 14 + Math.random() * 8,
+    opacity: 0.28 + Math.random() * 0.18,
+  }
+}
 
 export function HolidayLayer() {
   const [on, setOn] = useState(false)
   const [music, setMusic] = useState(false)
   const [tune, setTune] = useState<TuneId>("jingle")
-  const [santa, setSanta] = useState(false)
+  const [santa, setSanta] = useState<SantaPass | null>(null)
   const [open, setOpen] = useState(false)
 
   const apply = useCallback((enabled: boolean) => {
@@ -56,27 +81,36 @@ export function HolidayLayer() {
     if (!on) return
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     if (reduce) return
-    const intervalMs = music ? 70_000 : 28_000
-    const tick = () => {
-      setSanta(true)
-      window.setTimeout(() => setSanta(false), 9000)
+    let n = 0
+    let hide: number | undefined
+    const spawn = () => {
+      n += 1
+      const pass = nextSanta(n)
+      setSanta(pass)
+      hide = window.setTimeout(() => setSanta(null), pass.dur * 1000)
     }
-    const first = window.setTimeout(tick, music ? 18_000 : 6000)
-    const loop = window.setInterval(tick, intervalMs)
+    const first = window.setTimeout(spawn, 12_000 + Math.random() * 16_000)
+    const loop = window.setInterval(
+      () => {
+        if (Math.random() < 0.55) spawn()
+      },
+      42_000 + Math.random() * 28_000,
+    )
     return () => {
       window.clearTimeout(first)
       window.clearInterval(loop)
+      if (hide) window.clearTimeout(hide)
     }
-  }, [on, music])
+  }, [on])
 
   const flakes = useMemo(
     () =>
       FLAKES.map((i) => ({
         id: i,
-        left: `${(i * 17) % 100}%`,
-        delay: `${(i % 9) * 0.7}s`,
-        dur: `${9 + (i % 6)}s`,
-        size: 6 + (i % 7),
+        left: `${(i * 23 + 7) % 100}%`,
+        delay: `${(i % 11) * 0.85}s`,
+        dur: `${14 + (i % 8)}s`,
+        size: 3 + (i % 4),
       })),
     [],
   )
@@ -101,6 +135,15 @@ export function HolidayLayer() {
     <>
       {on ? (
         <div className="pointer-events-none fixed inset-0 z-[30] overflow-hidden" aria-hidden>
+          <div className="yilbasi-lights">
+            {LIGHTS.map((i) => (
+              <span
+                key={i}
+                className={cn("yilbasi-bulb", BULB[i % BULB.length])}
+                style={{ animationDelay: `${(i % 8) * 0.18}s` }}
+              />
+            ))}
+          </div>
           {flakes.map((flake) => (
             <span
               key={flake.id}
@@ -115,10 +158,17 @@ export function HolidayLayer() {
             />
           ))}
           {santa ? (
-            <div className="yilbasi-santa">
-              <span className="text-4xl drop-shadow" role="img" aria-label="Noel Baba">
-                🎅🛷
-              </span>
+            <div
+              className={cn("yilbasi-santa", `yilbasi-santa-${santa.from}`)}
+              style={{
+                top: `${santa.top}%`,
+                left: `${santa.left}%`,
+                fontSize: santa.size,
+                opacity: santa.opacity,
+                animationDuration: `${santa.dur}s`,
+              }}
+            >
+              🎅
             </div>
           ) : null}
         </div>
@@ -127,7 +177,7 @@ export function HolidayLayer() {
       <div className="fixed right-3 bottom-20 z-[80] md:bottom-4">
         <div
           className={cn(
-            "rounded-2xl border border-red-800/30 bg-[#1a3c2a]/95 text-amber-50 shadow-xl backdrop-blur",
+            "rounded-2xl border border-red-800/25 bg-[#12241c]/92 text-amber-50 shadow-lg backdrop-blur",
             open ? "w-[min(18rem,calc(100vw-1.5rem))] p-3" : "p-0",
           )}
         >
@@ -184,7 +234,7 @@ export function HolidayLayer() {
                     disabled={!on}
                     className={cn(
                       "rounded-lg px-2 py-1.5 text-left text-xs font-semibold",
-                      tune === item.id ? "bg-red-700 text-white" : "bg-white/10 hover:bg-white/15",
+                      tune === item.id ? "bg-red-800/90 text-white" : "bg-white/10 hover:bg-white/15",
                     )}
                     onClick={() => {
                       setStoredTune(item.id)
@@ -200,9 +250,6 @@ export function HolidayLayer() {
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] leading-snug text-amber-100/70">
-                Tarayıcı otomatik sesi engellerse tınıyı buradan açın. Ses kapalıyken Noel Baba daha sık geçer.
-              </p>
             </div>
           ) : null}
         </div>

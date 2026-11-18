@@ -119,7 +119,7 @@ function showDesktop(item: NotificationDTO) {
     })
     note.onclick = () => {
       window.focus()
-                    window.location.href = item.taskId ? `/gorevler/${item.taskId}` : "/arastirma"
+                    window.location.href = item.taskId ? `/gorevler/${item.taskId}` : "/stajyer-ilerleme"
       note.close()
     }
   } catch {
@@ -288,7 +288,7 @@ export function LiveAlertToasts({ items }: { items: NotificationDTO[] }) {
                 <p className="mt-1 text-sm leading-relaxed opacity-90">{item.body}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Link
-                    href={item.taskId ? `/gorevler/${item.taskId}` : "/gorevler"}
+                    href={item.taskId ? `/gorevler/${item.taskId}` : "/stajyer-ilerleme"}
                     className={cn(
                       "inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-bold text-white",
                       ui.bar,

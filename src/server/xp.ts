@@ -41,7 +41,7 @@ export async function listInternBoard(actor: SessionUser): Promise<InternBoardRo
   if (interns.length === 0) return []
 
   const internIds = interns.map((row) => row.id)
-  const [jobScores, questScores] = await Promise.all([
+  const [jobScores, questScores, bonusScores] = await Promise.all([
     prisma.taskScore.groupBy({
       by: ["internId"],
       where: { internId: { in: internIds } },
@@ -54,16 +54,24 @@ export async function listInternBoard(actor: SessionUser): Promise<InternBoardRo
       _sum: { points: true },
       _count: { _all: true },
     }),
+    prisma.internBonus.groupBy({
+      by: ["internId"],
+      where: { internId: { in: internIds } },
+      _sum: { points: true },
+      _count: { _all: true },
+    }),
   ])
 
   const jobMap = new Map(jobScores.map((row) => [row.internId, row]))
   const questMap = new Map(questScores.map((row) => [row.internId, row]))
+  const bonusMap = new Map(bonusScores.map((row) => [row.internId, row]))
 
   return interns
     .map((intern) => {
       const jobs = jobMap.get(intern.id)
       const quests = questMap.get(intern.id)
-      const xp = (jobs?._sum.points ?? 0) + (quests?._sum.points ?? 0)
+      const bonus = bonusMap.get(intern.id)
+      const xp = (jobs?._sum.points ?? 0) + (quests?._sum.points ?? 0) + (bonus?._sum.points ?? 0)
       const rank = internRank(xp)
       return {
         id: intern.id,
@@ -77,6 +85,7 @@ export async function listInternBoard(actor: SessionUser): Promise<InternBoardRo
         progress: rank.progress,
         jobCount: jobs?._count._all ?? 0,
         questCount: quests?._count._all ?? 0,
+        bonusCount: bonus?._count._all ?? 0,
         isYou: intern.id === actor.id,
       }
     })
@@ -292,6 +301,47 @@ export async function scoreQuestAnswer(
         userId: answer.internId,
         title: `Araştırmadan +${points} XP`,
         body: `${actor.name} «${answer.quest.title}» yanıtını ${points} puanla ödüllendirdi.`,
+      },
+    })
+  })
+}
+
+export async function awardBonusXp(
+  actor: SessionUser,
+  internId: string,
+  rawPoints: string,
+  rawNote: string,
+) {
+  if (!canCreateTask(actor.role)) {
+    throw new WorkflowError("Ek puanı avukat veya yönetici verir.")
+  }
+  const points = parsePoints(rawPoints)
+  if (!points) throw new WorkflowError("Puan 1 ile 10 arasında olmalı.")
+  const note = clean(rawNote, 400)
+  await ensureXpSchema()
+  const intern = await prisma.user.findUnique({
+    where: { id: internId },
+    select: { id: true, role: true, name: true },
+  })
+  if (!intern || intern.role !== "INTERN") {
+    throw new WorkflowError("Yalnızca stajyere ek puan verilir.")
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.internBonus.create({
+      data: {
+        internId: intern.id,
+        lawyerId: actor.id,
+        points,
+        note,
+      },
+    })
+    await tx.notification.create({
+      data: {
+        userId: intern.id,
+        title: `Ek puan: +${points} XP`,
+        body: note
+          ? `${actor.name} ek puan verdi: ${note}`
+          : `${actor.name} size ${points} ek XP verdi.`,
       },
     })
   })

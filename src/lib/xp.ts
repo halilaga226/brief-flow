@@ -73,6 +73,7 @@ export type InternBoardRow = {
   progress: number
   jobCount: number
   questCount: number
+  bonusCount: number
   isYou: boolean
 }
 
