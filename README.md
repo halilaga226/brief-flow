@@ -17,7 +17,7 @@ Görev, inceleme ve evrak gönderim portalı. Müvekkil → dosya → iş hiyera
 
 ## Yılbaşı ve stajyer ligi
 
-Sağ alttaki yılbaşı oynatıcısından kar, ışıklı süs, Noel Baba ve telifsiz çan melodileri (Jingle Bells, Mutlu Yıllar, Deck the Halls, Sessiz Gece) açılır. Aç/kapa ve ses çubuğu var; sayfa geçişleri kar/ışıltı animasyonu kullanır. Her gün bir hukuk özlü sözü bildirim olarak çıkar.
+Üst bardaki yılbaşı denetiminden kar, ışıklı süs ve yumuşak arka plan melodileri (Jingle Bells, Mutlu Yıllar, Deck the Halls, Sessiz Gece) açılır. Aç/kapa ve ses çubuğu tasarıma gömülüdür. Her gün bir hukuk özlü sözü bildirim olarak çıkar.
 
 **Stajyer ilerlemesi** sekmesinde lig, araştırma görevleri ve ek puan vardır. Her tamamlanan görev +5 XP verir; 15 büro unvanı vardır. Avukatlar araştırmaya veya doğrudan ek XP verebilir.
 

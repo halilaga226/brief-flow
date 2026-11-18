@@ -13,7 +13,6 @@ const C3 = 130.81
 const D3 = 146.83
 const E3 = 164.81
 const G3 = 196.0
-const A3 = 220.0
 const C4 = 261.63
 const D4 = 293.66
 const E4 = 329.63
@@ -198,8 +197,13 @@ const TUNE_KEY = "brief-flow:yilbasi-tune"
 const MUSIC_KEY = "brief-flow:yilbasi-music"
 const VOLUME_KEY = "brief-flow:yilbasi-volume"
 
+const SLOW = 2.7
+const PITCH = 0.5
+const OUTPUT_GAIN = 0.22
+const DEFAULT_VOLUME = 0.48
+
 export function clampVolume(raw: number) {
-  if (!Number.isFinite(raw)) return 0.38
+  if (!Number.isFinite(raw)) return DEFAULT_VOLUME
   return Math.min(1, Math.max(0, raw))
 }
 
@@ -260,7 +264,7 @@ export function getStoredVolume() {
   } catch {
     /* ignore */
   }
-  return 0.38
+  return DEFAULT_VOLUME
 }
 
 export function setStoredVolume(value: number) {
@@ -276,78 +280,118 @@ export function setStoredVolume(value: number) {
 
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
+let filter: BiquadFilterNode | null = null
 let timer: number | null = null
 let playing: TuneId | null = null
-let volume = 0.38
+let volume = DEFAULT_VOLUME
+
+function outputLevel(slider: number) {
+  return clampVolume(slider) * OUTPUT_GAIN
+}
 
 function applyVolume(value: number) {
   volume = clampVolume(value)
   if (master && ctx) {
-    master.gain.setTargetAtTime(volume, ctx.currentTime, 0.04)
+    master.gain.setTargetAtTime(outputLevel(volume), ctx.currentTime, 0.08)
   }
 }
 
-function playBell(audio: AudioContext, dest: GainNode, freq: number, start: number, dur: number, gain = 0.11) {
+function playPad(
+  audio: AudioContext,
+  dest: AudioNode,
+  freq: number,
+  start: number,
+  dur: number,
+  gain: number,
+) {
   if (freq <= 0) return
   const osc = audio.createOscillator()
-  const sparkle = audio.createOscillator()
+  const warm = audio.createOscillator()
   const env = audio.createGain()
   osc.type = "sine"
-  sparkle.type = "triangle"
+  warm.type = "triangle"
   osc.frequency.setValueAtTime(freq, start)
-  sparkle.frequency.setValueAtTime(freq * 2.005, start)
+  warm.frequency.setValueAtTime(freq * 0.5, start)
+  const attack = Math.min(0.42, dur * 0.28)
   env.gain.setValueAtTime(0.0001, start)
-  env.gain.exponentialRampToValueAtTime(gain, start + 0.018)
-  env.gain.exponentialRampToValueAtTime(0.0001, start + Math.max(0.12, dur * 0.98))
+  env.gain.exponentialRampToValueAtTime(gain, start + attack)
+  env.gain.exponentialRampToValueAtTime(0.0001, start + dur)
   osc.connect(env)
-  sparkle.connect(env)
+  warm.connect(env)
   env.connect(dest)
   osc.start(start)
-  sparkle.start(start)
-  osc.stop(start + dur + 0.04)
-  sparkle.stop(start + dur + 0.04)
+  warm.start(start)
+  osc.stop(start + dur + 0.05)
+  warm.stop(start + dur + 0.05)
 }
 
-function playBass(audio: AudioContext, dest: GainNode, freq: number, start: number, dur: number) {
-  if (freq <= 0) return
-  const osc = audio.createOscillator()
-  const env = audio.createGain()
-  osc.type = "sine"
-  osc.frequency.setValueAtTime(freq, start)
-  env.gain.setValueAtTime(0.0001, start)
-  env.gain.exponentialRampToValueAtTime(0.07, start + 0.03)
-  env.gain.exponentialRampToValueAtTime(0.0001, start + dur * 0.9)
-  osc.connect(env)
-  env.connect(dest)
-  osc.start(start)
-  osc.stop(start + dur)
+function schedulePass(audio: AudioContext, dest: AudioNode, melody: Note[], t: number) {
+  let cursor = t
+  for (const note of melody) {
+    const dur = Math.max(0.28, note.d * SLOW)
+    playPad(audio, dest, note.f * PITCH, cursor, dur * 1.55, 0.05)
+    if (note.bass) playPad(audio, dest, note.bass * PITCH, cursor, dur * 1.8, 0.028)
+    cursor += dur
+  }
+  return cursor
+}
+
+function getContextCtor() {
+  return (
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  )
 }
 
 export async function startTune(id: TuneId) {
   stopTune()
+  const Ctor = getContextCtor()
+  if (!Ctor) return
   volume = getStoredVolume()
-  const Ctx =
-    window.AudioContext ||
-    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-  ctx = new Ctx()
-  master = ctx.createGain()
-  master.gain.value = volume
-  master.connect(ctx.destination)
-  if (ctx.state === "suspended") await ctx.resume()
-  playing = id
-  const melody = MELODIES[id]
-  const loop = () => {
-    if (!ctx || !master || playing !== id) return
-    let t = ctx.currentTime + 0.05
-    for (const note of melody) {
-      playBell(ctx, master, note.f, t, Math.max(0.1, note.d * 0.94))
-      if (note.bass) playBass(ctx, master, note.bass, t, Math.max(0.16, note.d * 1.15))
-      t += note.d
+  try {
+    ctx = new Ctor()
+    master = ctx.createGain()
+    master.gain.value = outputLevel(volume)
+    filter = ctx.createBiquadFilter()
+    filter.type = "lowpass"
+    filter.frequency.value = 980
+    filter.Q.value = 0.7
+    filter.connect(master)
+    master.connect(ctx.destination)
+    if (ctx.state === "suspended") await ctx.resume()
+    playing = id
+    const melody = MELODIES[id]
+    const loop = () => {
+      if (!ctx || !filter || playing !== id) return
+      let t = ctx.currentTime + 0.08
+      t = schedulePass(ctx, filter, melody, t)
+      t += 0.55
+      t = schedulePass(ctx, filter, melody, t)
+      t += 3.2
+      const waitMs = Math.max(1200, (t - ctx.currentTime) * 1000)
+      timer = window.setTimeout(loop, waitMs)
     }
-    const waitMs = Math.max(500, (t - ctx.currentTime) * 1000 + 420)
-    timer = window.setTimeout(loop, waitMs)
+    loop()
+  } catch {
+    stopTune()
   }
-  loop()
+}
+
+export async function ensureTune(id: TuneId) {
+  if (playing === id && ctx) {
+    await resumeAudio()
+    return
+  }
+  await startTune(id)
+}
+
+export async function resumeAudio() {
+  if (!ctx) return
+  try {
+    if (ctx.state === "suspended") await ctx.resume()
+  } catch {
+    /* ignore */
+  }
 }
 
 export function stopTune() {
@@ -356,11 +400,12 @@ export function stopTune() {
     timer = null
   }
   playing = null
+  filter = null
   master = null
   if (ctx) {
     const closing = ctx
     ctx = null
-    void closing.close()
+    void closing.close().catch(() => undefined)
   }
 }
 

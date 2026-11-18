@@ -1,5 +1,6 @@
 "use client"
 
+import { HolidayDock } from "@/components/portal/holiday-dock"
 import { LoginForm } from "@/components/portal/login-form"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { BRAND } from "@/lib/brand"
@@ -42,7 +43,8 @@ export function LoginScene({ showDemo = false }: { showDemo?: boolean }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/45" />
       </div>
 
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 flex max-w-[calc(100vw-2rem)] flex-wrap items-center justify-end gap-2">
+        <HolidayDock tone="login" />
         <ThemeToggle />
       </div>
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { signOutAction } from "@/actions/auth"
+import { HolidayDock } from "@/components/portal/holiday-dock"
 import { HolidayPageTransition } from "@/components/portal/holiday-page-transition"
 import { NotificationBell } from "@/components/portal/notification-bell"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -243,9 +244,11 @@ export function AppShell({
             </SheetContent>
           </Sheet>
           <p className="min-w-0 truncate text-sm font-semibold md:hidden">{BRAND.shortName}</p>
-          <div className="flex-1" />
-          <ThemeToggle />
-          <NotificationBell items={notifications} />
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 overflow-x-auto">
+            <HolidayDock />
+            <ThemeToggle />
+            <NotificationBell items={notifications} />
+          </div>
         </header>
         <main id="icerik" className="min-w-0 px-3 py-5 pb-24 sm:px-4 md:px-8 md:py-8 md:pb-8">
           <HolidayPageTransition>{children}</HolidayPageTransition>

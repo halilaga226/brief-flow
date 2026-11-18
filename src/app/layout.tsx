@@ -41,8 +41,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <ThemeProvider>
           <TooltipProvider>
-            <HolidayLayer />
-            {children}
+            <HolidayLayer>{children}</HolidayLayer>
             <Toaster />
           </TooltipProvider>
         </ThemeProvider>
