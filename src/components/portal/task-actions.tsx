@@ -12,6 +12,7 @@ import {
   setClientCallAction,
 } from "@/actions/tasks"
 import { AcceptTaskButton, DeleteTaskButton } from "@/components/portal/task-lifecycle-buttons"
+import { maybeAnnounceLevelUp } from "@/components/portal/level-up-fanfare"
 import { useActionResult } from "@/components/portal/use-action-result"
 import { Button } from "@/components/ui/button"
 import {
@@ -170,7 +171,10 @@ function TriageControls({
   const [doneOpen, setDoneOpen] = useState(false)
   const [doneState, doneAction, donePending] = useActionState(completeDirectlyAction, null)
   useActionResult(checkState)
-  useActionResult(doneState, () => setDoneOpen(false))
+  useActionResult(doneState, () => {
+    setDoneOpen(false)
+    if (doneState?.message) maybeAnnounceLevelUp(doneState.message)
+  })
   const inCheck = status === "KONTROL_EDILECEK"
 
   return (
@@ -341,7 +345,10 @@ function OpsControls({
 function CompleteDialog({ taskId }: { taskId: string }) {
   const [open, setOpen] = useState(false)
   const [state, action, pending] = useActionState(completeTaskAction, null)
-  useActionResult(state, () => setOpen(false))
+  useActionResult(state, () => {
+    setOpen(false)
+    if (state?.message) maybeAnnounceLevelUp(state.message)
+  })
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <Button type="button" className="mt-3 bg-primary font-semibold" onClick={() => setOpen(true)}>

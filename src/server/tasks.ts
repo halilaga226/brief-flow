@@ -37,6 +37,7 @@ import {
   toTaskDetail,
 } from "@/server/present"
 import { XP_PER_TASK } from "@/lib/xp"
+import { internXpTotal, notifyInternLevelUp } from "@/server/xp"
 
 export async function visibleTask(taskId: string, actor: SessionUser) {
   const task = await prisma.task.findUnique({
@@ -836,6 +837,9 @@ export async function completeTask(actor: SessionUser, taskId: string, rawCode: 
     throw new WorkflowError("Bu iş şu anda tamamlanamaz.")
   }
 
+  const internXpBefore =
+    existing.assignee.role === "INTERN" ? await internXpTotal(existing.assigneeId) : 0
+
   await prisma.$transaction(async (tx) => {
     const task = await tx.task.findUnique({ where: { id: taskId } })
     if (!task || !canComplete(task, actor.id, actor.role)) {
@@ -879,6 +883,12 @@ export async function completeTask(actor: SessionUser, taskId: string, rawCode: 
       })
     }
   })
+  if (existing.assignee.role === "INTERN") {
+    return {
+      levelUp: await notifyInternLevelUp(existing.assigneeId, taskId, internXpBefore),
+    }
+  }
+  return { levelUp: null }
 }
 
 export async function setTaskListColor(
@@ -1005,6 +1015,8 @@ export async function completeDirectly(
   if (!canReview(existing, actor.id, actor.role)) {
     throw new WorkflowError("Bu işi tamamlananlara alamazsınız.")
   }
+  const internXpBefore =
+    existing.assignee.role === "INTERN" ? await internXpTotal(existing.assigneeId) : 0
   await prisma.$transaction(async (tx) => {
     const task = await tx.task.findUnique({ where: { id: taskId } })
     if (!task || !canReview(task, actor.id, actor.role)) {
@@ -1043,6 +1055,12 @@ export async function completeDirectly(
       },
     })
   })
+  if (existing.assignee.role === "INTERN") {
+    return {
+      levelUp: await notifyInternLevelUp(existing.assigneeId, taskId, internXpBefore),
+    }
+  }
+  return { levelUp: null }
 }
 
 export async function getAssignerDriveInfo(assignerId: string) {

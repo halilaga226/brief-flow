@@ -45,7 +45,7 @@ export function HolidayDock({ tone = "header" }: { tone?: "header" | "login" }) 
       <select
         value={tune}
         disabled={!on}
-        aria-label="Yılbaşı müziği"
+        aria-label="Ambiyans"
         className={cn(
           "hidden h-8 max-w-[7.5rem] truncate rounded-full border-0 bg-transparent px-1 text-[11px] font-semibold outline-none sm:block",
           dark ? "text-white" : "text-foreground",
@@ -63,7 +63,7 @@ export function HolidayDock({ tone = "header" }: { tone?: "header" | "login" }) 
         className="flex size-7 shrink-0 items-center justify-center"
         disabled={!on}
         aria-label={volume === 0 ? "Sesi aç" : "Sesi kapat"}
-        onClick={() => setVolume(volume === 0 ? 0.48 : 0)}
+        onClick={() => setVolume(volume === 0 ? 0.4 : 0)}
       >
         {volume === 0 || !music || !on ? (
           <VolumeX className="size-3.5" />

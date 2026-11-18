@@ -200,11 +200,17 @@ export async function completeDirectlyAction(
   const user = await requireUser()
   const taskId = readText(formData, "taskId")
   try {
-    await completeDirectly(user, taskId, readText(formData, "note"))
+    const result = await completeDirectly(user, taskId, readText(formData, "note"))
+    revalidateTask(taskId)
+    if (result.levelUp) {
+      return {
+        ok: true,
+        message: `Seviye atladınız. Yeni unvan: ${result.levelUp.rankTitle} (Sv. ${result.levelUp.level})`,
+      }
+    }
   } catch (error) {
     return actionError(error)
   }
-  revalidateTask(taskId)
   return { ok: true, message: "İş tamamlananlara alındı." }
 }
 
@@ -360,11 +366,17 @@ export async function completeTaskAction(
   const user = await requireUser()
   const taskId = readText(formData, "taskId")
   try {
-    await completeTask(user, taskId, readText(formData, "trackingCode"))
+    const result = await completeTask(user, taskId, readText(formData, "trackingCode"))
+    revalidateTask(taskId)
+    if (result.levelUp) {
+      return {
+        ok: true,
+        message: `Seviye atladınız. Yeni unvan: ${result.levelUp.rankTitle} (Sv. ${result.levelUp.level})`,
+      }
+    }
   } catch (error) {
     return actionError(error)
   }
-  revalidateTask(taskId)
   return { ok: true, message: "Görev evrak koduyla tamamlandı." }
 }
 

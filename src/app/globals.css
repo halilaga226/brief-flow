@@ -232,10 +232,10 @@ html.dark.yilbasi {
 
 html.yilbasi body {
   background-image:
-    radial-gradient(ellipse 70% 42% at 8% -8%, rgba(153, 27, 27, 0.22), transparent 52%),
-    radial-gradient(ellipse 55% 36% at 92% 4%, rgba(21, 128, 61, 0.2), transparent 48%),
-    radial-gradient(ellipse 46% 34% at 50% 100%, rgba(180, 83, 9, 0.14), transparent 52%),
-    linear-gradient(180deg, rgba(20, 40, 28, 0.04), transparent 28%);
+    radial-gradient(ellipse 80% 48% at 6% -10%, rgba(185, 28, 28, 0.32), transparent 54%),
+    radial-gradient(ellipse 60% 40% at 94% 0%, rgba(22, 101, 52, 0.28), transparent 50%),
+    radial-gradient(ellipse 50% 38% at 50% 100%, rgba(180, 83, 9, 0.22), transparent 52%),
+    linear-gradient(180deg, rgba(20, 40, 28, 0.06), transparent 30%);
 }
 
 html.yilbasi header {
@@ -252,7 +252,16 @@ html.dark.yilbasi header {
 
 html.yilbasi aside.bg-sidebar\/92,
 html.yilbasi .bg-sidebar {
-  background-color: rgba(16, 32, 26, 0.94);
+  background-color: rgba(16, 32, 26, 0.96);
+  box-shadow: inset -1px 0 0 rgba(251, 191, 36, 0.28);
+}
+
+.yilbasi-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 40% at 50% 110%, rgba(127, 29, 29, 0.18), transparent 60%),
+    linear-gradient(180deg, rgba(127, 29, 29, 0.08), transparent 18%);
 }
 
 .yilbasi-lights {
@@ -262,13 +271,51 @@ html.yilbasi .bg-sidebar {
   right: 0;
   display: flex;
   justify-content: space-between;
-  padding: 0.35rem 0.75rem 0;
+  padding: 0.45rem 0.9rem 0;
   z-index: 2;
 }
 
+.yilbasi-garland {
+  position: absolute;
+  top: 14px;
+  left: 6%;
+  right: 6%;
+  height: 18px;
+  border-top: 2px dotted rgba(251, 191, 36, 0.45);
+  display: flex;
+  justify-content: space-around;
+  z-index: 2;
+}
+
+.yilbasi-ornament {
+  font-size: 11px;
+  line-height: 1;
+  transform: translateY(6px);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.yilbasi-tree {
+  position: absolute;
+  left: 10px;
+  bottom: 12px;
+  font-size: 2.6rem;
+  opacity: 0.72;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.25));
+}
+
+.yilbasi-hearth {
+  position: absolute;
+  right: 8%;
+  bottom: -40px;
+  width: 220px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251, 146, 60, 0.28), transparent 68%);
+}
+
 .yilbasi-bulb {
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   border-radius: 999px;
   animation: yilbasi-twinkle 1.8s ease-in-out infinite;
 }
@@ -294,11 +341,18 @@ html.yilbasi .bg-sidebar {
   position: absolute;
   top: -16px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.7);
   animation-name: yilbasi-fall;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   will-change: transform;
+}
+
+.yilbasi-flake-star {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  line-height: 1;
 }
 
 .yilbasi-santa {
@@ -470,6 +524,60 @@ html.yilbasi .yilbasi-page {
   }
 }
 
+.level-up-fanfare {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 230;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse at center, rgba(20, 10, 4, 0.35), rgba(0, 0, 0, 0.2));
+}
+
+.level-up-card {
+  position: relative;
+  overflow: hidden;
+  width: min(24rem, calc(100vw - 2rem));
+  border-radius: 1.6rem;
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  background: linear-gradient(165deg, #7f1d1d 0%, #14532d 58%, #78350f 100%);
+  padding: 1.75rem 1.5rem 1.6rem;
+  text-align: center;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.42);
+  animation: yilbasi-page-in 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.level-up-burst span {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #fbbf24;
+  opacity: 0;
+  animation: level-up-spark 1.5s ease-out forwards;
+  animation-delay: calc(var(--i) * 55ms);
+}
+
+@keyframes level-up-spark {
+  0% {
+    opacity: 1;
+    transform: rotate(calc(var(--i) * 26deg)) translateY(0) scale(0.4);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 26deg)) translateY(-92px) scale(1);
+  }
+}
+
+@media (max-width: 767px) {
+  .yilbasi-tree {
+    bottom: 4.6rem;
+    font-size: 2rem;
+  }
+}
+
 .xp-orc-stage {
   pointer-events: none;
   position: fixed;
@@ -571,7 +679,10 @@ html.yilbasi .yilbasi-page {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .xp-orc-stage {
+  .xp-orc-stage,
+  .level-up-fanfare,
+  .yilbasi-tree,
+  .yilbasi-hearth {
     display: none;
   }
 }

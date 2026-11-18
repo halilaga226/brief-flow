@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import { quoteForDate } from "./legal-quotes"
 import { clampVolume } from "./christmas-tunes"
-import { internRank, parsePoints, parseXpGain, RANK_LADDER } from "./xp"
+import { internRank, parseLevelUp, parsePoints, parseXpGain, RANK_LADDER } from "./xp"
 
 describe("intern rank", () => {
   it("starts as stajyer at zero xp", () => {
@@ -44,6 +44,15 @@ describe("holiday volume", () => {
     assert.equal(clampVolume(-2), 0)
     assert.equal(clampVolume(0.4), 0.4)
     assert.equal(clampVolume(3), 1)
+  })
+})
+
+describe("parseLevelUp", () => {
+  it("reads the new title from a level-up notice", () => {
+    const got = parseLevelUp("Seviye atladınız", "Yeni unvan: Kalem stajyeri (Sv. 2)")
+    assert.equal(got?.level, 2)
+    assert.equal(got?.rankTitle, "Kalem stajyeri")
+    assert.equal(parseLevelUp("Görev bitti", "tamam"), null)
   })
 })
 

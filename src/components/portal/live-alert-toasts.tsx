@@ -1,5 +1,6 @@
 "use client"
 
+import { maybeAnnounceLevelUp } from "@/components/portal/level-up-fanfare"
 import { maybeAnnounceXp } from "@/components/portal/xp-orc-drop"
 import type { NotificationDTO } from "@/lib/dto"
 import { playNotificationBell } from "@/lib/welcome-sound"
@@ -155,6 +156,7 @@ export function LiveAlertToasts({ items }: { items: NotificationDTO[] }) {
         seen.add(item.id)
         showDesktop(item)
         maybeAnnounceXp(item.title, item.body)
+        maybeAnnounceLevelUp(item.title, item.body)
       }
       saveSeen(seen)
       void playNotificationBell()

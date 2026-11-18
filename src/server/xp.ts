@@ -31,6 +31,48 @@ async function visibleScoredTask(taskId: string, actor: SessionUser) {
   return task
 }
 
+export async function internXpTotal(internId: string) {
+  await ensureXpSchema()
+  const [doneCount, jobs, quests, bonus] = await Promise.all([
+    prisma.task.count({
+      where: { assigneeId: internId, deletedAt: null, status: "TAMAMLANDI" },
+    }),
+    prisma.taskScore.aggregate({
+      where: { internId },
+      _sum: { points: true },
+    }),
+    prisma.internQuestAnswer.aggregate({
+      where: { internId, points: { not: null } },
+      _sum: { points: true },
+    }),
+    prisma.internBonus.aggregate({
+      where: { internId },
+      _sum: { points: true },
+    }),
+  ])
+  return (
+    doneCount * XP_PER_TASK +
+    (jobs._sum.points ?? 0) +
+    (quests._sum.points ?? 0) +
+    (bonus._sum.points ?? 0)
+  )
+}
+
+export async function notifyInternLevelUp(internId: string, taskId: string, beforeXp: number) {
+  const after = internRank(await internXpTotal(internId))
+  const before = internRank(beforeXp)
+  if (after.level <= before.level) return null
+  await prisma.notification.create({
+    data: {
+      userId: internId,
+      taskId,
+      title: "Seviye atladınız",
+      body: `Yeni unvan: ${after.title} (Sv. ${after.level})`,
+    },
+  })
+  return { rankTitle: after.title, level: after.level }
+}
+
 export async function listInternBoard(actor: SessionUser): Promise<InternBoardRow[]> {
   await ensureXpSchema()
   const interns = await prisma.user.findMany({

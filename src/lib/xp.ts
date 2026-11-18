@@ -75,6 +75,17 @@ export function parseXpGain(title: string, body = ""): number | null {
 }
 
 export const XP_DROP_EVENT = "brief-flow:xp-drop"
+export const LEVEL_UP_EVENT = "brief-flow:level-up"
+
+export function parseLevelUp(title: string, body = "") {
+  if (!/seviye atladınız/i.test(`${title} ${body}`)) return null
+  const match = `${title} ${body}`.match(/Yeni unvan:\s*(.+?)\s*\(Sv\.\s*(\d+)\)/i)
+  const level = match ? Number(match[2]) : NaN
+  return {
+    rankTitle: match?.[1]?.trim() || "Yeni seviye",
+    level: Number.isFinite(level) && level > 0 ? level : internRank(0).level,
+  }
+}
 
 export type QuestAnswerRow = {
   id: string

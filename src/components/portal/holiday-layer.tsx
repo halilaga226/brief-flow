@@ -26,8 +26,9 @@ import {
   type ReactNode,
 } from "react"
 
-const FLAKES = Array.from({ length: 16 }, (_, i) => i)
-const LIGHTS = Array.from({ length: 28 }, (_, i) => i)
+const FLAKES = Array.from({ length: 28 }, (_, i) => i)
+const LIGHTS = Array.from({ length: 36 }, (_, i) => i)
+const ORNAMENTS = ["●", "◆", "●", "✦", "●"]
 const BULB = ["yilbasi-bulb-red", "yilbasi-bulb-gold", "yilbasi-bulb-green", "yilbasi-bulb-ice"] as const
 
 type SantaPass = {
@@ -78,7 +79,7 @@ export function useHoliday() {
 export function HolidayProvider({ children }: { children: ReactNode }) {
   const [on, setOn] = useState(false)
   const [music, setMusicState] = useState(false)
-  const [tune, setTuneState] = useState<TuneId>("jingle")
+  const [tune, setTuneState] = useState<TuneId>("snow")
   const [volume, setVolumeState] = useState(0.48)
   const [ready, setReady] = useState(false)
   const musicRef = useRef(music)
@@ -213,6 +214,7 @@ function HolidayAtmosphere() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[5] overflow-hidden" aria-hidden>
+      <div className="yilbasi-vignette" />
       <div className="yilbasi-lights">
         {LIGHTS.map((i) => (
           <span
@@ -222,19 +224,30 @@ function HolidayAtmosphere() {
           />
         ))}
       </div>
+      <div className="yilbasi-garland">
+        {ORNAMENTS.map((mark, i) => (
+          <span key={i} className={cn("yilbasi-ornament", BULB[i % BULB.length])}>
+            {mark}
+          </span>
+        ))}
+      </div>
       {flakes.map((flake) => (
         <span
           key={flake.id}
-          className="yilbasi-flake"
+          className={cn("yilbasi-flake", flake.id % 3 === 0 && "yilbasi-flake-star")}
           style={{
             left: flake.left,
             animationDelay: flake.delay,
             animationDuration: flake.dur,
-            width: flake.size,
-            height: flake.size,
+            width: flake.size + (flake.id % 3 === 0 ? 4 : 0),
+            height: flake.size + (flake.id % 3 === 0 ? 4 : 0),
           }}
-        />
+        >
+          {flake.id % 3 === 0 ? "❄" : ""}
+        </span>
       ))}
+      <div className="yilbasi-tree">🎄</div>
+      <div className="yilbasi-hearth" />
       {santa ? (
         <div
           className={cn("yilbasi-santa", `yilbasi-santa-${santa.from}`)}
