@@ -2,6 +2,7 @@
 
 import { DailyQuoteToast } from "@/components/portal/daily-quote-toast"
 import { LiveAlertToasts } from "@/components/portal/live-alert-toasts"
+import { XpOrcDrop } from "@/components/portal/xp-orc-drop"
 import type { NotificationDTO } from "@/lib/dto"
 import dynamic from "next/dynamic"
 
@@ -27,6 +28,7 @@ export function PortalOverlays({
       <WelcomeSplash name={name} />
       <IntroTour />
       <DailyQuoteToast />
+      <XpOrcDrop />
       <LiveAlertToasts items={notifications} />
     </>
   )

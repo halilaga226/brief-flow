@@ -1,21 +1,29 @@
 "use client"
 
 import { awardBonusXpAction } from "@/actions/xp"
+import { RankLadder } from "@/components/portal/rank-ladder"
 import { useActionResult } from "@/components/portal/use-action-result"
+import { announceXpDrop } from "@/components/portal/xp-orc-drop"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { InternBoardRow } from "@/lib/xp"
-import { MAX_POINTS } from "@/lib/xp"
+import { internRank, MAX_POINTS, parsePoints } from "@/lib/xp"
 import { cn } from "@/lib/utils"
 import { Crown, Sparkles, Trophy } from "lucide-react"
 import { useActionState } from "react"
 
 function BonusForm({ interns }: { interns: InternBoardRow[] }) {
   const [state, action, pending] = useActionState(awardBonusXpAction, null)
-  useActionResult(state)
+  useActionResult(state, () => {
+    const form = document.querySelector<HTMLFormElement>("form[data-bonus-xp]")
+    const raw = form ? new FormData(form).get("points") : "3"
+    const points = parsePoints(String(raw ?? "3"))
+    if (points) announceXpDrop(points)
+  })
   if (interns.length === 0) return null
   return (
     <form
+      data-bonus-xp
       action={action}
       className="mt-6 grid gap-3 rounded-2xl border border-amber-300/25 bg-black/25 p-4"
     >
@@ -72,6 +80,7 @@ export function InternGameBoard({
   canAssign: boolean
 }) {
   const you = rows.find((row) => row.isYou)
+  const youRank = you ? internRank(you.xp) : null
   const podium = rows.slice(0, 3)
 
   return (
@@ -95,7 +104,8 @@ export function InternGameBoard({
             Seviye {you.level} · {you.rankTitle}
           </p>
           <p className="text-xs text-amber-100/70">
-            {you.xp} XP · {you.jobCount} iş · {you.questCount} araştırma · {you.bonusCount} ek puan
+            Toplam {you.xp} XP · {you.jobCount} iş · {you.questCount} araştırma · {you.bonusCount} ek
+            puan
           </p>
           <div className="mt-3 h-3 overflow-hidden rounded-full bg-black/45">
             <div
@@ -103,11 +113,18 @@ export function InternGameBoard({
               style={{ width: `${Math.round(you.progress * 100)}%` }}
             />
           </div>
-          <p className="mt-1 text-right font-mono text-xs text-amber-200">
-            {you.into}/{you.need}
+          <p className="mt-1.5 text-xs font-medium text-amber-100/85">
+            Bu seviyede {you.into} / {you.need} XP
+            {youRank?.nextTitle
+              ? ` · ${youRank.nextTitle} için ${youRank.remaining} XP`
+              : " · son unvan bandındasınız"}
           </p>
         </div>
       ) : null}
+
+      <div className="mt-5">
+        <RankLadder currentLevel={you?.level} />
+      </div>
 
       {rows.length === 0 ? (
         <p className="mt-6 text-sm text-amber-100/70">Henüz stajyer kaydı yok.</p>
@@ -131,7 +148,9 @@ export function InternGameBoard({
               <p className="text-xs text-amber-100/70">
                 Sv. {row.level} · {row.rankTitle}
               </p>
-              <p className="mt-2 font-mono text-sm font-bold">{row.xp} XP</p>
+              <p className="mt-2 font-mono text-sm font-bold">
+                {row.xp} XP · {row.into}/{row.need}
+              </p>
             </div>
           ))}
         </div>
@@ -165,11 +184,16 @@ export function InternGameBoard({
                   <td className="py-2 pr-2 font-mono">{row.level}</td>
                   <td className="py-2 pr-2 font-mono">{row.xp}</td>
                   <td className="py-2">
-                    <div className="h-2 w-28 overflow-hidden rounded-full bg-black/40">
-                      <div
-                        className="h-full rounded-full bg-amber-300"
-                        style={{ width: `${Math.round(row.progress * 100)}%` }}
-                      />
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-24 overflow-hidden rounded-full bg-black/40">
+                        <div
+                          className="h-full rounded-full bg-amber-300"
+                          style={{ width: `${Math.round(row.progress * 100)}%` }}
+                        />
+                      </div>
+                      <span className="font-mono text-[11px] text-amber-200">
+                        {row.into}/{row.need} XP
+                      </span>
                     </div>
                   </td>
                 </tr>

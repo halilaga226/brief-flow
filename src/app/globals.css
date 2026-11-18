@@ -348,6 +348,112 @@ html.yilbasi .bg-sidebar {
   }
 }
 
+.xp-orc-stage {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  overflow: hidden;
+}
+
+.xp-orc {
+  position: absolute;
+  bottom: 12%;
+  left: -8rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.15rem;
+  animation: xp-orc-run 5.1s ease-in-out forwards;
+}
+
+.xp-orc-body {
+  font-size: 4.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.35));
+}
+
+.xp-orc-chest {
+  font-size: 2.1rem;
+  line-height: 1;
+  transform: translate(-0.4rem, -0.35rem);
+  animation: xp-orc-chest 5.1s ease-in-out forwards;
+}
+
+.xp-orc-burst {
+  position: absolute;
+  left: 3.2rem;
+  bottom: 3.4rem;
+  border-radius: 999px;
+  background: #fbbf24;
+  color: #1c1917;
+  padding: 0.25rem 0.7rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  opacity: 0;
+  animation: xp-orc-burst 5.1s ease-out forwards;
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.65);
+}
+
+@keyframes xp-orc-run {
+  0% {
+    transform: translateX(0) scaleX(1);
+  }
+  28% {
+    transform: translateX(42vw) scaleX(1);
+  }
+  48% {
+    transform: translateX(46vw) scaleX(1);
+  }
+  62% {
+    transform: translateX(48vw) scaleX(1);
+  }
+  100% {
+    transform: translateX(120vw) scaleX(1);
+  }
+}
+
+@keyframes xp-orc-chest {
+  0%,
+  30% {
+    transform: translate(-0.4rem, -0.35rem) rotate(-8deg);
+  }
+  38% {
+    transform: translate(-0.2rem, -1.1rem) rotate(12deg) scale(1.15);
+  }
+  52% {
+    transform: translate(-0.3rem, -0.2rem) rotate(0deg);
+  }
+  100% {
+    transform: translate(-0.4rem, -0.35rem);
+  }
+}
+
+@keyframes xp-orc-burst {
+  0%,
+  32% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.6);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-12px) scale(1.15);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-28px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-48px) scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xp-orc-stage {
+    display: none;
+  }
+}
+
 @keyframes welcome-in {
   0% {
     opacity: 0;

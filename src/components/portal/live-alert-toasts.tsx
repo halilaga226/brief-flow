@@ -1,5 +1,6 @@
 "use client"
 
+import { maybeAnnounceXp } from "@/components/portal/xp-orc-drop"
 import type { NotificationDTO } from "@/lib/dto"
 import { playNotificationBell } from "@/lib/welcome-sound"
 import { cn } from "@/lib/utils"
@@ -153,6 +154,7 @@ export function LiveAlertToasts({ items }: { items: NotificationDTO[] }) {
       for (const item of fresh) {
         seen.add(item.id)
         showDesktop(item)
+        maybeAnnounceXp(item.title, item.body)
       }
       saveSeen(seen)
       void playNotificationBell()

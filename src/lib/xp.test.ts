@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import { quoteForDate } from "./legal-quotes"
-import { internRank, parsePoints } from "./xp"
+import { internRank, parsePoints, parseXpGain, RANK_LADDER } from "./xp"
 
 describe("intern rank", () => {
   it("starts as kalem çırağı at zero xp", () => {
@@ -22,6 +22,24 @@ describe("intern rank", () => {
     const rank = internRank(500)
     assert.equal(rank.title, "Yargının yıldızı")
     assert.ok(rank.level > 8)
+    assert.equal(rank.nextTitle, null)
+  })
+
+  it("lists eight titles with 25 XP bands", () => {
+    assert.equal(RANK_LADDER.length, 8)
+    assert.equal(RANK_LADDER[0].fromXp, 0)
+    assert.equal(RANK_LADDER[0].toXp, 24)
+    assert.equal(RANK_LADDER[1].fromXp, 25)
+    assert.equal(RANK_LADDER[7].fromXp, 175)
+    assert.equal(RANK_LADDER[7].toXp, null)
+  })
+})
+
+describe("parseXpGain", () => {
+  it("reads +N XP from notification copy", () => {
+    assert.equal(parseXpGain("+7 XP kazandınız", "işe 7 puan verdi"), 7)
+    assert.equal(parseXpGain("Ek puan: +3 XP", "size 3 ek XP verdi"), 3)
+    assert.equal(parseXpGain("Yeni iş atandı", "görev"), null)
   })
 })
 
