@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from "lucide-react"
 import Link from "next/link"
+import type { ReactNode } from "react"
 
 type Counts = {
   awaiting: number
@@ -67,6 +68,7 @@ export function HomeDashboard({
   counts,
   awaiting,
   activity,
+  gameBoard,
 }: {
   greeting: string
   title: string
@@ -74,6 +76,7 @@ export function HomeDashboard({
   counts: Counts
   awaiting: TaskCardDTO[]
   activity: ActivityDTO[]
+  gameBoard?: ReactNode
 }) {
   return (
     <div className="mx-auto grid max-w-6xl gap-5">
@@ -122,6 +125,8 @@ export function HomeDashboard({
           )
         })}
       </section>
+
+      {gameBoard}
 
       <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
         <div>

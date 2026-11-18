@@ -59,6 +59,12 @@ export type TaskCardDTO = {
   logs: TimelineEventDTO[]
 }
 
+export type TaskScoreDTO = {
+  points: number
+  note: string
+  lawyerName: string
+}
+
 export type TaskFileDTO = {
   id: string
   kind: "INSTRUCTION" | "DRAFT"
@@ -103,6 +109,9 @@ export type TaskDetailDTO = TaskCardDTO & {
   nextStep: string
   latestDraft: { name: string; href: string | null; external: boolean } | null
   assignerDrive: { name: string; link: string } | null
+  canScore: boolean
+  internName: string
+  score: TaskScoreDTO | null
 }
 
 export type NotificationDTO = {
@@ -111,7 +120,7 @@ export type NotificationDTO = {
   body: string
   read: boolean
   when: string
-  taskId: string
+  taskId: string | null
 }
 
 export type ActivityDTO = {

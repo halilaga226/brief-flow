@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Nunito_Sans, Sora } from "next/font/google"
+import { HolidayLayer } from "@/components/portal/holiday-layer"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
@@ -40,6 +41,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <ThemeProvider>
           <TooltipProvider>
+            <HolidayLayer />
             {children}
             <Toaster />
           </TooltipProvider>

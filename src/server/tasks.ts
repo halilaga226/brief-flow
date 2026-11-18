@@ -37,7 +37,7 @@ import {
   toTaskDetail,
 } from "@/server/present"
 
-async function visibleTask(taskId: string, actor: SessionUser) {
+export async function visibleTask(taskId: string, actor: SessionUser) {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: { assignee: { select: { role: true } } },

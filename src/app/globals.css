@@ -212,6 +212,65 @@
   }
 }
 
+html.yilbasi body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(185, 28, 28, 0.22), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 90% 0%, rgba(22, 101, 52, 0.22), transparent 45%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(217, 119, 6, 0.14), transparent 50%);
+}
+
+html.yilbasi aside.bg-sidebar\/92,
+html.yilbasi .bg-sidebar {
+  background-color: rgba(20, 38, 28, 0.92);
+}
+
+.yilbasi-flake {
+  position: absolute;
+  top: -16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  animation-name: yilbasi-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.yilbasi-santa {
+  position: absolute;
+  bottom: 14%;
+  left: -8rem;
+  animation: yilbasi-sleigh 8.5s linear forwards;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.35));
+}
+
+@keyframes yilbasi-fall {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(-48px, 110vh, 0);
+    opacity: 0.15;
+  }
+}
+
+@keyframes yilbasi-sleigh {
+  0% {
+    transform: translateX(0) rotate(-6deg);
+  }
+  100% {
+    transform: translateX(120vw) rotate(8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yilbasi-flake,
+  .yilbasi-santa {
+    animation: none !important;
+    display: none;
+  }
+}
+
 @keyframes welcome-in {
   0% {
     opacity: 0;

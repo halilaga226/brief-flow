@@ -20,6 +20,7 @@ function toneFor(title: string): AlertTone {
   const t = title.toLocaleLowerCase("tr")
   if (t.includes("yeni iş") || t.includes("atandı") || t.includes("kabul") || t.includes("aktarıldı")) return "sky"
   if (t.includes("revizyon") || t.includes("revize")) return "rose"
+  if (t.includes("xp") || t.includes("puan") || t.includes("özlü") || t.includes("araştırma")) return "amber"
   if (t.includes("onay") || t.includes("tamamland")) return "emerald"
   if (t.includes("gönderim") || t.includes("gonderim")) return "violet"
   if (
@@ -118,7 +119,7 @@ function showDesktop(item: NotificationDTO) {
     })
     note.onclick = () => {
       window.focus()
-      window.location.href = `/gorevler/${item.taskId}`
+                    window.location.href = item.taskId ? `/gorevler/${item.taskId}` : "/arastirma"
       note.close()
     }
   } catch {
@@ -216,7 +217,7 @@ export function LiveAlertToasts({ items }: { items: NotificationDTO[] }) {
         body: "Örnek bildirim — popup tasarımı böyle görünür.",
         read: false,
         when: "şimdi",
-        taskId: "",
+        taskId: null,
       }
       enqueue([demo])
     }

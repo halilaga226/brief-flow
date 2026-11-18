@@ -1,5 +1,6 @@
 import { CommentThread } from "@/components/portal/comment-thread"
 import { MarkRead } from "@/components/portal/mark-read"
+import { ScoreTaskForm } from "@/components/portal/score-task-form"
 import { StatusBadge } from "@/components/portal/status-badge"
 import { TaskActions } from "@/components/portal/task-actions"
 import { TaskTimeline } from "@/components/portal/task-timeline"
@@ -94,6 +95,12 @@ export function TaskDetailView({
             latestDraft={task.latestDraft}
             trackingCode={task.trackingCode}
             completedLabel={task.completedLabel}
+          />
+          <ScoreTaskForm
+            taskId={task.id}
+            internName={task.internName}
+            canScore={task.canScore}
+            score={task.score}
           />
 
           {task.assignerDrive ? (

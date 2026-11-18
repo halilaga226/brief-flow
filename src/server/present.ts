@@ -210,6 +210,9 @@ export function toTaskDetail(
       : null,
     assignerDrive: null,
     logs: toTimeline(record),
+    canScore: false,
+    internName: record.assignee.name,
+    score: null,
   }
 }
 
@@ -219,7 +222,7 @@ export function toNotification(row: {
   body: string
   read: boolean
   createdAt: Date
-  taskId: string
+  taskId: string | null
 }): NotificationDTO {
   return {
     id: row.id,

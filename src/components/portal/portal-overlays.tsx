@@ -1,5 +1,6 @@
 "use client"
 
+import { DailyQuoteToast } from "@/components/portal/daily-quote-toast"
 import { LiveAlertToasts } from "@/components/portal/live-alert-toasts"
 import type { NotificationDTO } from "@/lib/dto"
 import dynamic from "next/dynamic"
@@ -25,6 +26,7 @@ export function PortalOverlays({
     <>
       <WelcomeSplash name={name} />
       <IntroTour />
+      <DailyQuoteToast />
       <LiveAlertToasts items={notifications} />
     </>
   )

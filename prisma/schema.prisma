@@ -91,6 +91,11 @@ model User {
   courthouseJobsAssigned  CourthouseJob[] @relation("CourthouseAssignee")
   courthouseJobsCreated   CourthouseJob[] @relation("CourthouseAssigner")
   courthouseJobsCompleted CourthouseJob[] @relation("CourthouseCompleter")
+  internScores            TaskScore[]           @relation("InternScores")
+  givenScores             TaskScore[]           @relation("LawyerGivenScores")
+  questsCreated           InternQuest[]
+  questAnswers            InternQuestAnswer[]   @relation("QuestIntern")
+  questGrades             InternQuestAnswer[]   @relation("QuestScorer")
 }
 
 /// Büro geneli ayarlar (Drive servis hesabı vb.) — yalnızca Halil günceller
@@ -243,6 +248,7 @@ model Task {
   logs          TaskLog[]
   files         TaskFile[]
   notifications Notification[]
+  score         TaskScore?
 
   @@index([assignerId])
   @@index([assigneeId])
@@ -305,16 +311,70 @@ model TaskFile {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  taskId    String
+  taskId    String?
   title     String
   body      String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([userId, read])
+}
+
+/// Avukatın tamamlanan stajyer işine verdiği puan (XP)
+model TaskScore {
+  id        String   @id @default(cuid())
+  taskId    String   @unique
+  internId  String
+  lawyerId  String
+  points    Int
+  note      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  intern User @relation("InternScores", fields: [internId], references: [id], onDelete: Cascade)
+  lawyer User @relation("LawyerGivenScores", fields: [lawyerId], references: [id])
+
+  @@index([internId])
+}
+
+/// Avukatın stajyerlere açtığı araştırma görevi
+model InternQuest {
+  id          String    @id @default(cuid())
+  title       String
+  prompt      String
+  createdById String
+  closedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  createdBy User                @relation(fields: [createdById], references: [id])
+  answers   InternQuestAnswer[]
+
+  @@index([createdById])
+  @@index([closedAt])
+}
+
+model InternQuestAnswer {
+  id         String    @id @default(cuid())
+  questId    String
+  internId   String
+  body       String
+  points     Int?
+  scoredById String?
+  scoredAt   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  quest    InternQuest @relation(fields: [questId], references: [id], onDelete: Cascade)
+  intern   User        @relation("QuestIntern", fields: [internId], references: [id], onDelete: Cascade)
+  scoredBy User?       @relation("QuestScorer", fields: [scoredById], references: [id])
+
+  @@unique([questId, internId])
+  @@index([internId])
 }
 
 /// Büro adliyeleri — yalnızca yönetici ekler
